@@ -10,13 +10,9 @@ into a straightforward framework that allows to define different checks very eas
 You can install _Rules Check_ using `pip`, `poetry` or `pipx`:
 
 ```sh
-pip install rules_checker
-```
-
-or with Poetry:
-
-```sh
-poetry add rules_checker
+pip install rules_check
+poetry add rules_check
+pipx install rules_check
 ```
 
 ## Usage
@@ -24,7 +20,13 @@ poetry add rules_checker
 Once installed, you can run it using `rulescheck` or `rc` command:
 
 ```sh
-rc <options>
+rc --help
+```
+
+To see an example how does it works, run
+
+```sh
+rc run-example
 ```
 
 For example, to check firewall rules from a configuration file:
@@ -32,15 +34,6 @@ For example, to check firewall rules from a configuration file:
 ```sh
 rc check my_firewall_config.json
 ```
-
-## Configuration
-
-Rules Checker allows defining custom validation rules using a simple configuration format. Users can specify different
-checks, such as:
-
-- Detecting shadowed rules.
-- Ensuring a specific deny rule blocks all preceding traffic.
-- Validating that rules follow best practices for security and performance.
 
 ## Contribution & Development
 
