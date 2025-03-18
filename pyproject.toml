@@ -1,0 +1,98 @@
+[tool.poetry]
+name = "rules_check"
+version = "0.1.0"
+description = ""
+authors = [
+    { name = "Kamil Urbanek", email = "urbanek.kamil@gmail.com" },
+]
+readme = "README.md"
+license = "MIT"
+
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pydantic = "^2.10.6"
+click = "^8.1.8"
+rich-click = "^1.8.7"
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.8.0"
+pytest = "^8.3.5"
+
+[project.scripts]
+rulescheck = 'rules_check.__main__:main'
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 80
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+    "__init__.py",
+]
+
+[tool.ruff.lint]
+select = [
+  "E",      # pycodestyle error
+  "F",      # flake8 error
+  "A",      # builtin shadowing
+  "B",      # flake8 bugbear
+  "BLE",    # aboid bare excepts
+  "C4",     # simplify comprehensions
+  "DTZ",    # datetime errors
+  "FBT",    # avoid boolean trap
+  "G",      # logging format
+  "I",      # isort imports
+  "N",      # conform to PEP8 naming rules
+  "RET",    # return values
+  "S",      # bandit
+  "TRY",    # exceptions antipatterns
+  "UP",     # upgade syntax
+  "W",      # pycodestyle warning
+  "YTT",    # wrong usage of sys.info
+]
+ignore = [
+    # only relevant if you run a script with `python -0`,
+    # which seems unlikely for any of the scripts in this repo
+    "B011",
+    # Avoid specifying long messages outside the exception class
+    "TRY003",
+    # Use of `assert` detected
+    "S101",
+    # Logging statement uses f-string
+    "G004",
+     "E501",
+    "S311"  # Standard pseudo-random generators are not suitable for cryptographic purposes
+]
+
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 72

@@ -1,0 +1,37 @@
+[
+  {
+    "@location": "shared",
+    "@name": "Main_Linux_Server",
+    "ip-netmask": "10.0.0.10/31"
+  },
+  {
+    "@location": "shared",
+    "@name": "Main_DB_Server",
+    "ip-netmask": "10.0.0.20/31"
+  },
+  {
+    "@location": "shared",
+    "@name": "Main_Servers_Subnet",
+    "ip-netmask": "10.0.0.0/24"
+  },
+  {
+    "@location": "shared",
+    "@name": "Log_server",
+    "ip-netmask": "10.0.200.12/31"
+  },
+    {
+    "@location": "shared",
+    "@name": "cloud_log_server",
+    "ip-netmask": "200.0.200.200/31"
+  },
+  {
+    "@location": "shared",
+    "@name": "SubnetInternal",
+    "ip-netmask": "172.0.0.1/24"
+  },
+  {
+    "@location": "shared",
+    "@name": "SubnetExternal",
+    "ip-netmask": "200.0.0.1/24"
+  }
+]
