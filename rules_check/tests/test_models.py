@@ -1,5 +1,4 @@
 # ruff: noqa: N802
-from pathlib import Path
 
 import pytest
 
@@ -8,12 +7,16 @@ from rules_check.models import (
     AddressObject,
     SecurityRule,
 )
+from rules_check.tests.conftest import (
+    get_example_address_groups_path,
+    get_example_address_objects_path,
+    get_example_security_rules_path,
+)
 from rules_check.utils import load_json
 
-data_dir = Path(__file__).parent / "data"
-security_rules_data = load_json(data_dir / "security_rules.json")
-address_objects_data = load_json(data_dir / "address_objects.json")
-address_groups_data = load_json(data_dir / "address_groups.json")
+security_rules_data = load_json(get_example_security_rules_path())
+address_objects_data = load_json(get_example_address_objects_path())
+address_groups_data = load_json(get_example_address_groups_path())
 
 
 @pytest.mark.parametrize("item", security_rules_data)

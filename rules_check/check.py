@@ -131,7 +131,7 @@ def check_services(
     return False, "Preceding rule does not contain all rule's applications"
 
 
-DEFAULT_CHECKS: list[RuleCheckFunction] = [
+SIMPLE_CHECKS: list[RuleCheckFunction] = [
     check_action,
     check_application,
     check_services,

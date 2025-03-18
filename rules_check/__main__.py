@@ -4,16 +4,17 @@ from typing import TYPE_CHECKING
 
 import rich
 import rich_click as click
+from click import ClickException
 from click.types import Path as ClickPath
 from rich.logging import RichHandler
 
-from rules_check.check import DEFAULT_CHECKS, run_checks_on_rules
+from rules_check.check import COMPLEX_CHECKS, SIMPLE_CHECKS, run_checks_on_rules
 from rules_check.evaluate import analyze_checks_results
 from rules_check.models import AddressGroup, AddressObject, SecurityRule
 from rules_check.resolve import resolve_rules_addresses
 
 if TYPE_CHECKING:
-    from click import Context
+    pass
 
 LOG_FORMAT = "%(message)s"
 LOG_DEFAULT_LEVEL = "INFO"
@@ -35,44 +36,87 @@ logger = logging.getLogger(__name__)
 
 
 @click.group(no_args_is_help=True, add_help_option=True)
-@click.pass_context
-def main(ctx: "Context"):
+def main():
     """Rules Check"""
-    logger.info(f"{ctx.default_map}")
 
 
 @main.command("run")
+@click.argument("checks_list", default="simple", nargs=1)
 @click.option(
     "--security-rules",
     "-sr",
     "security_rules_file",
     type=ClickPath(exists=True, dir_okay=False, path_type=Path),
-    default=Path("./data/security_rules.json"),
-    show_default=True,
     help="Path to JSON file with Security Rules",
 )
 @click.option(
     "--address-groups",
     "-ag",
     "address_groups_file",
-    type=ClickPath(exists=True, dir_okay=False, path_type=Path),
-    default=Path("./data/address_groups.json"),
-    show_default=True,
+    type=ClickPath(exists=False, dir_okay=False, path_type=Path),
     help="Path to JSON file with Address Groups",
 )
 @click.option(
     "--address-objects",
     "-ao",
     "address_objects_file",
-    type=ClickPath(exists=True, dir_okay=False, path_type=Path),
-    default=Path("./data/address_objects.json"),
-    show_default=True,
+    type=ClickPath(exists=False, dir_okay=False, path_type=Path),
     help="Path to JSON file with Address Objects",
 )
-def main_run(security_rules_file, address_objects_file, address_groups_file):
+def main_run(
+    checks_list, security_rules_file, address_objects_file, address_groups_file
+):
+    checks = SIMPLE_CHECKS
+    if not security_rules_file:
+        raise ClickException("No path was provided for --security-rules/-sr")
+
     security_rules = SecurityRule.load_from_json(security_rules_file)
-    address_objects = AddressObject.load_from_json(address_objects_file)
-    address_groups = AddressGroup.load_from_json(address_groups_file)
+    if checks_list == "complex":
+        if not address_groups_file or not address_objects_file:
+            logger.warning(
+                "Cannot run complex checks without Address Groups and Address Objects files."
+            )
+        else:
+            address_objects = AddressObject.load_from_json(address_objects_file)
+            address_groups = AddressGroup.load_from_json(address_groups_file)
+
+            security_rules = resolve_rules_addresses(
+                security_rules, address_objects, address_groups
+            )
+            checks = COMPLEX_CHECKS
+
+    logger.info("Starting shadowed Rules detection")
+    logger.info(f"Number of Rules to check: {len(security_rules)}")
+    logger.info(f"Number of Checks: {len(checks)}")
+    for check in checks:
+        logger.info(f"- {check.__name__}")
+    logger.info("Finished shadowed Rules detection. Analyzing results")
+
+    results = run_checks_on_rules(security_rules, checks)
+    analyze_checks_results(results)
+
+    rich.print(results)
+
+
+@main.command("run-example")
+def main_run_example():
+    logger.info("Running an example")
+
+    from rules_check.tests.conftest import (
+        get_example_address_groups_path,
+        get_example_address_objects_path,
+        get_example_security_rules_path,
+    )
+
+    security_rules = SecurityRule.load_from_json(
+        get_example_security_rules_path()
+    )
+    address_objects = AddressObject.load_from_json(
+        get_example_address_objects_path()
+    )
+    address_groups = AddressGroup.load_from_json(
+        get_example_address_groups_path()
+    )
 
     security_rules = resolve_rules_addresses(
         security_rules, address_objects, address_groups
@@ -80,12 +124,12 @@ def main_run(security_rules_file, address_objects_file, address_groups_file):
 
     logger.info("Starting shadowed Rules detection")
     logger.info(f"Number of Rules to check: {len(security_rules)}")
-    logger.info(f"Number of Checks: {len(DEFAULT_CHECKS)}")
-    for check in DEFAULT_CHECKS:
+    logger.info(f"Number of Checks: {len(SIMPLE_CHECKS)}")
+    for check in SIMPLE_CHECKS:
         logger.info(f"- {check.__name__}")
     logger.info("Finished shadowed Rules detection. Analyzing results")
 
-    results = run_checks_on_rules(security_rules, DEFAULT_CHECKS)
+    results = run_checks_on_rules(security_rules, SIMPLE_CHECKS)
     analyze_checks_results(results)
 
     rich.print(results)

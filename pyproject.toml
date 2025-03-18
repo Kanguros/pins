@@ -107,3 +107,4 @@ addopts = "-ra -v"
 testpaths = [
     "rules_check/tests"
 ]
+log_cli = true

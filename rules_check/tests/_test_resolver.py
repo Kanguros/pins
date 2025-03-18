@@ -3,7 +3,7 @@ from pathlib import Path
 
 import rich
 
-from rules_check.check import DEFAULT_CHECKS, run_checks_on_rules
+from rules_check.check import SIMPLE_CHECKS, run_checks_on_rules
 from rules_check.models import (
     AddressGroup,
     AddressObject,
@@ -32,6 +32,6 @@ def test_resolver():
 
 def test_run_default_checks_on_rules():
     security_rules = SecurityRule.load_many(security_rules_data)
-    checks_results = run_checks_on_rules(security_rules, DEFAULT_CHECKS)
+    checks_results = run_checks_on_rules(security_rules, SIMPLE_CHECKS)
     rich.print(checks_results)
     assert checks_results
