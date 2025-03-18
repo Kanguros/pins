@@ -1,13 +1,15 @@
-[tool.poetry]
+[project]
 name = "rules_check"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = [
-    "Kamil Urbanek <urbanek.kamil@gmail.com>",
+    { name = "Kamil Urbanek", email = "urbanek.kamil@gmail.com" },
 ]
+requires-python = ">=3.9"
+
+[tool.poetry]
 readme = "README.md"
 license = "MIT"
-
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -22,6 +24,7 @@ pytest = "^8.3.5"
 [project.scripts]
 rulescheck = 'rules_check.__main__:main'
 rc = 'rules_check.__main__:main'
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

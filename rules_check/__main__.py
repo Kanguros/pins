@@ -34,12 +34,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-@click.group(no_args_is_help=True,
-             add_help_option=True)
+@click.group(no_args_is_help=True, add_help_option=True)
 @click.pass_context
 def main(ctx: "Context"):
     """Rules Check"""
-    logger.info(f"{ctx}")
+    logger.info(f"{ctx.default_map}")
 
 
 @main.command("run")
