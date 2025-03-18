@@ -3,7 +3,7 @@ name = "rules_check"
 version = "0.1.0"
 description = ""
 authors = [
-    { name = "Kamil Urbanek", email = "urbanek.kamil@gmail.com" },
+    "Kamil Urbanek <urbanek.kamil@gmail.com>",
 ]
 readme = "README.md"
 license = "MIT"
