@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import rich
 import rich_click as click
@@ -10,6 +11,9 @@ from rules_check.check import DEFAULT_CHECKS, run_checks_on_rules
 from rules_check.evaluate import analyze_checks_results
 from rules_check.models import AddressGroup, AddressObject, SecurityRule
 from rules_check.resolve import resolve_rules_addresses
+
+if TYPE_CHECKING:
+    from click import Context
 
 LOG_FORMAT = "%(message)s"
 LOG_DEFAULT_LEVEL = "INFO"
@@ -30,7 +34,15 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-@click.command(add_help_option=True)
+@click.group(no_args_is_help=True,
+             add_help_option=True)
+@click.pass_context
+def main(ctx: "Context"):
+    """Rules Check"""
+    logger.info(f"{ctx}")
+
+
+@main.command("run")
 @click.option(
     "--security-rules",
     "-sr",
@@ -58,8 +70,7 @@ logger = logging.getLogger(__name__)
     show_default=True,
     help="Path to JSON file with Address Objects",
 )
-def main(security_rules_file, address_objects_file, address_groups_file):
-    """SRF stands for Shadowing Rules Finder"""
+def main_run(security_rules_file, address_objects_file, address_groups_file):
     security_rules = SecurityRule.load_from_json(security_rules_file)
     address_objects = AddressObject.load_from_json(address_objects_file)
     address_groups = AddressGroup.load_from_json(address_groups_file)

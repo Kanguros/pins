@@ -12,7 +12,6 @@ repos:
           - id: pytest
             name: pytest
             entry: pytest
-            args: ["rules_check/tests"]
             language: system
             types: [python]
             pass_filenames: false

@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Literal, Optional, Union
 
-from pydantic import AliasChoices, AliasPath, BaseModel, Field
+from pydantic import AliasChoices, AliasPath, BaseModel, Field, field_validator
 from pydantic.networks import IPv4Network
 from typing_extensions import Self
 
