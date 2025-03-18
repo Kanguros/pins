@@ -23,27 +23,21 @@ Once installed, you can run it using `rulescheck` or `rc` command:
 rc --help
 ```
 
-To see an example how does it works, run
+To see an example how does it works, run:
 
 ```sh
 rc run-example
 ```
 
-For example, to check firewall rules from a configuration file:
+To check your own firewall rules:
 
 ```sh
-rc check my_firewall_config.json
+rc run --security-rules policies.json
 ```
 
 ## Contribution & Development
 
 If you'd like to contribute, follow these steps:
-
-1. Clone the repository.
-2. Install dependencies using `poetry install`.
-3. Use `pre-commit` for linting, testing, and validation.
-
-To run tests and ensure code quality:
 
 ```sh
 git clone https://github.com/Kanguros/rules_check
