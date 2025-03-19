@@ -14,7 +14,11 @@ from click import ClickException
 from click.types import Path as ClickPath
 from rich.logging import RichHandler
 
-from policy_inspector.check import COMPLEX_CHECKS, SIMPLE_CHECKS, run_checks_on_rules
+from policy_inspector.check import (
+    COMPLEX_CHECKS,
+    SIMPLE_CHECKS,
+    run_checks_on_rules,
+)
 from policy_inspector.evaluate import analyze_checks_results
 from policy_inspector.models import AddressGroup, AddressObject, SecurityRule
 from policy_inspector.resolve import resolve_rules_addresses
@@ -75,7 +79,7 @@ def main():
     help="Path to JSON file with Address Objects",
 )
 def main_run(
-        checks_list, security_rules_file, address_objects_file, address_groups_file
+    checks_list, security_rules_file, address_objects_file, address_groups_file
 ):
     """
     Execute

@@ -7,16 +7,27 @@ Analysis of a firewall security policies.
 
 ## What _Policy Inspector_ really is?
 
-It is a CLI tool which main purpose is to analyze firewall security policies against a predefined checks. 
+It is a CLI tool which main purpose is to analyze firewall security policies against a predefined checks.
 
 It started as a tool to detect shadowing firewall rules. During development, it evolved
 into a small framework that allows to define different checks very easily.
 
+## How does it work?
+
+It's pretty straightforward.
+
+1. Loads security policies from file.
+2. Filter them to exclude unwanted policies.
+3. Execute selected list of checks for each security policy.
+4. Gather outputs from each check for all security policy.
+
 ## What _checks_ are?
+
+A _check_ is simply a function. It takes security policy or policies as an argument, assess whether the policies fulfill a check or not.
 
 ## Installation
 
-You can install _Rules Check_ using `pip`, `poetry` or `pipx`:
+You can install using:
 
 ```shell
 pip install policy_inspector
@@ -32,28 +43,28 @@ pipx install policy_inspector
 
 ## Usage
 
-Once installed, you can run it using `rulescheck` or `rc` command:
+Once installed, you can run it using `policyinspector` or just `pi` command:
 
 ```shell
-rc --help
+pi --help
 ```
 
 To see an example how does it works, run:
 
 ```shell
-rc run-example
+pi run-example
 ```
 
 To check your own firewall rules:
 
 ```shell
-rc run --security-rules policies.json
+pi run --security-rules policies.json
 ```
 
 ## Example
 
 ```shell
-$ rc run-example
+$ pi run-example
 
 INFO     Running an example
 INFO     Starting shadowed Rules detection
@@ -113,7 +124,7 @@ INFO     [rule3-allow-dns] Rule not shadowed
 If you'd like to contribute, follow these steps:
 
 ```shell
-git clone https://github.com/Kanguros/rules_check
+git clone https://github.com/Kanguros/policy_inspector
 cd policy_inspector
 poetry install --with=dev
 pre-commit install --install-hooks
