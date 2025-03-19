@@ -1,18 +1,24 @@
 import logging
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import rich
-import rich_click as click
+
+if int(os.environ.get("DISABLE_RICH_CLICK", 0)):
+    import click
+else:
+    import rich_click as click
+
 from click import ClickException
 from click.types import Path as ClickPath
 from rich.logging import RichHandler
 
-from rules_check.check import COMPLEX_CHECKS, SIMPLE_CHECKS, run_checks_on_rules
-from rules_check.evaluate import analyze_checks_results
-from rules_check.models import AddressGroup, AddressObject, SecurityRule
-from rules_check.resolve import resolve_rules_addresses
-from rules_check.utils import verbose_option
+from policy_inspector.check import COMPLEX_CHECKS, SIMPLE_CHECKS, run_checks_on_rules
+from policy_inspector.evaluate import analyze_checks_results
+from policy_inspector.models import AddressGroup, AddressObject, SecurityRule
+from policy_inspector.resolve import resolve_rules_addresses
+from policy_inspector.utils import verbose_option
 
 if TYPE_CHECKING:
     pass
@@ -69,7 +75,7 @@ def main():
     help="Path to JSON file with Address Objects",
 )
 def main_run(
-    checks_list, security_rules_file, address_objects_file, address_groups_file
+        checks_list, security_rules_file, address_objects_file, address_groups_file
 ):
     """
     Execute
@@ -111,7 +117,7 @@ def main_run(
 def main_run_example():
     logger.info("Running an example")
 
-    from rules_check.tests.conftest import (
+    from policy_inspector.tests.conftest import (
         get_example_address_groups_path,
         get_example_address_objects_path,
         get_example_security_rules_path,

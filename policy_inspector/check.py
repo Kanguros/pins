@@ -1,7 +1,7 @@
 import logging
 from typing import Any, Callable, Union
 
-from rules_check.models import AnyObj, SecurityRule
+from policy_inspector.models import AnyObj, SecurityRule
 
 CheckOutput = tuple[Union[None, bool], str]
 """Return data format of a ``RuleCheckFunction``.

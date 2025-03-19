@@ -3,14 +3,14 @@ from pathlib import Path
 
 import rich
 
-from rules_check.check import SIMPLE_CHECKS, run_checks_on_rules
-from rules_check.models import (
+from policy_inspector.check import SIMPLE_CHECKS, run_checks_on_rules
+from policy_inspector.models import (
     AddressGroup,
     AddressObject,
     SecurityRule,
 )
-from rules_check.resolve import resolve_rules_addresses
-from rules_check.utils import load_json
+from policy_inspector.resolve import resolve_rules_addresses
+from policy_inspector.utils import load_json
 
 data_dir = Path(__file__).parent.parent / "data"
 security_rules_data = load_json(data_dir / "security_rules.json")

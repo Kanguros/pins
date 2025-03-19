@@ -2,17 +2,17 @@
 
 import pytest
 
-from rules_check.models import (
+from policy_inspector.models import (
     AddressGroup,
     AddressObject,
     SecurityRule,
 )
-from rules_check.tests.conftest import (
+from policy_inspector.tests.conftest import (
     get_example_address_groups_path,
     get_example_address_objects_path,
     get_example_security_rules_path,
 )
-from rules_check.utils import load_json
+from policy_inspector.utils import load_json
 
 security_rules_data = load_json(get_example_security_rules_path())
 address_objects_data = load_json(get_example_address_objects_path())

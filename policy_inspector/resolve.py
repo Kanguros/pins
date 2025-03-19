@@ -2,7 +2,7 @@ import logging
 from ipaddress import IPv4Network
 from typing import Union
 
-from rules_check.models import (
+from policy_inspector.models import (
     AddressGroup,
     AddressObject,
     AnyObj,

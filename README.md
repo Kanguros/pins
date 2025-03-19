@@ -1,43 +1,58 @@
-# Rules Check
+> [!CAUTION]
+> Package is under active development. Things might and will change.
 
-It is a CLI tool to analyze _a firewall_ security policies.
+# Policy Inspector
 
-Rules Checker started as a tool to detect overlapping firewall rules, known as shadowing. During development, it evolved
-into a straightforward framework that allows to define different checks very easily.
+Analysis of a firewall security policies.
+
+## What _Policy Inspector_ really is?
+
+It is a CLI tool which main purpose is to analyze firewall security policies against a predefined checks. 
+
+It started as a tool to detect shadowing firewall rules. During development, it evolved
+into a small framework that allows to define different checks very easily.
+
+## What _checks_ are?
 
 ## Installation
 
 You can install _Rules Check_ using `pip`, `poetry` or `pipx`:
 
-```sh
-pip install rules_check
-poetry add rules_check
-pipx install rules_check
+```shell
+pip install policy_inspector
+```
+
+```shell
+poetry add policy_inspector
+```
+
+```shell
+pipx install policy_inspector
 ```
 
 ## Usage
 
 Once installed, you can run it using `rulescheck` or `rc` command:
 
-```sh
+```shell
 rc --help
 ```
 
 To see an example how does it works, run:
 
-```sh
+```shell
 rc run-example
 ```
 
 To check your own firewall rules:
 
-```sh
+```shell
 rc run --security-rules policies.json
 ```
 
 ## Example
 
-```sh
+```shell
 $ rc run-example
 
 INFO     Running an example
@@ -97,9 +112,9 @@ INFO     [rule3-allow-dns] Rule not shadowed
 
 If you'd like to contribute, follow these steps:
 
-```sh
+```shell
 git clone https://github.com/Kanguros/rules_check
-cd rules_check
+cd policy_inspector
 poetry install --with=dev
 pre-commit install --install-hooks
 pre-commit run --all-files

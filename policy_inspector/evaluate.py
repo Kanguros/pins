@@ -1,6 +1,6 @@
 import logging
 
-from rules_check.check import RulesChecksResults
+from policy_inspector.check import RulesChecksResults
 
 logger = logging.getLogger(__name__)
 

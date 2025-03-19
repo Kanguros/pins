@@ -1,7 +1,7 @@
 import pytest
 from click.testing import CliRunner
 
-from rules_check.__main__ import main
+from policy_inspector.__main__ import main
 
 
 @pytest.fixture(scope="session")
