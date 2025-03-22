@@ -48,7 +48,7 @@ def main():
     """Rules Check"""
 
 
-@click.group(no_args_is_help=True)
+@main.group(no_args_is_help=True)
 @verbose_option()
 def run():
     """Execute one of the predefined scenarios."""
@@ -70,7 +70,7 @@ def run_shadowing(security_rules_file):
     results = scenario.analyze(output)
 
 
-@main.command("complex_shadowing")
+@run.command("complex_shadowing")
 @verbose_option()
 @click.option(
     "--security-rules",

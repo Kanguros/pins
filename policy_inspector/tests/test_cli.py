@@ -1,7 +1,11 @@
+import os
+
 import pytest
 from click.testing import CliRunner
 
 from policy_inspector.__main__ import main
+
+os.environ["DISABLE_RICH_CLICK"] = "1"
 
 
 @pytest.fixture(scope="session")
@@ -10,7 +14,7 @@ def runner():
 
 
 @pytest.mark.parametrize("args", [None, ["--help"]])
-def test_command_rc_help(runner, args):
+def test_main_command_help(runner, args):
     result = runner.invoke(main, args, color=False)
 
     assert result.exit_code == 0
@@ -19,8 +23,8 @@ def test_command_rc_help(runner, args):
         assert phrase in result.output
 
 
-# def test_command_run_example(runner):
-#     result = runner.invoke(main, ["run-example"])
+# def test_run_command(runner):
+#     result = runner.invoke(main, ["run"])
 #     assert result.exit_code == 0
 #     phrases = [
 #         " [rule3-allow-dns] Rule not shadowed ",
