@@ -95,19 +95,29 @@ ignore = [
     "B011",
     # Avoid specifying long messages outside the exception class
     "TRY003",
-    # Use of `assert` detected
-    "S101",
     # Logging statement uses f-string
     "G004",
     "E501",
     "EM102", # Exception must not use an f-string literal, assign to variable first
     "S311"  # Standard pseudo-random generators are not suitable for cryptographic purposes
+    "D100",  # Missing docstring in public module
 ]
 
 
 [tool.ruff.format]
 docstring-code-format = true
 docstring-code-line-length = 72
+
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402"]
+"**/{tests,docs,scripts}/*" = [
+    "E402",
+    "ANN201",  # Missing return type annotation for public function
+    "ANN001",  # Missing type annotation for function argument
+    "S101",  # Use of `assert` detected
+    "D103",  # Missing docstring in public function
+]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
