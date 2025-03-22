@@ -67,7 +67,7 @@ def run_shadowing(security_rules_file):
     security_rules = load_from_file(SecurityRule, security_rules_file)
     scenario = ShadowingScenario(security_rules)
     output = scenario.execute()
-    results = scenario.analyze(output)
+    scenario.analyze(output)
 
 
 @run.command("complex_shadowing")
@@ -101,7 +101,7 @@ def run_complex_shadowing(
     address_objects = load_from_file(AddressObject, address_objects_file)
     scenario = ComplexShadowing(security_rules, address_groups, address_objects)
     output = scenario.execute()
-    results = scenario.analyze(output)
+    scenario.analyze(output)
 
 
 if __name__ == "__main__":
