@@ -63,33 +63,32 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-select = ["ALL"]
-#select = [
-#    "E", # pycodestyle error
-#    "F", # flake8 error
-#    "A", # builtin shadowing
-#    "B", # flake8 bugbear
-#    "BLE", # aboid bare excepts
-#    "C4", # simplify comprehensions
-#    "DTZ", # datetime errors
-#    "FBT", # avoid boolean trap
-#    "G", # logging format
-#    "I", # isort imports
-#    "N", # conform to PEP8 naming rules
-#    "RET", # return values
-#    "S", # bandit
-#    "TRY", # exceptions antipatterns
-#    "UP", # upgade syntax
-#    "W", # pycodestyle warning
-#    "YTT", # wrong usage of sys.info
-    "ANN",
-"ANN003",
-"ANN001",
-"ANN201"
-"D100",
-"D101",
-"D103",
-#]
+#select = ["ALL"]
+select = [
+    "E", # pycodestyle error
+    "F", # flake8 error
+    "A", # builtin shadowing
+    "B", # flake8 bugbear
+    "BLE", # aboid bare excepts
+    "C4", # simplify comprehensions
+    "DTZ", # datetime errors
+    "FBT", # avoid boolean trap
+    "G", # logging format
+    "I", # isort imports
+    "N", # conform to PEP8 naming rules
+    "RET", # return values
+    "S", # bandit
+    "TRY", # exceptions antipatterns
+    "UP", # upgade syntax
+    "W", # pycodestyle warning
+    "YTT", # wrong usage of sys.info
+    "ANN003",
+    "ANN001",
+    "ANN201",
+    "D100",
+    "D101",
+    "D103",
+]
 ignore = [
     # only relevant if you run a script with `python -0`,
     # which seems unlikely for any of the scripts in this repo
@@ -101,7 +100,7 @@ ignore = [
     # Logging statement uses f-string
     "G004",
     "E501",
-    "EM102",  # Exception must not use an f-string literal, assign to variable first
+    "EM102", # Exception must not use an f-string literal, assign to variable first
     "S311"  # Standard pseudo-random generators are not suitable for cryptographic purposes
 ]
 
