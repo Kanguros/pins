@@ -26,7 +26,7 @@ logging.basicConfig(
             show_path=False,
             show_time=False,
             omit_repeated_times=False,
-        )
+        ),
     ],
 )
 

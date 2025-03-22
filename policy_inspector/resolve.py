@@ -35,14 +35,14 @@ class AddressLookup:
         self.cache: dict[Union[str, tuple[str]], set[IPv4Network]] = {}
 
     def resolve(self, names: set[str]) -> set[IPv4Network]:
-        """
-        Resolve given names of ``Address Groups`` or ``Address Objects``  into actual IP address.
+        """Resolve given names of ``Address Groups`` or ``Address Objects``  into actual IP address.
 
         Args:
             names: Names of ``Address Groups`` or ``Address Objects``
 
         Returns:
             Unique ``IPv4Network``.
+
         """
         resolved = set()
         stack = list(names)
@@ -73,7 +73,7 @@ class AddressLookup:
                 self.cache[current] = set(ip_network)
             except ValueError as ex:
                 raise ValueError(
-                    f"Unknown address object or group: {current}"
+                    f"Unknown address object or group: {current}",
                 ) from ex
 
         self.cache[tuple(names)] = resolved
@@ -85,8 +85,7 @@ def resolve_rules_addresses(
     address_objects: list[AddressObject],
     address_groups: list[AddressGroup],
 ) -> list[SecurityRule]:
-    """
-    Resolve Security Rules source_addresses and destination_addresses values
+    """Resolve Security Rules source_addresses and destination_addresses values
     of Address Objects and Address Groups to an actual IP addresses.
     """
     resolver = AddressLookup(address_objects, address_groups)
@@ -110,6 +109,6 @@ def resolve_rules_addresses(
 
     if errors:
         raise ValueError(
-            f"Failed to resolve rules addresses: {' | '.join(errors)}"
+            f"Failed to resolve rules addresses: {' | '.join(errors)}",
         )
     return rules

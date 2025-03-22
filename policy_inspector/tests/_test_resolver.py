@@ -24,7 +24,9 @@ def test_resolver():
     address_groups = AddressGroup.load_many(address_groups_data)
 
     resolved_security_rules = resolve_rules_addresses(
-        security_rules, address_objects, address_groups
+        security_rules,
+        address_objects,
+        address_groups,
     )
     for resolved_rule in resolved_security_rules:
         rich.print(resolved_rule)

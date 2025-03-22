@@ -26,10 +26,12 @@ class SecurityRule(MainModel):
         description="Name of a rule.",
     )
     enabled: bool = Field(
-        default=True, description="Whether the policy is enabled or disabled"
+        default=True,
+        description="Whether the policy is enabled or disabled",
     )
     action: Action = Field(
-        ..., description="Whether the traffic should be allowed or denied."
+        ...,
+        description="Whether the traffic should be allowed or denied.",
     )
     source_zones: Union[SetStr, AnyObjType] = Field(
         ...,
@@ -78,7 +80,6 @@ class SecurityRule(MainModel):
     @classmethod
     def parse_json(cls, data: dict) -> "SecurityRule":
         """Map a JSON object to a SecurityRule."""
-
         mapping = {
             "@name": "name",
             "source": "source_addresses",
@@ -156,7 +157,8 @@ class AddressGroup(MainModel):
 class AddressObject(MainModel):
     name: str = Field(..., description="Name of the address object.")
     ip_netmask: str = Field(
-        ..., description="IP address and netmask of the address object."
+        ...,
+        description="IP address and netmask of the address object.",
     )
 
     @classmethod

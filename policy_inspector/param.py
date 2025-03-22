@@ -11,7 +11,7 @@ from policy_inspector.models import AddressGroup, AddressObject, SecurityRule
 def verbose_option() -> Callable:
     """Wrapper around Click ``option``. Sets logger and its handlers to the ``DEBUG`` level."""
 
-    def callback(ctx, param, value) -> None:  # noqa: FBT001
+    def callback(ctx, param, value) -> None:
         if not value:
             return
         logger = logging.getLogger()
@@ -48,6 +48,7 @@ def model_argument(model_cls, arg, **kwargs) -> Callable:
         @model_argument(MyModel, 'model_file')
         def cli(model_file):
             process(model_file)
+
     """
 
     def callback(ctx, param, value: str):
@@ -57,7 +58,9 @@ def model_argument(model_cls, arg, **kwargs) -> Callable:
             return load_from_file(model_cls, value)
         except FileNotFoundError:
             raise BadParameter(
-                f"File '{value}' not found!", ctx=ctx, param=param
+                f"File '{value}' not found!",
+                ctx=ctx,
+                param=param,
             ) from None
 
     kwargs = {
@@ -79,6 +82,7 @@ def security_rules_argument():
         @security_rules_argument()
         def cli(security_rules):
             process(security_rules)
+
     """
     return model_argument(SecurityRule, "security_rules")
 
@@ -94,6 +98,7 @@ def address_groups_argument():
         @security_rules_argument()
         def cli(security_rules):
             process(security_rules)
+
     """
     return model_argument(AddressGroup, "address_groups")
 
@@ -109,5 +114,6 @@ def address_objects_argument():
         @security_rules_argument()
         def cli(security_rules):
             process(security_rules)
+
     """
     return model_argument(AddressObject, "address_objects")

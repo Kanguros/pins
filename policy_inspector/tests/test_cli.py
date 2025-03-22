@@ -5,7 +5,7 @@ from policy_inspector.__main__ import main
 
 
 @pytest.mark.parametrize("args", [None, ["--help"]])
-def test_main_command_help(runner, args):
+def test_main_command_help(args):
     result = CliRunner().invoke(main, args, color=True)
 
     assert result.exit_code == 0
@@ -16,7 +16,7 @@ def test_main_command_help(runner, args):
 
 
 @pytest.mark.parametrize("arg", [None, "--help"])
-def test_run_command(runner, arg):
+def test_run_command(arg):
     args = ["run"]
     if arg:
         args.append(arg)
@@ -25,7 +25,7 @@ def test_run_command(runner, arg):
     phrases = [
         " Execute one of the predefined scenarios. ",
         "shadowing",
-        "complex_shadowing"
+        "complex_shadowing",
     ]
     for phrase in phrases:
         assert phrase in result.output

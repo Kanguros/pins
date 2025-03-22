@@ -26,7 +26,8 @@ PrecedingRulesOutputs = dict[str, ChecksOutputs]
 
 
 def check_action(
-    rule: "SecurityRule", preceding_rule: "SecurityRule"
+    rule: "SecurityRule",
+    preceding_rule: "SecurityRule",
 ) -> CheckOutput:
     """Check if the action is the same in both rules."""
     result = rule.action == preceding_rule.action
@@ -35,7 +36,8 @@ def check_action(
 
 
 def check_source_zone(
-    rule: "SecurityRule", preceding_rule: "SecurityRule"
+    rule: "SecurityRule",
+    preceding_rule: "SecurityRule",
 ) -> CheckOutput:
     """Checks the source zones of the preceding rule."""
     if rule.source_zones == preceding_rule.source_zones:
@@ -51,7 +53,8 @@ def check_source_zone(
 
 
 def check_destination_zone(
-    rule: "SecurityRule", preceding_rule: "SecurityRule"
+    rule: "SecurityRule",
+    preceding_rule: "SecurityRule",
 ) -> CheckOutput:
     """Checks the destination zones of the preceding rule."""
     if rule.destination_zones == preceding_rule.destination_zones:
@@ -67,7 +70,8 @@ def check_destination_zone(
 
 
 def check_source_address(
-    rule: "SecurityRule", preceding_rule: "SecurityRule"
+    rule: "SecurityRule",
+    preceding_rule: "SecurityRule",
 ) -> CheckOutput:
     """Checks the source addresses of the preceding rule's addresses."""
     if AnyObj in preceding_rule.source_addresses:
@@ -86,10 +90,12 @@ def check_source_address(
 
 
 def check_destination_address(
-    rule: "SecurityRule", preceding_rule: "SecurityRule"
+    rule: "SecurityRule",
+    preceding_rule: "SecurityRule",
 ) -> CheckOutput:
     """Checks if the destination addresses are
-    identical, allow any, or are subsets of the preceding rule's addresses."""
+    identical, allow any, or are subsets of the preceding rule's addresses.
+    """
     if AnyObj in preceding_rule.destination_addresses:
         return True, "Preceding rule allows any destination address"
 
@@ -97,7 +103,7 @@ def check_destination_address(
         return True, "Destination addresses are the same"
 
     if preceding_rule.destination_addresses.issubset(
-        rule.destination_addresses
+        rule.destination_addresses,
     ):
         return (
             True,
@@ -108,7 +114,8 @@ def check_destination_address(
 
 
 def check_application(
-    rule: "SecurityRule", preceding_rule: "SecurityRule"
+    rule: "SecurityRule",
+    preceding_rule: "SecurityRule",
 ) -> CheckOutput:
     """Checks the applications of the preceding rule."""
     rule_apps = rule.applications
@@ -127,10 +134,12 @@ def check_application(
 
 
 def check_services(
-    rule: "SecurityRule", preceding_rule: "SecurityRule"
+    rule: "SecurityRule",
+    preceding_rule: "SecurityRule",
 ) -> CheckOutput:
     """Checks if the rule's ports are the same
-    or a subset of the preceding rule's ports."""
+    or a subset of the preceding rule's ports.
+    """
     if rule.services == preceding_rule.services:
         return True, "Preceding rule and rule's services are the same"
 
@@ -169,7 +178,8 @@ class ShadowingScenario:
             for j in range(i):
                 preceding_rule = rules[j]
                 output[preceding_rule.name] = self.run_checks(
-                    rule, preceding_rule
+                    rule,
+                    preceding_rule,
                 )
             logger.info(f"{cid} Checking rule finished.")
             results[rule.name] = output
@@ -182,7 +192,7 @@ class ShadowingScenario:
         for check in self.checks:
             try:
                 results[check.__name__] = check(*rules)
-            except Exception as ex:  # noqa: BLE001
+            except Exception as ex:
                 logger.exception(f"Error occur during running {check}. {ex}")  # noqa: TRY401
         return results
 
@@ -199,7 +209,7 @@ class ShadowingScenario:
                 ):
                     shadowed = True
                     logger.info(
-                        f"[{rule_name}] Rule is shadowed by: {preceding_rule_name}"
+                        f"[{rule_name}] Rule is shadowed by: {preceding_rule_name}",
                     )
 
             if not shadowed:

@@ -8,7 +8,8 @@ FilterFunction = Callable[["SecurityRule"], bool]
 
 
 def apply_filters(
-    filters: Iterable[FilterFunction], policies: Iterable["SecurityRule"]
+    filters: Iterable[FilterFunction],
+    policies: Iterable["SecurityRule"],
 ) -> Iterator["SecurityRule"]:
     """Apply a set of filter functions to security policies.
 
@@ -25,9 +26,11 @@ def apply_filters(
         filtered_policies = apply_filters(filters, policies)
         for policy in filtered_policies:
             print(policy)
+
     """
     return filter(
-        lambda p: all(filter_func(p) for filter_func in filters), policies
+        lambda p: all(filter_func(p) for filter_func in filters),
+        policies,
     )
 
 

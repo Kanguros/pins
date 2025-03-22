@@ -92,8 +92,9 @@ def random_ip_network() -> str:
     """Generate a random IPv4 network."""
     return str(
         IPv4Network(
-            (random.randint(0, 2**32 - 1), random.randint(8, 24)), strict=False
-        )
+            (random.randint(0, 2**32 - 1), random.randint(8, 24)),
+            strict=False,
+        ),
     )
 
 
@@ -139,17 +140,15 @@ def generate_security_rule(rule_id: int):
     )
 
     return SecurityRule(
-        **{
-            "name": f"rule_{rule_id}",
-            "action": random.choice(ACTIONS),
-            "source_zones": src_zone,
-            "destination_zones": dst_zone,
-            "source_addresses": src_addresses,
-            "destination_addresses": dst_addresses,
-            "applications": applications,
-            "services": services,
-            "category": {AnyObj},
-        }
+        name=f"rule_{rule_id}",
+        action=random.choice(ACTIONS),
+        source_zones=src_zone,
+        destination_zones=dst_zone,
+        source_addresses=src_addresses,
+        destination_addresses=dst_addresses,
+        applications=applications,
+        services=services,
+        category={AnyObj},
     )
 
 

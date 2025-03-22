@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 def load_json(
-    file_path: Union[str, Path], encoding: str = "utf-8"
+    file_path: Union[str, Path],
+    encoding: str = "utf-8",
 ) -> Union[list[dict], Any]:
     """Loads JSON file from given file_path and return it's content."""
     with open(file_path, encoding=encoding) as file:
@@ -19,7 +20,8 @@ def load_json(
 
 
 def load_csv(
-    file_path: Union[str, Path], encoding: str = "utf-8"
+    file_path: Union[str, Path],
+    encoding: str = "utf-8",
 ) -> Union[list[dict], Any]:
     """Loads CSV file from given file_path and return it's content."""
     with open(file_path, encoding=encoding) as file:
@@ -41,7 +43,8 @@ ModelClass = TypeVar("ModelClass", bound="MainModel")
 
 
 def load_from_file(
-    model_cls: type[ModelClass], file_path: Union[str, Path]
+    model_cls: type[ModelClass],
+    file_path: Union[str, Path],
 ) -> list[ModelClass]:
     """Load example from a given file and create instances of the specified model class.
 
@@ -61,6 +64,7 @@ def load_from_file(
         example = load_from_file(MyModel, 'example.json')
         for item in example:
             print(item)
+
     """
     file_path = Path(file_path)
     logger.debug(f"Loading {model_cls} from {file_path}")
@@ -82,7 +86,9 @@ def load_from_file(
 
 
 def get_example_file_path(
-    model_cls: type[ModelClass], dir_name: str, suffix: str = "json"
+    model_cls: type[ModelClass],
+    dir_name: str,
+    suffix: str = "json",
 ) -> Path:
     examples_dir = Path(__file__).parent / "example" / dir_name
     return examples_dir / f"{model_cls.__name__.lower()}.{suffix}"
