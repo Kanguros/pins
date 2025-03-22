@@ -1,27 +1,23 @@
 # ruff: noqa: N802
 import pytest
 
-from policy_inspector.load import load_from_file
+from policy_inspector.load import load_from_file, get_example_file_path
 from policy_inspector.models import (
     AddressGroup,
     AddressObject,
     SecurityRule,
 )
-from policy_inspector.tests.conftest import (
-    get_example_address_groups_path,
-    get_example_address_objects_path,
-    get_example_security_rules_path,
-)
 
 
 @pytest.mark.parametrize(
-    "model,filepath",
+    "model,example_name",
     [
-        (SecurityRule, get_example_security_rules_path()),
-        (AddressGroup, get_example_address_groups_path()),
-        (AddressObject, get_example_address_objects_path()),
+        (SecurityRule, "example1"),
+        (AddressGroup, "example1"),
+        (AddressObject, "example1"),
     ],
 )
-def test_load_from_file(model, filepath):
-    items = load_from_file(model, filepath)
+def test_load_from_file(model, example_name):
+    file_path = get_example_file_path(model, example_name)
+    items = load_from_file(model, file_path)
     assert all(isinstance(item, model) for item in items)

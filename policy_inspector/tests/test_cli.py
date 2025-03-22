@@ -5,7 +5,10 @@ from click.testing import CliRunner
 
 from policy_inspector.__main__ import main
 
-os.environ["DISABLE_RICH_CLICK"] = "1"
+
+@pytest.fixture(autouse=True)
+def disable_cli_color():
+    os.environ["NO_COLOR"] = "1"
 
 
 @pytest.fixture(scope="session")
@@ -23,12 +26,12 @@ def test_main_command_help(runner, args):
         assert phrase in result.output
 
 
-# def test_run_command(runner):
-#     result = runner.invoke(main, ["run"])
-#     assert result.exit_code == 0
-#     phrases = [
-#         " [rule3-allow-dns] Rule not shadowed ",
-#         "[rule-example2] Rule is shadowed by: rule-example1",
-#     ]
-#     for phrase in phrases:
-#         assert phrase in result.output
+def test_run_command(runner):
+    result = runner.invoke(main, ["run"])
+    assert result.exit_code == 0
+    phrases = [
+        " [rule3-allow-dns] Rule not shadowed ",
+        "[rule-example2] Rule is shadowed by: rule-example1",
+    ]
+    for phrase in phrases:
+        assert phrase in result.output

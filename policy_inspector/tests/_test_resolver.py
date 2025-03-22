@@ -10,7 +10,7 @@ from policy_inspector.models import (
 )
 from policy_inspector.resolve import resolve_rules_addresses
 from policy_inspector.shadowing import SIMPLE_CHECKS, run_checks_on_rules
-from policy_inspector.utils import load_json
+from load import load_json
 
 data_dir = Path(__file__).parent.parent / "example"
 security_rules_data = load_json(data_dir / "securityrule.example1.json")

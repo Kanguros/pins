@@ -1,6 +1,5 @@
 import logging
 import os
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from policy_inspector.scenario.complex_shadowing import ComplexShadowing
@@ -11,11 +10,14 @@ if int(os.environ.get("DISABLE_RICH_CLICK", 0)):
 else:
     import rich_click as click
 
-from click.types import Path as ClickPath
 from rich.logging import RichHandler
 
-from policy_inspector.models import AddressGroup, AddressObject, SecurityRule
-from policy_inspector.cli_utils import verbose_option, model_argument
+from policy_inspector.cli_utils import (
+    address_groups_argument,
+    address_objects_argument,
+    security_rules_argument,
+    verbose_option,
+)
 
 if TYPE_CHECKING:
     pass
@@ -53,49 +55,24 @@ def run():
     """Execute one of the predefined scenarios."""
 
 
-@run.command("shadowing")
+@run.command("shadowing", no_args_is_help=True)
 @verbose_option()
-@model_argument(SecurityRule,
-                 "security_rules")
+@security_rules_argument()
 def run_shadowing(security_rules):
     scenario = ShadowingScenario(security_rules)
     output = scenario.execute()
     scenario.analyze(output)
 
 
-@run.command("complex_shadowing")
+@run.command("complex_shadowing", no_args_is_help=True)
 @verbose_option()
-@click.option(
-    "--security-rules",
-    "-sr",
-    "security_rules_file",
-    type=ClickPath(exists=True, dir_okay=False, path_type=Path),
-    help="Path to JSON file with Security Rules",
-)
-@click.option(
-    "--address-groups",
-    "-ag",
-    "address_groups_file",
-    type=ClickPath(exists=True, dir_okay=False, path_type=Path),
-    help="Path to JSON file with Address Groups",
-)
-@click.option(
-    "--address-objects",
-    "-ao",
-    "address_objects_file",
-    type=ClickPath(exists=True, dir_okay=False, path_type=Path),
-    help="Path to JSON file with Address Objects",
-)
-def run_complex_shadowing(
-        security_rules_file, address_objects_file, address_groups_file
-):
-    pass
-    # security_rules = load_from_file(SecurityRule, security_rules_file)
-    # address_groups = load_from_file(AddressGroup, address_groups_file)
-    # address_objects = load_from_file(AddressObject, address_objects_file)
-    # scenario = ComplexShadowing(security_rules, address_groups, address_objects)
-    # output = scenario.execute()
-    # scenario.analyze(output)
+@security_rules_argument()
+@address_groups_argument()
+@address_objects_argument()
+def run_complex_shadowing(security_rules, address_groups, address_objects):
+    scenario = ComplexShadowing(security_rules, address_groups, address_objects)
+    output = scenario.execute()
+    scenario.analyze(output)
 
 
 if __name__ == "__main__":

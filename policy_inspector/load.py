@@ -1,22 +1,40 @@
+import csv
+import json
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeVar, Union
-
-from policy_inspector.utils import load_csv, load_json
+from typing import TYPE_CHECKING, TypeVar, Union, Any
 
 if TYPE_CHECKING:
     from policy_inspector.models import MainModel
 
 logger = logging.getLogger(__name__)
 
+
+def load_json(
+        file_path: Union[str, Path], encoding: str = "utf-8"
+) -> Union[list[dict], Any]:
+    """Loads JSON file from given file_path and return it's content."""
+    with open(file_path, encoding=encoding) as file:
+        return json.loads(file.read())
+
+
+def load_csv(
+        file_path: Union[str, Path], encoding: str = "utf-8"
+) -> Union[list[dict], Any]:
+    """Loads CSV file from given file_path and return it's content."""
+    with open(file_path, encoding=encoding) as file:
+        reader = csv.DictReader(file)
+        return list(reader)
+
+
+loaders = {".json": load_json, ".csv": load_csv}
+"""Mapping of file extensions to example loading functions."""
+
 parsers = {
     ".csv": "parse_csv",
     ".json": "parse_json",
 }
 """Mapping of file extensions to parser method names."""
-
-loaders = {".json": load_json, ".csv": load_csv}
-"""Mapping of file extensions to example loading functions."""
 
 ModelClass = TypeVar("ModelClass", bound="MainModel")
 """Type variable for model classes derived from MainModel."""
@@ -63,8 +81,8 @@ def load_from_file(
     return [parser(item) for item in data]
 
 
-def load_example(model_cls: type[ModelClass], name: str, suffix: str = ".json") -> list[ModelClass]:
+def get_example_file_path(model_cls: type[ModelClass], name: str, suffix: str = "json") -> Path:
     examples_dir = Path(__file__).parent / "example"
     model_name = model_cls.__name__.lower()
-    file_path = examples_dir / f"{model_name}.{name}{suffix}"
-    return load_from_file(model_cls, file_path)
+    return examples_dir / ".".join((model_name,name, suffix))
+
