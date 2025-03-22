@@ -14,3 +14,11 @@ def get_example_address_groups_path() -> Path:
 def get_example_address_objects_path() -> Path:
     data_dir = Path(__file__).parent / "data"
     return data_dir / "address_objects.json"
+
+
+class MockObject:
+    """Mock class to use in tests."""
+
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)

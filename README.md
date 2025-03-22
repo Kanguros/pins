@@ -68,7 +68,7 @@ $ pi run-example
 
 INFO     Running an example
 INFO     Starting shadowed Rules detection
-INFO     Number of Rules to check: 3
+INFO     Number of Rules to scenario: 3
 INFO     Number of Checks: 7
 INFO     Finished shadowed Rules detection. Analyzing results
 INFO     [1/3][rule-example1] Checking rule against 0 preceding Rules

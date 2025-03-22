@@ -3,25 +3,19 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import rich
+from policy_inspector.load import load_from_file
+from policy_inspector.scenario.complex_shadowing import ComplexShadowing
+from policy_inspector.scenario.shadowing import ShadowingScenario
 
 if int(os.environ.get("DISABLE_RICH_CLICK", 0)):
     import click
 else:
     import rich_click as click
 
-from click import ClickException
 from click.types import Path as ClickPath
 from rich.logging import RichHandler
 
-from policy_inspector.check import (
-    COMPLEX_CHECKS,
-    SIMPLE_CHECKS,
-    run_checks_on_rules,
-)
-from policy_inspector.evaluate import analyze_checks_results
 from policy_inspector.models import AddressGroup, AddressObject, SecurityRule
-from policy_inspector.resolve import resolve_rules_addresses
 from policy_inspector.utils import verbose_option
 
 if TYPE_CHECKING:
@@ -54,8 +48,29 @@ def main():
     """Rules Check"""
 
 
-@main.command("run")
-@click.argument("checks_list", default="simple", nargs=1)
+@click.group(no_args_is_help=True)
+@verbose_option()
+def run():
+    """Execute one of the predefined scenarios."""
+
+
+@run.command("shadowing")
+@verbose_option()
+@click.option(
+    "--security-rules",
+    "-sr",
+    "security_rules_file",
+    type=ClickPath(exists=True, dir_okay=False, path_type=Path),
+    help="Path to file with Security Rules.",
+)
+def run_shadowing(security_rules_file):
+    security_rules = load_from_file(SecurityRule, security_rules_file)
+    scenario = ShadowingScenario(security_rules)
+    output = scenario.execute()
+    results = scenario.analyze(output)
+
+
+@main.command("complex_shadowing")
 @verbose_option()
 @click.option(
     "--security-rules",
@@ -68,90 +83,25 @@ def main():
     "--address-groups",
     "-ag",
     "address_groups_file",
-    type=ClickPath(exists=False, dir_okay=False, path_type=Path),
+    type=ClickPath(exists=True, dir_okay=False, path_type=Path),
     help="Path to JSON file with Address Groups",
 )
 @click.option(
     "--address-objects",
     "-ao",
     "address_objects_file",
-    type=ClickPath(exists=False, dir_okay=False, path_type=Path),
+    type=ClickPath(exists=True, dir_okay=False, path_type=Path),
     help="Path to JSON file with Address Objects",
 )
-def main_run(
-    checks_list, security_rules_file, address_objects_file, address_groups_file
+def run_complex_shadowing(
+    security_rules_file, address_objects_file, address_groups_file
 ):
-    """
-    Execute
-    """
-    checks = SIMPLE_CHECKS
-    if not security_rules_file:
-        raise ClickException("No path was provided for --security-rules/-sr")
-
-    security_rules = SecurityRule.load_from_json(security_rules_file)
-    if checks_list == "complex":
-        if not address_groups_file or not address_objects_file:
-            logger.error(
-                "Cannot run complex checks without Address Groups and Address Objects files."
-            )
-        else:
-            address_objects = AddressObject.load_from_json(address_objects_file)
-            address_groups = AddressGroup.load_from_json(address_groups_file)
-
-            security_rules = resolve_rules_addresses(
-                security_rules, address_objects, address_groups
-            )
-            checks = COMPLEX_CHECKS
-
-    logger.info("Starting shadowed Rules detection")
-    logger.info(f"Number of Rules to check: {len(security_rules)}")
-    logger.info(f"Number of Checks: {len(checks)}")
-    for check in checks:
-        logger.debug(f"- {check.__name__}")
-    logger.info("Finished shadowed Rules detection. Analyzing results")
-
-    results = run_checks_on_rules(security_rules, checks)
-    analyze_checks_results(results)
-
-    rich.print(results)
-
-
-@main.command("run-example")
-@verbose_option()
-def main_run_example():
-    logger.info("Running an example")
-
-    from policy_inspector.tests.conftest import (
-        get_example_address_groups_path,
-        get_example_address_objects_path,
-        get_example_security_rules_path,
-    )
-
-    security_rules = SecurityRule.load_from_json(
-        get_example_security_rules_path()
-    )
-    address_objects = AddressObject.load_from_json(
-        get_example_address_objects_path()
-    )
-    address_groups = AddressGroup.load_from_json(
-        get_example_address_groups_path()
-    )
-
-    security_rules = resolve_rules_addresses(
-        security_rules, address_objects, address_groups
-    )
-
-    logger.info("Starting shadowed Rules detection")
-    logger.info(f"Number of Rules to check: {len(security_rules)}")
-    logger.info(f"Number of Checks: {len(SIMPLE_CHECKS)}")
-    for check in SIMPLE_CHECKS:
-        logger.debug(f"- {check.__name__}")
-    logger.info("Finished shadowed Rules detection. Analyzing results")
-
-    results = run_checks_on_rules(security_rules, SIMPLE_CHECKS)
-    analyze_checks_results(results)
-
-    rich.print(results)
+    security_rules = load_from_file(SecurityRule, security_rules_file)
+    address_groups = load_from_file(AddressGroup, address_groups_file)
+    address_objects = load_from_file(AddressObject, address_objects_file)
+    scenario = ComplexShadowing(security_rules, address_groups, address_objects)
+    output = scenario.execute()
+    results = scenario.analyze(output)
 
 
 if __name__ == "__main__":

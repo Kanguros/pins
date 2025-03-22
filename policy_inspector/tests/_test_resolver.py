@@ -3,13 +3,13 @@ from pathlib import Path
 
 import rich
 
-from policy_inspector.check import SIMPLE_CHECKS, run_checks_on_rules
 from policy_inspector.models import (
     AddressGroup,
     AddressObject,
     SecurityRule,
 )
 from policy_inspector.resolve import resolve_rules_addresses
+from policy_inspector.shadowing import SIMPLE_CHECKS, run_checks_on_rules
 from policy_inspector.utils import load_json
 
 data_dir = Path(__file__).parent.parent / "data"
