@@ -16,7 +16,7 @@ parsers = {
 """Mapping of file extensions to parser method names."""
 
 loaders = {".json": load_json, ".csv": load_csv}
-"""Mapping of file extensions to data loading functions."""
+"""Mapping of file extensions to example loading functions."""
 
 ModelClass = TypeVar("ModelClass", bound="MainModel")
 """Type variable for model classes derived from MainModel."""
@@ -25,23 +25,23 @@ ModelClass = TypeVar("ModelClass", bound="MainModel")
 def load_from_file(
     model_cls: type[ModelClass], file_path: Union[str, Path]
 ) -> list[ModelClass]:
-    """Load data from a given file and create instances of the specified model class.
+    """Load example from a given file and create instances of the specified model class.
 
     Args:
-        model_cls: The model class to instantiate for each data entry.
-        file_path: The path to the JSON or CSV file containing the data.
+        model_cls: The model class to instantiate for each example entry.
+        file_path: The path to the JSON or CSV file containing the example.
 
     Returns:
         A list of instances of the specified model class, each initialized
-        with data from the file.
+        with example from the file.
 
     Raises:
         ValueError: If the file extension is unsupported or no parser method
         is found in the model class for the file type.
 
     Example:
-        data = load_from_file(MyModel, 'data.json')
-        for item in data:
+        example = load_from_file(MyModel, 'example.json')
+        for item in example:
             print(item)
     """
     file_path = Path(file_path)
@@ -61,3 +61,10 @@ def load_from_file(
 
     data = loader(file_path)
     return [parser(item) for item in data]
+
+
+def load_example(model_cls: type[ModelClass], name: str, suffix: str = ".json") -> list[ModelClass]:
+    examples_dir = Path(__file__).parent / "example"
+    model_name = model_cls.__name__.lower()
+    file_path = examples_dir / f"{model_name}.{name}{suffix}"
+    return load_from_file(model_cls, file_path)

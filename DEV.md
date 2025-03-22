@@ -26,10 +26,10 @@
 │   │   │   _test_resolver.py
 │   │   │   __init__
 │   │   │
-│   │   ├───data
-│             address_groups.json
-│             address_objects.json
-│             security_rules.json
+│   │   ├───example
+│             addressgroup.example1.json
+│             addressobject.example1.json
+│             securityrule.example1.json
 ```
 
 ## Fake rules

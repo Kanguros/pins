@@ -12,10 +12,10 @@ from policy_inspector.resolve import resolve_rules_addresses
 from policy_inspector.shadowing import SIMPLE_CHECKS, run_checks_on_rules
 from policy_inspector.utils import load_json
 
-data_dir = Path(__file__).parent.parent / "data"
-security_rules_data = load_json(data_dir / "security_rules.json")
-address_objects_data = load_json(data_dir / "address_objects.json")
-address_groups_data = load_json(data_dir / "address_groups.json")
+data_dir = Path(__file__).parent.parent / "example"
+security_rules_data = load_json(data_dir / "securityrule.example1.json")
+address_objects_data = load_json(data_dir / "addressobject.example1.json")
+address_groups_data = load_json(data_dir / "addressgroup.example1.json")
 
 
 def test_resolver():

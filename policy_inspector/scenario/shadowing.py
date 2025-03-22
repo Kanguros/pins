@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 CheckOutput = tuple[Union[None, bool], str]
-"""Return data format of a ``RuleCheckFunction``.
+"""Return example format of a ``RuleCheckFunction``.
 
 1. Status ``Union[None, bool]`` - Whether the rules pair fulfill a check.
 2. Message ``str`` - Verbose message.

@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from policy_inspector.load import load_from_file
 from policy_inspector.scenario.complex_shadowing import ComplexShadowing
 from policy_inspector.scenario.shadowing import ShadowingScenario
 
@@ -16,7 +15,7 @@ from click.types import Path as ClickPath
 from rich.logging import RichHandler
 
 from policy_inspector.models import AddressGroup, AddressObject, SecurityRule
-from policy_inspector.utils import verbose_option
+from policy_inspector.cli_utils import verbose_option, model_argument
 
 if TYPE_CHECKING:
     pass
@@ -56,15 +55,9 @@ def run():
 
 @run.command("shadowing")
 @verbose_option()
-@click.option(
-    "--security-rules",
-    "-sr",
-    "security_rules_file",
-    type=ClickPath(exists=True, dir_okay=False, path_type=Path),
-    help="Path to file with Security Rules.",
-)
-def run_shadowing(security_rules_file):
-    security_rules = load_from_file(SecurityRule, security_rules_file)
+@model_argument(SecurityRule,
+                 "security_rules")
+def run_shadowing(security_rules):
     scenario = ShadowingScenario(security_rules)
     output = scenario.execute()
     scenario.analyze(output)
@@ -94,14 +87,15 @@ def run_shadowing(security_rules_file):
     help="Path to JSON file with Address Objects",
 )
 def run_complex_shadowing(
-    security_rules_file, address_objects_file, address_groups_file
+        security_rules_file, address_objects_file, address_groups_file
 ):
-    security_rules = load_from_file(SecurityRule, security_rules_file)
-    address_groups = load_from_file(AddressGroup, address_groups_file)
-    address_objects = load_from_file(AddressObject, address_objects_file)
-    scenario = ComplexShadowing(security_rules, address_groups, address_objects)
-    output = scenario.execute()
-    scenario.analyze(output)
+    pass
+    # security_rules = load_from_file(SecurityRule, security_rules_file)
+    # address_groups = load_from_file(AddressGroup, address_groups_file)
+    # address_objects = load_from_file(AddressObject, address_objects_file)
+    # scenario = ComplexShadowing(security_rules, address_groups, address_objects)
+    # output = scenario.execute()
+    # scenario.analyze(output)
 
 
 if __name__ == "__main__":

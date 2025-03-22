@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class MainModel(BaseModel):
-    """Base class for all data models. Mainly for common methods."""
+    """Base class for all example models. Mainly for common methods."""
 
 
 class SecurityRule(MainModel):
