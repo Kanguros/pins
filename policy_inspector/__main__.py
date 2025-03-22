@@ -1,12 +1,6 @@
 import logging
-import os
-from typing import TYPE_CHECKING
-
-from policy_inspector.scenario.complex_shadowing import ComplexShadowing
-from policy_inspector.scenario.shadowing import ShadowingScenario
 
 import rich_click as click
-
 from rich.logging import RichHandler
 
 from policy_inspector.param import (
@@ -15,7 +9,8 @@ from policy_inspector.param import (
     security_rules_argument,
     verbose_option,
 )
-
+from policy_inspector.scenario.complex_shadowing import ComplexShadowing
+from policy_inspector.scenario.shadowing import ShadowingScenario
 
 LOG_FORMAT = "%(message)s"
 LOG_DEFAULT_LEVEL = "INFO"

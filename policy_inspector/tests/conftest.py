@@ -1,6 +1,3 @@
-from pathlib import Path
-
-
 class MockObject:
     """Mock class to use in tests."""
 

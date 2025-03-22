@@ -1,24 +1,12 @@
-import os
-
 import pytest
 from click.testing import CliRunner
 
 from policy_inspector.__main__ import main
 
 
-# @pytest.fixture(autouse=True)
-# def disable_cli_color():
-#     os.environ["NO_COLOR"] = "1"
-
-
-@pytest.fixture(scope="session")
-def runner():
-    return CliRunner()
-
-
 @pytest.mark.parametrize("args", [None, ["--help"]])
 def test_main_command_help(runner, args):
-    result = runner.invoke(main, args, color=True)
+    result = CliRunner().invoke(main, args, color=True)
 
     assert result.exit_code == 0
     phrases = [" Commands ", "run", "Usage"]
@@ -27,12 +15,17 @@ def test_main_command_help(runner, args):
         assert phrase in result.output
 
 
-def test_run_command(runner):
-    result = runner.invoke(main, ["run"])
+@pytest.mark.parametrize("arg", [None, "--help"])
+def test_run_command(runner, arg):
+    args = ["run"]
+    if arg:
+        args.append(arg)
+    result = CliRunner().invoke(main, args)
     assert result.exit_code == 0
     phrases = [
-        " [rule3-allow-dns] Rule not shadowed ",
-        "[rule-example2] Rule is shadowed by: rule-example1",
+        " Execute one of the predefined scenarios. ",
+        "shadowing",
+        "complex_shadowing"
     ]
     for phrase in phrases:
         assert phrase in result.output
