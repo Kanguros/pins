@@ -2,6 +2,7 @@
 from pathlib import Path
 
 import rich
+from load import load_json
 
 from policy_inspector.models import (
     AddressGroup,
@@ -10,7 +11,6 @@ from policy_inspector.models import (
 )
 from policy_inspector.resolve import resolve_rules_addresses
 from policy_inspector.shadowing import SIMPLE_CHECKS, run_checks_on_rules
-from load import load_json
 
 data_dir = Path(__file__).parent.parent / "example"
 security_rules_data = load_json(data_dir / "securityrule.example1.json")

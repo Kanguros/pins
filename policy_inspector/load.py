@@ -2,7 +2,7 @@ import csv
 import json
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeVar, Union, Any
+from typing import TYPE_CHECKING, Any, TypeVar, Union
 
 if TYPE_CHECKING:
     from policy_inspector.models import MainModel
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def load_json(
-        file_path: Union[str, Path], encoding: str = "utf-8"
+    file_path: Union[str, Path], encoding: str = "utf-8"
 ) -> Union[list[dict], Any]:
     """Loads JSON file from given file_path and return it's content."""
     with open(file_path, encoding=encoding) as file:
@@ -19,7 +19,7 @@ def load_json(
 
 
 def load_csv(
-        file_path: Union[str, Path], encoding: str = "utf-8"
+    file_path: Union[str, Path], encoding: str = "utf-8"
 ) -> Union[list[dict], Any]:
     """Loads CSV file from given file_path and return it's content."""
     with open(file_path, encoding=encoding) as file:
@@ -81,8 +81,9 @@ def load_from_file(
     return [parser(item) for item in data]
 
 
-def get_example_file_path(model_cls: type[ModelClass], name: str, suffix: str = "json") -> Path:
+def get_example_file_path(
+    model_cls: type[ModelClass], name: str, suffix: str = "json"
+) -> Path:
     examples_dir = Path(__file__).parent / "example"
     model_name = model_cls.__name__.lower()
-    return examples_dir / ".".join((model_name,name, suffix))
-
+    return examples_dir / ".".join((model_name, name, suffix))
