@@ -6,9 +6,9 @@ from click.testing import CliRunner
 from policy_inspector.__main__ import main
 
 
-@pytest.fixture(autouse=True)
-def disable_cli_color():
-    os.environ["NO_COLOR"] = "1"
+# @pytest.fixture(autouse=True)
+# def disable_cli_color():
+#     os.environ["NO_COLOR"] = "1"
 
 
 @pytest.fixture(scope="session")
@@ -18,10 +18,11 @@ def runner():
 
 @pytest.mark.parametrize("args", [None, ["--help"]])
 def test_main_command_help(runner, args):
-    result = runner.invoke(main, args, color=False)
+    result = runner.invoke(main, args, color=True)
 
     assert result.exit_code == 0
     phrases = [" Commands ", "run", "Usage"]
+    print(result.output)
     for phrase in phrases:
         assert phrase in result.output
 

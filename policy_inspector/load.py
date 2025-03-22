@@ -82,8 +82,7 @@ def load_from_file(
 
 
 def get_example_file_path(
-    model_cls: type[ModelClass], name: str, suffix: str = "json"
+    model_cls: type[ModelClass], dir_name: str, suffix: str = "json"
 ) -> Path:
-    examples_dir = Path(__file__).parent / "example"
-    model_name = model_cls.__name__.lower()
-    return examples_dir / ".".join((model_name, name, suffix))
+    examples_dir = Path(__file__).parent / "example" / dir_name
+    return examples_dir / f"{model_cls.__name__.lower()}.{suffix}"

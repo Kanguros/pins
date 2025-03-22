@@ -5,22 +5,17 @@ from typing import TYPE_CHECKING
 from policy_inspector.scenario.complex_shadowing import ComplexShadowing
 from policy_inspector.scenario.shadowing import ShadowingScenario
 
-if int(os.environ.get("DISABLE_RICH_CLICK", 0)):
-    import click
-else:
-    import rich_click as click
+import rich_click as click
 
 from rich.logging import RichHandler
 
-from policy_inspector.cli_utils import (
+from policy_inspector.param import (
     address_groups_argument,
     address_objects_argument,
     security_rules_argument,
     verbose_option,
 )
 
-if TYPE_CHECKING:
-    pass
 
 LOG_FORMAT = "%(message)s"
 LOG_DEFAULT_LEVEL = "INFO"
@@ -46,7 +41,7 @@ logger = logging.getLogger(__name__)
 @click.group(no_args_is_help=True, add_help_option=True)
 @verbose_option()
 def main():
-    """Rules Check"""
+    """Policy Inspector"""
 
 
 @main.group(no_args_is_help=True)
