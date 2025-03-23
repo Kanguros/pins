@@ -1,7 +1,8 @@
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Union
+from typing import TYPE_CHECKING, Any, Callable, Union, ClassVar
 
 from policy_inspector.models import AnyObj
+from scenario.base import run_checks
 
 if TYPE_CHECKING:
     from policy_inspector.models import SecurityRule
@@ -152,7 +153,7 @@ def check_services(
 class ShadowingScenario:
     """Scenario to find what Security Rules are being shadowed by which preceding Security Rules."""
 
-    checks = [
+    checks: ClassVar = [
         check_action,
         check_application,
         check_services,
@@ -167,6 +168,7 @@ class ShadowingScenario:
 
     def execute(self) -> dict[str, PrecedingRulesOutputs]:
         rules = self.security_rules
+        checks = self.checks
         rules_count = len(rules)
 
         results = {}
@@ -177,7 +179,8 @@ class ShadowingScenario:
             output = {}
             for j in range(i):
                 preceding_rule = rules[j]
-                output[preceding_rule.name] = self.run_checks(
+                output[preceding_rule.name] = run_checks(
+                    checks,
                     rule,
                     preceding_rule,
                 )
@@ -185,15 +188,6 @@ class ShadowingScenario:
             results[rule.name] = output
 
         logger.info("Shadowed rules detection complete")
-        return results
-
-    def run_checks(self, *rules: "SecurityRule") -> dict[str, Any]:
-        results = {}
-        for check in self.checks:
-            try:
-                results[check.__name__] = check(*rules)
-            except Exception as ex:
-                logger.exception(f"Error occur during running {check}. {ex}")  # noqa: TRY401
         return results
 
     def analyze(

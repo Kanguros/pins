@@ -1,7 +1,7 @@
 # ruff: noqa: N802
 import pytest
 
-from policy_inspector.load import get_example_file_path, load_from_file
+from policy_inspector.loader import get_example_file_path, load_from_file
 from policy_inspector.models import (
     AddressGroup,
     AddressObject,

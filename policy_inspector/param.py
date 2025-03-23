@@ -1,10 +1,12 @@
 import logging
 from typing import Callable
 
+from pathlib import Path
+
 from click import BadParameter, argument, option
 from click.types import Path as ClickPath
 
-from policy_inspector.load import get_example_file_path, load_from_file
+from policy_inspector.loader import get_example_file_path, load_from_file
 from policy_inspector.models import AddressGroup, AddressObject, SecurityRule
 
 
@@ -54,6 +56,8 @@ def model_argument(model_cls, arg, **kwargs) -> Callable:
     def callback(ctx, param, value: str):
         if value.startswith("example"):
             value = get_example_file_path(model_cls, value)
+        else:
+            value = Path(value)
         try:
             return load_from_file(model_cls, value)
         except FileNotFoundError:

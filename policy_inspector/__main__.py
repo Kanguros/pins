@@ -39,13 +39,20 @@ def main():
     """Policy Inspector"""
 
 
-@main.group(no_args_is_help=True)
+@main.group("run",no_args_is_help=True)
 @verbose_option()
-def run():
-    """Execute one of the predefined scenarios."""
+def main_run():
+    """Execute Scenario."""
 
 
-@run.command("shadowing", no_args_is_help=True)
+@main.group("list")
+@verbose_option()
+def main_list():
+    """List available Scenarios."""
+
+
+
+@main_run.command("shadowing", no_args_is_help=True)
 @verbose_option()
 @security_rules_argument()
 def run_shadowing(security_rules):
@@ -54,7 +61,7 @@ def run_shadowing(security_rules):
     scenario.analyze(output)
 
 
-@run.command("complex_shadowing", no_args_is_help=True)
+@main_run.command("complex_shadowing", no_args_is_help=True)
 @verbose_option()
 @security_rules_argument()
 @address_groups_argument()

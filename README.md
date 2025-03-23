@@ -7,19 +7,33 @@ Analysis of a firewall security policies.
 
 ## What _Policy Inspector_ really is?
 
-It is a CLI tool which main purpose is to analyze firewall security policies against a predefined checks.
+It is a CLI tool which main purpose is to analyze firewall 
+security policies against a predefined scenario.
 
 It started as a tool to detect shadowing firewall rules. During development, it evolved
-into a small framework that allows to define different checks very easily.
+into a small framework that allows to define different scenario very 
+easily.
 
 ## How does it work?
 
 It's pretty straightforward.
 
-1. Loads security policies from file.
-2. Filter them to exclude unwanted policies.
-3. Execute selected list of checks for each security policy.
-4. Gather outputs from each check for all security policy.
+1. Get desire scenario.
+2. Loads security policies from file.
+3. Filter them to exclude unwanted policies.
+4. Execute selected scenario's checks for each security policy.
+5. Evaluate check's results.
+
+```mermaid
+flowchart TD
+    SelectScenario[Select Scenario]
+    SelectScenario --> LoadRules[Load Security Rules]
+    LoadRules --> FilterRules[Filter Security Rules]
+    FilterRules --> RunChecks[Run Checks for each Rule]
+    RunChecks --> Collect[Collect Results]
+    Collect --> Analyze[Analyze Results]
+    Analyze --> Report[Create Report]
+```
 
 ## What _checks_ are?
 

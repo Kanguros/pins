@@ -22,7 +22,7 @@
 │   ├───tests
 │   │   │   conftest.py
 │   │   │   test_cli.py
-│   │   │   test_load.py
+│   │   │   test_loader.py
 │   │   │   _test_resolver.py
 │   │   │   __init__
 │   │   │

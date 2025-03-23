@@ -34,36 +34,36 @@ class SecurityRule(MainModel):
         description="Whether the traffic should be allowed or denied.",
     )
     source_zones: Union[SetStr, AnyObjType] = Field(
-        ...,
+        default={"any"},
         description="Set of source zones or 'any'",
     )
     destination_zones: Union[SetStr, AnyObjType] = Field(
-        ...,
+        default={"any"},
         description="Set of destination zones or 'any'",
     )
 
     source_addresses: Union[SetStr, AnyObjType] = Field(
-        ...,
+        default={"any"},
         description="Source address objects/groups or 'any'",
     )
 
     destination_addresses: Union[SetStr, AnyObjType] = Field(
-        ...,
+        default={"any"},
         description="Destination address objects/groups or 'any'",
     )
 
     applications: Union[SetStr, AnyObjType] = Field(
-        ...,
+        default={"any"},
         description="Set of applications or 'any' that the rule applies to.",
     )
 
     services: Union[SetStr, AnyObjType, AppDefaultType] = Field(
-        ...,
+        default_factory=set,
         description="Services (e.g., TCP/UDP ports) or 'any'/'application-default'",
     )
 
     category: Union[SetStr, AnyObjType] = Field(
-        ...,
+        default={"any"},
         description="URL categories or 'any'",
     )
 
