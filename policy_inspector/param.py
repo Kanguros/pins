@@ -1,7 +1,6 @@
 import logging
-from typing import Callable
-
 from pathlib import Path
+from typing import Callable
 
 from click import BadParameter, argument, option
 from click.types import Path as ClickPath

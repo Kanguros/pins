@@ -11,16 +11,16 @@ logger = logging.getLogger(__name__)
 
 
 def load_json(
-        file_path: Path,
-        encoding: str = "utf-8",
+    file_path: Path,
+    encoding: str = "utf-8",
 ) -> Union[list[dict], Any]:
     """Loads JSON file from given file_path and return it's content."""
     return json.loads(file_path.read_text(encoding=encoding))
 
 
 def load_csv(
-        file_path: Path,
-        encoding: str = "utf-8",
+    file_path: Path,
+    encoding: str = "utf-8",
 ) -> Union[list[dict], Any]:
     """Loads CSV file from given file_path and return it's content."""
     return list(csv.DictReader(file_path.open(encoding=encoding)))
@@ -31,10 +31,7 @@ ModelClass = TypeVar("ModelClass", bound="MainModel")
 
 
 class FileHandler:
-    _loaders = {
-        'json': load_json,
-        'csv': load_csv
-    }
+    _loaders = {"json": load_json, "csv": load_csv}
     """Mapping of file extensions to example loading functions."""
 
     @classmethod
@@ -42,7 +39,9 @@ class FileHandler:
         cls._loaders[extension] = loader
 
     @classmethod
-    def load_for_model(cls, model_cls: type[ModelClass], file_path: Path) -> list[ModelClass]:
+    def load_for_model(
+        cls, model_cls: type[ModelClass], file_path: Path
+    ) -> list[ModelClass]:
         """Main entry point for loading model data from files"""
         ext = file_path.suffix.lower().lstrip(".")
 
@@ -60,7 +59,9 @@ class FileHandler:
         return [parser_method(item) for item in raw_items]
 
 
-def load_from_file(model_cls: type[ModelClass], file_path: Path) -> list[ModelClass]:
+def load_from_file(
+    model_cls: type[ModelClass], file_path: Path
+) -> list[ModelClass]:
     """Load example from a given file and create instances of the specified model class.
 
     Args:
@@ -81,9 +82,9 @@ def load_from_file(model_cls: type[ModelClass], file_path: Path) -> list[ModelCl
 
 
 def get_example_file_path(
-        model_cls: type[ModelClass],
-        dir_name: str,
-        suffix: str = "json",
+    model_cls: type[ModelClass],
+    dir_name: str,
+    suffix: str = "json",
 ) -> Path:
     examples_dir = Path(__file__).parent / "example" / dir_name
     return examples_dir / f"{model_cls.__name__.lower()}.{suffix}"

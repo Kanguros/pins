@@ -7,11 +7,11 @@ Analysis of a firewall security policies.
 
 ## What _Policy Inspector_ really is?
 
-It is a CLI tool which main purpose is to analyze firewall 
+It is a CLI tool which main purpose is to analyze firewall
 security policies against a predefined scenario.
 
 It started as a tool to detect shadowing firewall rules. During development, it evolved
-into a small framework that allows to define different scenario very 
+into a small framework that allows to define different scenario very
 easily.
 
 ## How does it work?

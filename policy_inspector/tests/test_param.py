@@ -5,7 +5,7 @@ import click
 import pytest
 from click.testing import CliRunner
 
-from policy_inspector.param import verbose_option, model_argument
+from policy_inspector.param import model_argument, verbose_option
 
 
 # Fixtures
@@ -49,5 +49,3 @@ def test_model_argument_file_not_found(cli_runner):
     result = cli_runner.invoke(test_cmd_model, ["missing.json"])
     assert result.exit_code == 2
     assert "File 'missing.json' not found" in str(result.output)
-
-

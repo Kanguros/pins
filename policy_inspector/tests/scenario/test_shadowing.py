@@ -17,7 +17,7 @@ def base_rules():
             source_addresses={"any"},
             destination_addresses={"any"},
             applications={"web"},
-            services={"http"}
+            services={"http"},
         ),
         SecurityRule(
             name="rule2",
@@ -27,7 +27,7 @@ def base_rules():
             source_addresses={"any"},
             destination_addresses={"any"},
             applications={"web"},
-            services={"http"}
+            services={"http"},
         ),
         SecurityRule(  # Should be shadowed by rule1
             name="rule3",
@@ -37,8 +37,8 @@ def base_rules():
             source_addresses={"any"},
             destination_addresses={"any"},
             applications={"web"},
-            services={"http"}
-        )
+            services={"http"},
+        ),
     ]
 
 
@@ -58,7 +58,7 @@ def different_rules():
             destination_zones={"zoneY"},
             source_addresses={"192.168.1.1"},
             destination_addresses={"10.2.111.2"},
-            applications={"ssh"}
+            applications={"ssh"},
         ),
         SecurityRule(
             name="ruleB",
@@ -67,8 +67,8 @@ def different_rules():
             destination_zones={"zoneQ"},
             source_addresses={"10.0.0.1"},
             destination_addresses={"10.2.2.2"},
-            applications={"http"}
-        )
+            applications={"http"},
+        ),
     ]
 
 
@@ -83,8 +83,9 @@ def identical_rules():
             source_addresses={"any"},
             destination_addresses={"any"},
             applications={"web"},
-            services={"http"}
-        ) for i in range(3)
+            services={"http"},
+        )
+        for i in range(3)
     ]
 
 
@@ -101,11 +102,14 @@ def test_single_rule(base_rules):
     assert results["rule1"] == {}
 
 
-@pytest.mark.parametrize("rule_index,expected_preceding", [
-    (0, 0),  # First rule has no preceding
-    (1, 1),  # Second rule checks 1 preceding
-    (2, 2)  # Third rule checks 2 preceding
-])
+@pytest.mark.parametrize(
+    "rule_index,expected_preceding",
+    [
+        (0, 0),  # First rule has no preceding
+        (1, 1),  # Second rule checks 1 preceding
+        (2, 2),  # Third rule checks 2 preceding
+    ],
+)
 def test_rule_preceding_counts(base_rules, rule_index, expected_preceding):
     scenario = ShadowingScenario(base_rules)
     results = scenario.execute()

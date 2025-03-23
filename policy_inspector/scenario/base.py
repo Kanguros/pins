@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Callable, Protocol, ClassVar, TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Protocol, TypeVar
 
 if TYPE_CHECKING:
     from policy_inspector.models import SecurityRule
@@ -18,7 +18,9 @@ class Scenario(Protocol):
 CheckCallable = TypeVar("CheckCallable", bound=Callable)
 
 
-def run_checks(checks: list[CheckCallable], *rules: "SecurityRule") -> dict[str, Any]:
+def run_checks(
+    checks: list[CheckCallable], *rules: "SecurityRule"
+) -> dict[str, Any]:
     results = {}
     for check in checks:
         try:

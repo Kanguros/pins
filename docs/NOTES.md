@@ -1,9 +1,8 @@
 # Notes
 
-
 ## Scenarios
 
-A scenario is a set of checks that evaluate firewall rules against 
+A scenario is a set of checks that evaluate firewall rules against
 specific issues or configurations. Each scenario is designed to identify particular problem.
 
 ### Available Scenarios
@@ -36,7 +35,6 @@ This scenario performs more thorough analysis by resolving IP
 addresses in your rules and comparing actual network ranges. This
 helps identify partial or complete shadowing at the IP address level.
 
-
 ```bash
 pi run complex_shadowing security_rules.json address_groups.json address_objects.json
 ```
@@ -65,15 +63,15 @@ A typical workflow for a network engineer might be:
 
 1. Export your firewall security rules to JSON format
 2. Run the basic shadowing check:
-   ```bash
-   pi run shadowing my_firewall_rules.json
-   ```
+    ```bash
+    pi run shadowing my_firewall_rules.json
+    ```
 3. Review which rules are shadowed
 4. For more precise analysis, export address groups and objects, then
    run:
-   ```bash
-   pi run complex_shadowing my_firewall_rules.json my_address_groups.json my_address_objects.json
-   ```
+    ```bash
+    pi run complex_shadowing my_firewall_rules.json my_address_groups.json my_address_objects.json
+    ```
 5. Use the results to clean up redundant rules in your firewall policy
 
 This approach helps maintain cleaner, more efficient firewall
@@ -81,4 +79,5 @@ configurations and improves security by reducing configuration
 complexity.
 
 ---
+
 Answer from Perplexity: pplx.ai/share

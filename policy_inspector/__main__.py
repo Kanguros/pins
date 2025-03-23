@@ -39,7 +39,7 @@ def main():
     """Policy Inspector"""
 
 
-@main.group("run",no_args_is_help=True)
+@main.group("run", no_args_is_help=True)
 @verbose_option()
 def main_run():
     """Execute Scenario."""
@@ -49,7 +49,6 @@ def main_run():
 @verbose_option()
 def main_list():
     """List available Scenarios."""
-
 
 
 @main_run.command("shadowing", no_args_is_help=True)
