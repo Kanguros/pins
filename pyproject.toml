@@ -82,12 +82,12 @@ select = [
     "UP", # upgade syntax
     "W", # pycodestyle warning
     "YTT", # wrong usage of sys.info
-    "ANN003",
-    "ANN001",
+#    "ANN003",
+#    "ANN001",
 #    "ANN201",
-    "D100",
-    "D101",
-    "D103",
+#    "D100",
+#    "D101",
+#    "D103",
 ]
 ignore = [
     # only relevant if you run a script with `python -0`,
