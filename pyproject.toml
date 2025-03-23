@@ -113,10 +113,9 @@ docstring-code-line-length = 72
 "__init__.py" = ["E402"]
 "**/{tests,docs,scripts}/*" = [
     "E402",
-    "ANN201",  # Missing return type annotation for public function
-    "ANN001",  # Missing type annotation for function argument
+    "ANN",  # Missing type annotation for function argument
     "S101",  # Use of `assert` detected
-    "D103",  # Missing docstring in public function
+    "D",  # Missing docstring in public function
 ]
 
 [tool.pytest.ini_options]

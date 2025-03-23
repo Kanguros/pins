@@ -1,9 +1,8 @@
 import logging
 from typing import TYPE_CHECKING, Callable, ClassVar, Union
 
-from policy_inspector.scenario.base import run_checks
-
 from policy_inspector.models import AnyObj
+from policy_inspector.scenario.base import run_checks
 
 if TYPE_CHECKING:
     from policy_inspector.models import SecurityRule
