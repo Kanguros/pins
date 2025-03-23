@@ -1,7 +1,7 @@
 import pytest
 
 from policy_inspector.models import SecurityRule
-from policy_inspector.scenario.shadowing import ShadowingScenario
+from policy_inspector.scenario.shadowing import Shadowing
 
 
 # Fixtures
@@ -90,13 +90,13 @@ def identical_rules():
 
 
 def test_empty_rules(empty_rules):
-    scenario = ShadowingScenario(empty_rules)
+    scenario = Shadowing(empty_rules)
     results = scenario.execute()
     assert results == {}
 
 
 def test_single_rule(base_rules):
-    scenario = ShadowingScenario([base_rules[0]])
+    scenario = Shadowing([base_rules[0]])
     results = scenario.execute()
     assert len(results) == 1
     assert results["rule1"] == {}
@@ -111,7 +111,7 @@ def test_single_rule(base_rules):
     ],
 )
 def test_rule_preceding_counts(base_rules, rule_index, expected_preceding):
-    scenario = ShadowingScenario(base_rules)
+    scenario = Shadowing(base_rules)
     results = scenario.execute()
     rule_name = base_rules[rule_index].name
     assert len(results[rule_name]) == expected_preceding
@@ -127,7 +127,7 @@ def test_rule_preceding_counts(base_rules, rule_index, expected_preceding):
 
 def test_identical_rules(identical_rules):
     """All rules are identical - last rule should be shadowed"""
-    scenario = ShadowingScenario(identical_rules)
+    scenario = Shadowing(identical_rules)
     results = scenario.execute()
     for i, rule_result in enumerate(results.values()):
         assert i == len(rule_result)

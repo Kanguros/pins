@@ -2,7 +2,7 @@ import logging
 from typing import TYPE_CHECKING, Callable, ClassVar, Union
 
 from policy_inspector.models import AnyObj
-from policy_inspector.scenario.base import run_checks
+from policy_inspector.scenario.base import Scenario
 
 if TYPE_CHECKING:
     from policy_inspector.models import SecurityRule
@@ -150,10 +150,10 @@ def check_services(
     return False, "Preceding rule does not contain all rule's applications"
 
 
-class ShadowingScenario:
+class Shadowing(Scenario):
     """Scenario to find what Security Rules are being shadowed by which preceding Security Rules."""
 
-    checks: ClassVar = [
+    checks: list[ShadowingCheckFunction] = [
         check_action,
         check_application,
         check_services,
@@ -168,7 +168,6 @@ class ShadowingScenario:
 
     def execute(self) -> dict[str, PrecedingRulesOutputs]:
         rules = self.security_rules
-        checks = self.checks
         rules_count = len(rules)
 
         results = {}
@@ -179,8 +178,7 @@ class ShadowingScenario:
             output = {}
             for j in range(i):
                 preceding_rule = rules[j]
-                output[preceding_rule.name] = run_checks(
-                    checks,
+                output[preceding_rule.name] = self.run_checks(
                     rule,
                     preceding_rule,
                 )

@@ -1,30 +1,41 @@
 import logging
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Protocol, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, TypeVar, Self
 
 if TYPE_CHECKING:
     from policy_inspector.models import SecurityRule
 
 logger = logging.getLogger(__name__)
 
-
-class Scenario(Protocol):
-    checks: ClassVar[list[Callable]] = []
-
-    def execute(self) -> Any: ...
-
-    def analyze(self, results: dict[str, Any]) -> Any: ...
+ScenarioCheck = TypeVar("ScenarioCheck", bound=Callable)
+ScenarioResults = TypeVar("ScenarioResults")
 
 
-CheckCallable = TypeVar("CheckCallable", bound=Callable)
+class Scenario:
+    scenarios: ClassVar[set[type[Self]]] = {}
 
+    checks: list[ScenarioCheck] = []
 
-def run_checks(
-    checks: list[CheckCallable], *rules: "SecurityRule"
-) -> dict[str, Any]:
-    results = {}
-    for check in checks:
-        try:
-            results[check.__name__] = check(*rules)
-        except Exception as ex:
-            logger.exception(f"Error occur during running {check}. {ex}")  # noqa: TRY401
-    return results
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.scenarios.add(cls)
+
+    @classmethod
+    def list(cls) -> set[type[Self]]:
+        return cls.scenarios
+
+    def execute(self) -> ScenarioResults:
+        raise NotImplementedError
+
+    def analyze(self, results: ScenarioResults) -> Any:
+        raise NotImplementedError
+
+    def run_checks(self,
+                   *rules: "SecurityRule"
+                   ) -> dict[str, Any]:
+        results = {}
+        for check in self.checks:
+            try:
+                results[check.__name__] = check(*rules)
+            except Exception as ex:
+                logger.exception(f"Error occur during running {check}. {ex}")  # noqa: TRY401
+        return results

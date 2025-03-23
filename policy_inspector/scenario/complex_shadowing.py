@@ -5,7 +5,7 @@ from policy_inspector.resolve import resolve_rules_addresses
 from policy_inspector.scenario.shadowing import (
     CheckOutput,
     ShadowingCheckFunction,
-    ShadowingScenario,
+    Shadowing,
     check_action,
     check_application,
     check_destination_zone,
@@ -63,8 +63,8 @@ def check_destination_addresses_by_ip(
     return True, "Preceding rule covers all destination ip addresses"
 
 
-class ComplexShadowing(ShadowingScenario):
-    checks: ClassVar[list[ShadowingCheckFunction]] = [
+class ShadowingByValue(Shadowing):
+    checks: list[ShadowingCheckFunction] = [
         check_action,
         check_application,
         check_services,
@@ -85,4 +85,4 @@ class ComplexShadowing(ShadowingScenario):
             address_objects,
             address_groups,
         )
-        self.security_rules = security_rules
+        super().__init__(security_rules)
