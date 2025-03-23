@@ -34,6 +34,7 @@ logging.basicConfig(
             tracebacks_suppress=[click],
             show_path=False,
             show_time=False,
+            show_level=False,
             omit_repeated_times=False,
         ),
     ],
@@ -61,7 +62,7 @@ def main_list() -> None:
     logger.info("Available Scenarios:")
     scenarios = Scenario.list()
     for scenario in scenarios:
-        logger.info(f"- {scenario}")
+        logger.info(f"- {scenario.__name__}")
 
 
 @main_run.command("shadowing", no_args_is_help=True)

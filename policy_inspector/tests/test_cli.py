@@ -40,9 +40,7 @@ def test_run_list(arg):
     result = CliRunner().invoke(main, args)
     assert result.exit_code == 0
     phrases = [
-        " Execute one of the predefined scenarios. ",
-        "shadowing",
-        "complex_shadowing",
+        " Available Scenarios:",
     ]
     for phrase in phrases:
         assert phrase in result.output

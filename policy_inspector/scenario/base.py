@@ -11,7 +11,7 @@ ScenarioResults = TypeVar("ScenarioResults")
 
 
 class Scenario:
-    scenarios: set[type["Scenario"]] = {}
+    scenarios: set[type["Scenario"]] = set()
 
     checks: list[ScenarioCheck] = []
 
