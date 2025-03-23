@@ -1,11 +1,11 @@
 import logging
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING
 
 from policy_inspector.resolve import resolve_rules_addresses
 from policy_inspector.scenario.shadowing import (
     CheckOutput,
-    ShadowingCheckFunction,
     Shadowing,
+    ShadowingCheckFunction,
     check_action,
     check_application,
     check_destination_zone,

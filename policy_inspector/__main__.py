@@ -10,12 +10,16 @@ from policy_inspector.param import (
     security_rules_argument,
     verbose_option,
 )
+from policy_inspector.scenario.base import Scenario
 from policy_inspector.scenario.complex_shadowing import ShadowingByValue
 from policy_inspector.scenario.shadowing import Shadowing
-from policy_inspector.scenario.base import Scenario
 
 if TYPE_CHECKING:
-    from policy_inspector.models import AddressObject, SecurityRule, AddressGroup
+    from policy_inspector.models import (
+        AddressGroup,
+        AddressObject,
+        SecurityRule,
+    )
 
 LOG_FORMAT = "%(message)s"
 LOG_DEFAULT_LEVEL = "INFO"
@@ -74,7 +78,11 @@ def run_shadowing(security_rules: list["SecurityRule"]) -> None:
 @security_rules_argument()
 @address_groups_argument()
 @address_objects_argument()
-def run_complex_shadowing(security_rules: list["SecurityRule"], address_groups: list["AddressGroup"], address_objects: list["AddressObject"]) -> None:
+def run_complex_shadowing(
+    security_rules: list["SecurityRule"],
+    address_groups: list["AddressGroup"],
+    address_objects: list["AddressObject"],
+) -> None:
     scenario = ShadowingByValue(security_rules, address_groups, address_objects)
     output = scenario.execute()
     scenario.analyze(output)

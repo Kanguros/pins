@@ -30,6 +30,7 @@ def test_run_command(arg):
     for phrase in phrases:
         assert phrase in result.output
 
+
 @pytest.mark.parametrize("arg", [None, "--help"])
 def test_run_list(arg):
     args = ["list"]

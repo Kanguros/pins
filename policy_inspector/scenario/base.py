@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, TypeVar, Self
+from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 if TYPE_CHECKING:
     from policy_inspector.models import SecurityRule
@@ -11,7 +11,7 @@ ScenarioResults = TypeVar("ScenarioResults")
 
 
 class Scenario:
-    scenarios: ClassVar[set[type[Self]]] = {}
+    scenarios: set[type["Scenario"]] = {}
 
     checks: list[ScenarioCheck] = []
 
@@ -20,7 +20,7 @@ class Scenario:
         cls.scenarios.add(cls)
 
     @classmethod
-    def list(cls) -> set[type[Self]]:
+    def list(cls) -> set[type["Scenario"]]:
         return cls.scenarios
 
     def execute(self) -> ScenarioResults:
@@ -29,9 +29,7 @@ class Scenario:
     def analyze(self, results: ScenarioResults) -> Any:
         raise NotImplementedError
 
-    def run_checks(self,
-                   *rules: "SecurityRule"
-                   ) -> dict[str, Any]:
+    def run_checks(self, *rules: "SecurityRule") -> dict[str, Any]:
         results = {}
         for check in self.checks:
             try:

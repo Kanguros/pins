@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Callable, ClassVar, Union
+from typing import TYPE_CHECKING, Callable, Union
 
 from policy_inspector.models import AnyObj
 from policy_inspector.scenario.base import Scenario

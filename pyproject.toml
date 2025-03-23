@@ -84,7 +84,7 @@ select = [
     "YTT", # wrong usage of sys.info
     "ANN003",
     "ANN001",
-    "ANN201",
+#    "ANN201",
     "D100",
     "D101",
     "D103",
