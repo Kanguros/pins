@@ -86,5 +86,6 @@ def get_example_file_path(
     dir_name: str,
     suffix: str = "json",
 ) -> Path:
+    dir_name = str(dir_name).replace("example", "").strip()
     examples_dir = Path(__file__).parent / "example" / dir_name
     return examples_dir / f"{model_cls.__name__.lower()}.{suffix}"

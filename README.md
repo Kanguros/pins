@@ -9,12 +9,12 @@ Analysis of a firewall security policies.
 
 ## What _Policy Inspector_ really is?
 
-It is a CLI tool to analyze firewall security policies against a 
+It is a CLI tool to analyze firewall security policies against a
 predefined scenarios.
 
 It started as a tool to detect shadowing firewall rules. It evolved
 into a small framework that allows to define different scenario very
-easily. 
+easily.
 
 ## Installation
 
@@ -101,11 +101,9 @@ flowchart TD
 A scenario is a set of checks that evaluate firewall rules against
 specific issues or configurations. Each scenario is designed to identify particular problem.
 
-
 ### Checks
 
 A _check_ is simply a function. It takes security policy or policies as an argument, assess whether the policies fulfill a check or not.
-
 
 ## Contribution & Development
 

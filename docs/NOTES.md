@@ -1,7 +1,5 @@
 # Notes
 
-
-
 ### Available Scenarios
 
 #### 1. Basic Shadowing
