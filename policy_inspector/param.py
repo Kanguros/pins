@@ -5,7 +5,7 @@ from typing import Callable
 from click import BadParameter, argument, option
 from click.types import Path as ClickPath
 
-from policy_inspector.loader import get_example_file_path, load_from_file
+from policy_inspector.loader import load_from_file
 from policy_inspector.models import AddressGroup, AddressObject, SecurityRule
 
 

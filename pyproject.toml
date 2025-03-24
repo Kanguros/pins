@@ -122,6 +122,6 @@ docstring-code-line-length = 72
 minversion = "8.0"
 addopts = "-ra -v"
 testpaths = [
-    "rules_check/tests"
+    "policy_inspector/tests"
 ]
 log_cli = true
