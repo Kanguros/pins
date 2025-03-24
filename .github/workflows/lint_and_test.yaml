@@ -14,24 +14,24 @@ jobs:
         strategy:
             matrix:
                 python-version:
-                    - 3.9
-                    - 3.10
-                    - 3.11
+                    - "3.9"
+                    - "3.10"
+                    - "3.11"
                 os:
                     - ubuntu-latest
                     - macos-latest
                     - windows-latest
         runs-on: ${{ matrix.os }}
         steps:
-            - name: ${{ matrix.os }} - Check out
+            - name: Check out
               uses: actions/checkout@v3
 
-            - name: ${{ matrix.os }} - Set up Python ${{ matrix.python-version }}
+            - name: Set up Python ${{ matrix.python-version }}
               uses: actions/setup-python@v5
               with:
                   python-version: ${{ matrix.python-version }}
 
-            - name: ${{ matrix.os }} - Cache Poetry
+            - name: Cache Poetry
               uses: actions/cache@v4
               with:
                   path: |
@@ -39,18 +39,18 @@ jobs:
                       ~/.cache/pypoetry
                   key: ${{ runner.os }}-poetry-${{ matrix.python-version }}-${{ hashFiles('poetry.lock') }}
 
-            - name: ${{ matrix.os }} - Install poetry
+            - name: Install poetry
               uses: abatilo/actions-poetry@v4
 
-            - name: ${{ matrix.os }} - Configure poetry
+            - name: Configure poetry
               run: |
                   poetry config virtualenvs.create true --local
                   poetry config virtualenvs.in-project true --local
 
-            - name: ${{ matrix.os }} - Install dependencies
+            - name: Install dependencies
               run: poetry install --no-interaction --with=dev
 
-            - name: ${{ matrix.os }} - Run pre-commit
+            - name: Run pre-commit
               run: poetry run pre-commit run --all-files
 
     publish:
@@ -66,10 +66,10 @@ jobs:
               with:
                   python-version: 3.11
 
-            - name: ${{ matrix.os }} - Install poetry
+            - name: Install poetry
               uses: abatilo/actions-poetry@v4
 
-            - name: ${{ matrix.os }} - Configure poetry
+            - name: Configure poetry
               run: |
                   poetry config virtualenvs.create true --local
                   poetry config virtualenvs.in-project true --local
