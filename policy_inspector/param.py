@@ -54,7 +54,7 @@ def model_argument(model_cls, arg, **kwargs) -> Callable:
 
     def callback(ctx, param, value: str):
         if value.startswith("example"):
-            value = get_example_file_path(model_cls, value)
+            value = get_example_file_path(model_cls, value.lstrip("example"))
         else:
             value = Path(value)
         try:

@@ -1,9 +1,6 @@
 # Notes
 
-## Scenarios
 
-A scenario is a set of checks that evaluate firewall rules against
-specific issues or configurations. Each scenario is designed to identify particular problem.
 
 ### Available Scenarios
 

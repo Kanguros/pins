@@ -1,55 +1,38 @@
-> [!CAUTION]
-> Package is under active development. Things might and will change.
+![logo.png](logo.png)
 
 # Policy Inspector
 
 Analysis of a firewall security policies.
 
+> [!CAUTION]
+> Package is under active development. Things might and will change.
+
 ## What _Policy Inspector_ really is?
 
-It is a CLI tool which main purpose is to analyze firewall
-security policies against a predefined scenario.
+It is a CLI tool to analyze firewall security policies against a 
+predefined scenarios.
 
-It started as a tool to detect shadowing firewall rules. During development, it evolved
+It started as a tool to detect shadowing firewall rules. It evolved
 into a small framework that allows to define different scenario very
-easily.
-
-## How does it work?
-
-It's pretty straightforward.
-
-1. Get desire scenario.
-2. Loads security policies from file.
-3. Filter them to exclude unwanted policies.
-4. Execute selected scenario's checks for each security policy.
-5. Evaluate check's results.
-
-```mermaid
-flowchart TD
-    SelectScenario[Select Scenario]
-    SelectScenario --> LoadRules[Load Security Rules]
-    LoadRules --> FilterRules[Filter Security Rules]
-    FilterRules --> RunChecks[Run Checks for each Rule]
-    RunChecks --> Collect[Collect Results]
-    Collect --> Analyze[Analyze Results]
-    Analyze --> Report[Create Report]
-```
-
-## What _checks_ are?
-
-A _check_ is simply a function. It takes security policy or policies as an argument, assess whether the policies fulfill a check or not.
+easily. 
 
 ## Installation
 
 You can install using:
 
+### pip
+
 ```shell
 pip install policy_inspector
 ```
 
+### poetry
+
 ```shell
 poetry add policy_inspector
 ```
+
+### pipx
 
 ```shell
 pipx install policy_inspector
@@ -66,72 +49,63 @@ pi --help
 To see an example how does it works, run:
 
 ```shell
-pi run-example
+pi run example1
 ```
 
 To check your own firewall rules:
 
 ```shell
-pi run --security-rules policies.json
+pi run shadowing policies.json
 ```
 
 ## Example
 
 ```shell
-$ pi run-example
-
-INFO     Running an example
-INFO     Starting shadowed Rules detection
-INFO     Number of Rules to scenario: 3
-INFO     Number of Checks: 7
-INFO     Finished shadowed Rules detection. Analyzing results
-INFO     [1/3][rule-example1] Checking rule against 0 preceding Rules
-INFO     [1/3][rule-example1] Checking rule finished.
-INFO     [2/3][rule-example2] Checking rule against 1 preceding Rules
-INFO     [2/3][rule-example2] Checking rule finished.
-INFO     [3/3][rule3-allow-dns] Checking rule against 2 preceding Rules
-INFO     [3/3][rule3-allow-dns] Checking rule finished.
-INFO     Shadowed rules detection complete
-INFO     [rule-example2] Rule is shadowed by: rule-example1
-INFO     [rule3-allow-dns] Rule not shadowed
-INFO     [rule3-allow-dns] Rule not shadowed
-{
-    'rule-example1': {},
-    'rule-example2': {
-        'rule-example1': {
-            'check_action': (True, 'Actions match'),
-            'check_application': (True, "Preceding rule contains rule's applications"),
-            'check_services': (True, "Preceding rule and rule's services are the same"),
-            'check_source_zone': (True, 'Source zones are the same'),
-            'check_destination_zone': (True, 'Source zones are the same'),
-            'check_source_address': (True, 'Preceding rule allows any source address'),
-            'check_destination_address': (True, 'Preceding rule allows any destination address')
-        }
-    },
-    'rule3-allow-dns': {
-        'rule-example1': {
-            'check_action': (True, 'Actions match'),
-            'check_application': (False, "Preceding rule does not contain all rule's applications"),
-            'check_services': (True, "Preceding rule and rule's services are the same"),
-            'check_source_zone': (False, 'Source zones differ'),
-            'check_destination_zone': (True, 'Source zones are the same'),
-            'check_source_address': (True, 'Preceding rule allows any source address'),
-            'check_destination_address': (True, 'Preceding rule allows any destination address')
-        },
-        'rule-example2': {
-            'check_action': (True, 'Actions match'),
-            'check_application': (False, "Preceding rule does not contain all rule's applications"),
-            'check_services': (True, "Preceding rule and rule's services are the same"),
-            'check_source_zone': (False, 'Source zones differ'),
-            'check_destination_zone': (True, 'Source zones are the same'),
-            'check_source_address': (False, 'Source addresses not covered at all'),
-            'check_destination_address': (False, 'Destination addresses not covered at all')
-        }
-    }
-}
-
+[1/3][rule-example1] Checking rule against 0 preceding Rules
+[1/3][rule-example1] Checking rule finished.
+[2/3][rule-example2] Checking rule against 1 preceding Rules
+[2/3][rule-example2] Checking rule finished.
+[3/3][rule3-allow-dns] Checking rule against 2 preceding Rules
+[3/3][rule3-allow-dns] Checking rule finished.
+Shadowed rules detection complete
+[rule-example1] Rule not shadowed
+[rule-example2] Rule is shadowed by: rule-example1
+[rule3-allow-dns] Rule not shadowed
 
 ```
+
+## Details
+
+### How does it work?
+
+It's pretty straightforward.
+
+1. Get desire scenario.
+2. Loads security policies from file.
+3. Filter them to exclude unwanted policies.
+4. Execute selected scenario's checks for each security policy.
+5. Evaluate check's results.
+
+```mermaid
+flowchart TD
+    SelectScenario[Select Scenario]
+    SelectScenario --> LoadRules[Load Security Rules]
+    LoadRules --> FilterRules[Filter Security Rules]
+    FilterRules --> RunChecks[Run Checks for each Rule]
+    RunChecks --> Analyze[Analyze Results]
+    Analyze --> Report[Create Report]
+```
+
+### Scenarios
+
+A scenario is a set of checks that evaluate firewall rules against
+specific issues or configurations. Each scenario is designed to identify particular problem.
+
+
+### Checks
+
+A _check_ is simply a function. It takes security policy or policies as an argument, assess whether the policies fulfill a check or not.
+
 
 ## Contribution & Development
 
