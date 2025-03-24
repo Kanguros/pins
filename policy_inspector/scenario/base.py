@@ -20,6 +20,15 @@ class Scenario:
         cls.scenarios.add(cls)
 
     @classmethod
+    def get_args(cls) -> list[str]:
+        """Get ``__init__`` arguments, except ``self``."""
+        try:
+            args = list(cls.__init__.__code__.co_varnames)
+            return args[1:]
+        except AttributeError:
+            return []
+
+    @classmethod
     def list(cls) -> set[type["Scenario"]]:
         return cls.scenarios
 

@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import rich_click as click
@@ -49,12 +50,6 @@ def main():
     """Policy Inspector"""
 
 
-@main.group("run", no_args_is_help=True)
-@verbose_option()
-def main_run():
-    """Execute Scenario."""
-
-
 @main.command("list")
 @verbose_option()
 def main_list() -> None:
@@ -63,6 +58,12 @@ def main_list() -> None:
     scenarios = Scenario.list()
     for scenario in scenarios:
         logger.info(f"- {scenario.__name__}")
+
+
+@main.group("run", no_args_is_help=True)
+@verbose_option()
+def main_run():
+    """Execute Scenario."""
 
 
 @main_run.command("shadowing", no_args_is_help=True)
@@ -87,6 +88,41 @@ def run_complex_shadowing(
     scenario = ShadowingByValue(security_rules, address_groups, address_objects)
     output = scenario.execute()
     scenario.analyze(output)
+
+
+examples = {
+    "shadowing_by_name": {
+        "kwargs": {"security_rules": Path("1/securityrule.json")},
+        "cmd": run_shadowing,
+    },
+    "shadowing_by_value": {
+        "kwargs": {
+            "security_rules": Path("1/securityrule.json"),
+            "address_groups": Path("1/addressgroup.json"),
+            "address_objects": Path("1/addressobject.json"),
+        },
+        "cmd": run_complex_shadowing,
+    },
+}
+
+examples_dir: Path = Path(__file__).parent / "example"
+
+
+@main_run.command("example", no_args_is_help=True)
+@verbose_option()
+@click.argument(
+    "name", metavar="EXAMPLE_NAME", type=click.Choice(list(examples.keys()))
+)
+@click.pass_context
+def run_example(ctx, name: str) -> None:
+    """Run one of the examples."""
+    example_params = examples[name]
+
+    kwargs = example_params["kwargs"]
+    for arg, value in kwargs.items():
+        example_params[arg] = examples_dir / value
+    command = example_params["cmd"]
+    ctx.invoke(command, **kwargs)
 
 
 if __name__ == "__main__":

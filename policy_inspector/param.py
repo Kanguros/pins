@@ -53,9 +53,7 @@ def model_argument(model_cls, arg, **kwargs) -> Callable:
     """
 
     def callback(ctx, param, value: str):
-        if value.startswith("example"):
-            value = get_example_file_path(model_cls, value.lstrip("example"))
-        else:
+        if not isinstance(value, Path):
             value = Path(value)
         try:
             return load_from_file(model_cls, value)

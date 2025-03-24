@@ -4,7 +4,6 @@ from policy_inspector.models import SecurityRule
 from policy_inspector.scenario.shadowing import Shadowing
 
 
-# Fixtures
 @pytest.fixture
 def base_rules():
     """Basic rule set with 3 rules where rule3 is shadowed by rule1"""

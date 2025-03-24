@@ -1,11 +1,11 @@
+> [!CAUTION]
+> Package is under active development. Things might and will change.
+
 ![logo.png](logo.png)
 
 # Policy Inspector
 
 Analysis of a firewall security policies.
-
-> [!CAUTION]
-> Package is under active development. Things might and will change.
 
 ## What _Policy Inspector_ really is?
 
@@ -23,24 +23,21 @@ You can install using:
 ### pip
 
 ```shell
+# pip
 pip install policy_inspector
-```
 
-### poetry
-
-```shell
+# poetry
 poetry add policy_inspector
-```
 
-### pipx
-
-```shell
+# pipx
 pipx install policy_inspector
+
 ```
 
 ## Usage
 
-Once installed, you can run it using `policyinspector` or just `pi` command:
+Once installed, you can run it using `policyinspector` or just `pi`
+command:
 
 ```shell
 pi --help
@@ -99,11 +96,13 @@ flowchart TD
 ### Scenarios
 
 A scenario is a set of checks that evaluate firewall rules against
-specific issues or configurations. Each scenario is designed to identify particular problem.
+specific issues or configurations. Each scenario is designed to
+identify particular problem.
 
 ### Checks
 
-A _check_ is simply a function. It takes security policy or policies as an argument, assess whether the policies fulfill a check or not.
+A _check_ is simply a function. It takes security policy or policies
+as an argument, assess whether the policies fulfill a check or not.
 
 ## Contribution & Development
 
