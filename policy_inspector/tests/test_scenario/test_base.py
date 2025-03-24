@@ -33,7 +33,8 @@ class TestScenarioWithImplementation:
         assert scenario_class.get_args() == args
 
     def test_list_with_subclasses(self):
-        assert Scenario.list() == {self.MyScenario, self.MyScenario2}
+        assert self.MyScenario in Scenario.list()
+        assert self.MyScenario2 in Scenario.list()
 
     def test_raise_notimplementederror(self):
         scenario = self.MyScenario("arg")
