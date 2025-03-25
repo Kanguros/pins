@@ -1,7 +1,22 @@
+import logging
+
+import click
 import pytest
 from click.testing import CliRunner
 
-from policy_inspector.__main__ import main
+from policy_inspector.__main__ import main, run_example, examples
+from policy_inspector.param import verbose_option
+
+
+@click.command()
+@verbose_option()
+def fake_cmd_verbose():
+    logging.debug("Test debug message")
+
+
+def test_verbose_option_in_help(cli_runner):
+    result = cli_runner.invoke(fake_cmd_verbose, ["--help"])
+    assert "--verbose" in result.stdout
 
 
 @pytest.mark.parametrize("args", [None, ["--help"]])
@@ -32,7 +47,7 @@ def test_run_command(arg):
 
 
 @pytest.mark.parametrize("arg", [None, "--help"])
-def test_run_list(arg):
+def test_run_list_command(arg):
     args = ["list"]
     if arg:
         args.append(arg)
@@ -44,3 +59,10 @@ def test_run_list(arg):
     # ]
     # for phrase in phrases:
     #     assert phrase in result.output
+
+
+@pytest.mark.parametrize("name", list(examples.keys()))
+def test_run_example(name):
+    result = CliRunner().invoke(run_example, [name], color=False, catch_exceptions=False)
+    print(result.stdout)
+    assert result.exit_code == 0

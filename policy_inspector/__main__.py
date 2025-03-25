@@ -3,17 +3,17 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import rich_click as click
+from click import Path as ClickPath
 from rich.logging import RichHandler
 
+from loader import load_from_file
 from policy_inspector.param import (
-    address_groups_argument,
-    address_objects_argument,
-    security_rules_argument,
     verbose_option,
 )
 from policy_inspector.scenario.base import Scenario
 from policy_inspector.scenario.complex_shadowing import ShadowingByValue
 from policy_inspector.scenario.shadowing import Shadowing
+from policy_inspector.utils import Example
 
 if TYPE_CHECKING:
     from policy_inspector.models import (
@@ -68,42 +68,46 @@ def main_run():
 
 @main_run.command("shadowing", no_args_is_help=True)
 @verbose_option()
-@security_rules_argument()
-def run_shadowing(security_rules: list["SecurityRule"]) -> None:
-    scenario = Shadowing(security_rules)
+@click.argument("security_rules_path", required=True, type=ClickPath(dir_okay=False, path_type=Path))
+def run_shadowing(security_rules_path: Path) -> None:
+    scenario = Shadowing(security_rules_path)
     output = scenario.execute()
     scenario.analyze(output)
 
 
 @main_run.command("complex_shadowing", no_args_is_help=True)
 @verbose_option()
-@security_rules_argument()
-@address_groups_argument()
-@address_objects_argument()
+@click.argument("security_rules_path", required=True, type=ClickPath(dir_okay=False, path_type=Path))
+@click.argument("address_groups_path", required=True, type=ClickPath(dir_okay=False, path_type=Path))
+@click.argument("address_objects_path", required=True, type=ClickPath(dir_okay=False, path_type=Path))
 def run_complex_shadowing(
-    security_rules: list["SecurityRule"],
-    address_groups: list["AddressGroup"],
-    address_objects: list["AddressObject"],
+        security_rules_path: Path,
+        address_groups_path: Path,
+        address_objects_path: Path,
 ) -> None:
+    security_rules = load_from_file(SecurityRule, security_rules_path)
+    address_groups = load_from_file(AddressGroup, address_groups_path)
+    address_objects = load_from_file(AddressObject, address_objects_path)
     scenario = ShadowingByValue(security_rules, address_groups, address_objects)
     output = scenario.execute()
     scenario.analyze(output)
 
 
-examples = {
-    "shadowing_by_name": {
-        "kwargs": {"security_rules": Path("1/securityrule.json")},
-        "cmd": run_shadowing,
-    },
-    "shadowing_by_value": {
-        "kwargs": {
-            "security_rules": Path("1/securityrule.json"),
-            "address_groups": Path("1/addressgroup.json"),
-            "address_objects": Path("1/addressobject.json"),
-        },
-        "cmd": run_complex_shadowing,
-    },
-}
+examples = [
+    Example(name="shadowing_by_name",
+            args=[Path("1/securityrule.json")],
+            cmd=run_shadowing
+            ),
+    Example(name="shadowing_by_value",
+            args=[Path("1/securityrule.json"),
+                  Path("1/addressgroup.json"),
+                  Path("1/addressobject.json")],
+            cmd=run_complex_shadowing
+            )
+
+]
+
+examples_by_name = {e.name: e for e in examples}
 
 examples_dir: Path = Path(__file__).parent / "example"
 
@@ -111,18 +115,15 @@ examples_dir: Path = Path(__file__).parent / "example"
 @main_run.command("example", no_args_is_help=True)
 @verbose_option()
 @click.argument(
-    "name", metavar="EXAMPLE_NAME", type=click.Choice(list(examples.keys()))
-)
+    "name", metavar="EXAMPLE_NAME", type=click.Choice(list(examples_by_name.keys())))
 @click.pass_context
 def run_example(ctx, name: str) -> None:
     """Run one of the examples."""
-    example_params = examples[name]
-
-    kwargs = example_params["kwargs"]
-    for arg, value in kwargs.items():
-        example_params[arg] = examples_dir / value
-    command = example_params["cmd"]
-    ctx.invoke(command, **kwargs)
+    example = examples_by_name[name]
+    print(f"{example=}")
+    args = [str(examples_dir / arg) for arg in example.args]
+    print(f"{args=}")
+    ctx.invoke(example.cmd, args[0])
 
 
 if __name__ == "__main__":
