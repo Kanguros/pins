@@ -2,7 +2,7 @@ import logging
 from typing import TYPE_CHECKING, Callable
 
 from policy_inspector.models import AnyObj
-from policy_inspector.scenario.base import Scenario, CheckResult
+from policy_inspector.scenario.base import CheckResult, Scenario
 
 if TYPE_CHECKING:
     from policy_inspector.models import SecurityRule
@@ -19,8 +19,8 @@ PrecedingRulesOutputs = dict[str, ChecksOutputs]
 
 
 def check_action(
-        rule: "SecurityRule",
-        preceding_rule: "SecurityRule",
+    rule: "SecurityRule",
+    preceding_rule: "SecurityRule",
 ) -> CheckResult:
     """Check if the action is the same in both rules."""
     result = rule.action == preceding_rule.action
@@ -29,8 +29,8 @@ def check_action(
 
 
 def check_source_zone(
-        rule: "SecurityRule",
-        preceding_rule: "SecurityRule",
+    rule: "SecurityRule",
+    preceding_rule: "SecurityRule",
 ) -> CheckResult:
     """Checks the source zones of the preceding rule."""
     if rule.source_zones == preceding_rule.source_zones:
@@ -46,8 +46,8 @@ def check_source_zone(
 
 
 def check_destination_zone(
-        rule: "SecurityRule",
-        preceding_rule: "SecurityRule",
+    rule: "SecurityRule",
+    preceding_rule: "SecurityRule",
 ) -> CheckResult:
     """Checks the destination zones of the preceding rule."""
     if rule.destination_zones == preceding_rule.destination_zones:
@@ -63,8 +63,8 @@ def check_destination_zone(
 
 
 def check_source_address(
-        rule: "SecurityRule",
-        preceding_rule: "SecurityRule",
+    rule: "SecurityRule",
+    preceding_rule: "SecurityRule",
 ) -> CheckResult:
     """Checks the source addresses of the preceding rule's addresses."""
     if AnyObj in preceding_rule.source_addresses:
@@ -83,8 +83,8 @@ def check_source_address(
 
 
 def check_destination_address(
-        rule: "SecurityRule",
-        preceding_rule: "SecurityRule",
+    rule: "SecurityRule",
+    preceding_rule: "SecurityRule",
 ) -> CheckResult:
     """Checks if the destination addresses are
     identical, allow any, or are subsets of the preceding rule's addresses.
@@ -96,7 +96,7 @@ def check_destination_address(
         return True, "Destination addresses are the same"
 
     if preceding_rule.destination_addresses.issubset(
-            rule.destination_addresses,
+        rule.destination_addresses,
     ):
         return (
             True,
@@ -107,8 +107,8 @@ def check_destination_address(
 
 
 def check_application(
-        rule: "SecurityRule",
-        preceding_rule: "SecurityRule",
+    rule: "SecurityRule",
+    preceding_rule: "SecurityRule",
 ) -> CheckResult:
     """Checks the applications of the preceding rule."""
     rule_apps = rule.applications
@@ -127,8 +127,8 @@ def check_application(
 
 
 def check_services(
-        rule: "SecurityRule",
-        preceding_rule: "SecurityRule",
+    rule: "SecurityRule",
+    preceding_rule: "SecurityRule",
 ) -> CheckResult:
     """Checks if the rule's ports are the same
     or a subset of the preceding rule's ports.
@@ -181,14 +181,14 @@ class Shadowing(Scenario):
         return results
 
     def analyze(
-            self,
-            results: dict[str, PrecedingRulesOutputs],
+        self,
+        results: dict[str, PrecedingRulesOutputs],
     ):
         for rule_name, rule_results in results.items():
             shadowed = False
             for preceding_rule_name, checks_results in rule_results.items():
                 if all(
-                        check_result[0] for check_result in checks_results.values()
+                    check_result[0] for check_result in checks_results.values()
                 ):
                     shadowed = True
                     logger.info(
