@@ -22,8 +22,8 @@ pre-commit = "^3.8.0"
 pytest = "^8.3.5"
 
 [project.scripts]
-policyinspector = 'policy_inspector.__main__:main'
-pi = 'policy_inspector.__main__:main'
+policyinspector = 'policy_inspector.cli:main'
+pi = 'policy_inspector.cli:main'
 
 
 [build-system]

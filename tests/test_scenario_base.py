@@ -1,6 +1,6 @@
 import pytest
 
-from policy_inspector.scenario import Scenario
+from policy_inspector.scenario.base import Scenario
 
 
 class TestScenarioWithImplementation:
@@ -19,19 +19,6 @@ class TestScenarioWithImplementation:
         def analyze(self, results):
             return True
 
-    def test_get_args_empty(self):
-        assert Scenario.get_args() == []
-
-    @pytest.mark.parametrize(
-        "scenario_class,args",
-        [
-            (MyScenario, ["arg1"]),
-            (MyScenario2, ["arg1", "arg2", "defarg"]),
-        ],
-    )
-    def test_get_args(self, scenario_class, args):
-        assert scenario_class.get_args() == args
-
     def test_list_with_subclasses(self):
         assert self.MyScenario in Scenario.list()
         assert self.MyScenario2 in Scenario.list()
@@ -40,6 +27,5 @@ class TestScenarioWithImplementation:
         scenario = self.MyScenario("arg")
         with pytest.raises(NotImplementedError):
             scenario.execute()
-
         with pytest.raises(NotImplementedError):
             scenario.analyze(None)

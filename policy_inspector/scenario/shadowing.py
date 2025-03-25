@@ -1,25 +1,17 @@
 import logging
-from typing import TYPE_CHECKING, Callable, Union
+from typing import TYPE_CHECKING, Callable
 
 from policy_inspector.models import AnyObj
-from policy_inspector.scenario.base import Scenario
+from policy_inspector.scenario.base import Scenario, CheckResult
 
 if TYPE_CHECKING:
     from policy_inspector.models import SecurityRule
 
 logger = logging.getLogger(__name__)
 
-CheckOutput = tuple[Union[None, bool], str]
-"""Return example format of a ``RuleCheckFunction``.
+ShadowingCheckFunction = Callable[["SecurityRule", "SecurityRule"], CheckResult]
 
-1. Status ``Union[None, bool]`` - Whether the rules pair fulfill a check.
-2. Message ``str`` - Verbose message.
-"""
-
-ShadowingCheckFunction = Callable[["SecurityRule", "SecurityRule"], CheckOutput]
-"""Definition of typing for a scenario type of function."""
-
-ChecksOutputs = dict[str, CheckOutput]
+ChecksOutputs = dict[str, CheckResult]
 """Dict with check's name as keys and its output as value."""
 
 PrecedingRulesOutputs = dict[str, ChecksOutputs]
@@ -27,9 +19,9 @@ PrecedingRulesOutputs = dict[str, ChecksOutputs]
 
 
 def check_action(
-    rule: "SecurityRule",
-    preceding_rule: "SecurityRule",
-) -> CheckOutput:
+        rule: "SecurityRule",
+        preceding_rule: "SecurityRule",
+) -> CheckResult:
     """Check if the action is the same in both rules."""
     result = rule.action == preceding_rule.action
     message = "Actions match" if result else "Actions differ"
@@ -37,9 +29,9 @@ def check_action(
 
 
 def check_source_zone(
-    rule: "SecurityRule",
-    preceding_rule: "SecurityRule",
-) -> CheckOutput:
+        rule: "SecurityRule",
+        preceding_rule: "SecurityRule",
+) -> CheckResult:
     """Checks the source zones of the preceding rule."""
     if rule.source_zones == preceding_rule.source_zones:
         return True, "Source zones are the same"
@@ -54,9 +46,9 @@ def check_source_zone(
 
 
 def check_destination_zone(
-    rule: "SecurityRule",
-    preceding_rule: "SecurityRule",
-) -> CheckOutput:
+        rule: "SecurityRule",
+        preceding_rule: "SecurityRule",
+) -> CheckResult:
     """Checks the destination zones of the preceding rule."""
     if rule.destination_zones == preceding_rule.destination_zones:
         return True, "Source zones are the same"
@@ -71,9 +63,9 @@ def check_destination_zone(
 
 
 def check_source_address(
-    rule: "SecurityRule",
-    preceding_rule: "SecurityRule",
-) -> CheckOutput:
+        rule: "SecurityRule",
+        preceding_rule: "SecurityRule",
+) -> CheckResult:
     """Checks the source addresses of the preceding rule's addresses."""
     if AnyObj in preceding_rule.source_addresses:
         return True, "Preceding rule allows any source address"
@@ -91,9 +83,9 @@ def check_source_address(
 
 
 def check_destination_address(
-    rule: "SecurityRule",
-    preceding_rule: "SecurityRule",
-) -> CheckOutput:
+        rule: "SecurityRule",
+        preceding_rule: "SecurityRule",
+) -> CheckResult:
     """Checks if the destination addresses are
     identical, allow any, or are subsets of the preceding rule's addresses.
     """
@@ -104,7 +96,7 @@ def check_destination_address(
         return True, "Destination addresses are the same"
 
     if preceding_rule.destination_addresses.issubset(
-        rule.destination_addresses,
+            rule.destination_addresses,
     ):
         return (
             True,
@@ -115,9 +107,9 @@ def check_destination_address(
 
 
 def check_application(
-    rule: "SecurityRule",
-    preceding_rule: "SecurityRule",
-) -> CheckOutput:
+        rule: "SecurityRule",
+        preceding_rule: "SecurityRule",
+) -> CheckResult:
     """Checks the applications of the preceding rule."""
     rule_apps = rule.applications
     preceding_apps = preceding_rule.applications
@@ -135,9 +127,9 @@ def check_application(
 
 
 def check_services(
-    rule: "SecurityRule",
-    preceding_rule: "SecurityRule",
-) -> CheckOutput:
+        rule: "SecurityRule",
+        preceding_rule: "SecurityRule",
+) -> CheckResult:
     """Checks if the rule's ports are the same
     or a subset of the preceding rule's ports.
     """
@@ -189,15 +181,14 @@ class Shadowing(Scenario):
         return results
 
     def analyze(
-        self,
-        results: dict[str, PrecedingRulesOutputs],
+            self,
+            results: dict[str, PrecedingRulesOutputs],
     ):
         for rule_name, rule_results in results.items():
             shadowed = False
-
             for preceding_rule_name, checks_results in rule_results.items():
                 if all(
-                    check_result[0] for check_result in checks_results.values()
+                        check_result[0] for check_result in checks_results.values()
                 ):
                     shadowed = True
                     logger.info(

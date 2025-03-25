@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from policy_inspector.resolve import resolve_rules_addresses
 from policy_inspector.scenario.shadowing import (
-    CheckOutput,
+    CheckResult,
     Shadowing,
     ShadowingCheckFunction,
     check_action,
@@ -28,14 +28,14 @@ logger = logging.getLogger(__name__)
 def check_services_and_application(
     rule: "SecurityRule",
     preceding_rule: "SecurityRule",
-) -> CheckOutput:
+) -> CheckResult:
     pass
 
 
 def check_source_addresses_by_ip(
     rule: "SecurityRule",
     preceding_rule: "SecurityRule",
-) -> CheckOutput:
+) -> CheckResult:
     check_by_name = check_source_address(rule, preceding_rule)
     if check_by_name[0]:
         return check_by_name
@@ -55,7 +55,7 @@ def check_source_addresses_by_ip(
 def check_destination_addresses_by_ip(
     rule: "SecurityRule",
     preceding_rule: "SecurityRule",
-) -> CheckOutput:
+) -> CheckResult:
     check_by_name = check_destination_address(rule, preceding_rule)
     if check_by_name[0]:
         return check_by_name
