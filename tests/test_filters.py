@@ -5,7 +5,14 @@ from policy_inspector.filters import (
     exclude_deny,
     exclude_disabled,
 )
-from policy_inspector.tests.conftest import MockObject
+
+
+class MockObject:
+    """Mock class to use in tests."""
+
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
 
 @pytest.mark.parametrize(

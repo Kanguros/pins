@@ -1,26 +1,20 @@
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import rich_click as click
 from click import Path as ClickPath
 from rich.logging import RichHandler
 
-from loader import load_from_file
-from policy_inspector.param import (
-    verbose_option,
+from policy_inspector.loader import load_from_file
+from policy_inspector.models import (
+    AddressGroup,
+    AddressObject,
+    SecurityRule,
 )
-from policy_inspector.scenario.base import Scenario
+from policy_inspector.scenario import Scenario
 from policy_inspector.scenario.complex_shadowing import ShadowingByValue
 from policy_inspector.scenario.shadowing import Shadowing
-from policy_inspector.utils import Example
-
-if TYPE_CHECKING:
-    from policy_inspector.models import (
-        AddressGroup,
-        AddressObject,
-        SecurityRule,
-    )
+from policy_inspector.utils import Example, verbose_option
 
 LOG_FORMAT = "%(message)s"
 LOG_DEFAULT_LEVEL = "INFO"
@@ -68,22 +62,39 @@ def main_run():
 
 @main_run.command("shadowing", no_args_is_help=True)
 @verbose_option()
-@click.argument("security_rules_path", required=True, type=ClickPath(dir_okay=False, path_type=Path))
+@click.argument(
+    "security_rules_path",
+    required=True,
+    type=ClickPath(dir_okay=False, path_type=Path),
+)
 def run_shadowing(security_rules_path: Path) -> None:
-    scenario = Shadowing(security_rules_path)
+    security_rules = load_from_file(SecurityRule, security_rules_path)
+    scenario = Shadowing(security_rules)
     output = scenario.execute()
     scenario.analyze(output)
 
 
 @main_run.command("complex_shadowing", no_args_is_help=True)
 @verbose_option()
-@click.argument("security_rules_path", required=True, type=ClickPath(dir_okay=False, path_type=Path))
-@click.argument("address_groups_path", required=True, type=ClickPath(dir_okay=False, path_type=Path))
-@click.argument("address_objects_path", required=True, type=ClickPath(dir_okay=False, path_type=Path))
+@click.argument(
+    "security_rules_path",
+    required=True,
+    type=ClickPath(dir_okay=False, path_type=Path),
+)
+@click.argument(
+    "address_groups_path",
+    required=True,
+    type=ClickPath(dir_okay=False, path_type=Path),
+)
+@click.argument(
+    "address_objects_path",
+    required=True,
+    type=ClickPath(dir_okay=False, path_type=Path),
+)
 def run_complex_shadowing(
-        security_rules_path: Path,
-        address_groups_path: Path,
-        address_objects_path: Path,
+    security_rules_path: Path,
+    address_groups_path: Path,
+    address_objects_path: Path,
 ) -> None:
     security_rules = load_from_file(SecurityRule, security_rules_path)
     address_groups = load_from_file(AddressGroup, address_groups_path)
@@ -94,17 +105,20 @@ def run_complex_shadowing(
 
 
 examples = [
-    Example(name="shadowing_by_name",
-            args=[Path("1/securityrule.json")],
-            cmd=run_shadowing
-            ),
-    Example(name="shadowing_by_value",
-            args=[Path("1/securityrule.json"),
-                  Path("1/addressgroup.json"),
-                  Path("1/addressobject.json")],
-            cmd=run_complex_shadowing
-            )
-
+    Example(
+        name="shadowing_by_name",
+        args=[Path("1/securityrule.json")],
+        cmd=run_shadowing,
+    ),
+    Example(
+        name="shadowing_by_value",
+        args=[
+            Path("1/securityrule.json"),
+            Path("1/addressgroup.json"),
+            Path("1/addressobject.json"),
+        ],
+        cmd=run_complex_shadowing,
+    ),
 ]
 
 examples_by_name = {e.name: e for e in examples}
@@ -115,15 +129,16 @@ examples_dir: Path = Path(__file__).parent / "example"
 @main_run.command("example", no_args_is_help=True)
 @verbose_option()
 @click.argument(
-    "name", metavar="EXAMPLE_NAME", type=click.Choice(list(examples_by_name.keys())))
+    "name",
+    metavar="EXAMPLE_NAME",
+    type=click.Choice(list(examples_by_name.keys())),
+)
 @click.pass_context
 def run_example(ctx, name: str) -> None:
     """Run one of the examples."""
     example = examples_by_name[name]
-    print(f"{example=}")
-    args = [str(examples_dir / arg) for arg in example.args]
-    print(f"{args=}")
-    ctx.invoke(example.cmd, args[0])
+    args = [examples_dir / arg for arg in example.args]
+    ctx.invoke(example.cmd.callback, *args)
 
 
 if __name__ == "__main__":

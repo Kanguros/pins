@@ -8,8 +8,10 @@ from policy_inspector.scenario.shadowing import (
     ShadowingCheckFunction,
     check_action,
     check_application,
+    check_destination_address,
     check_destination_zone,
     check_services,
+    check_source_address,
     check_source_zone,
 )
 
@@ -34,6 +36,10 @@ def check_source_addresses_by_ip(
     rule: "SecurityRule",
     preceding_rule: "SecurityRule",
 ) -> CheckOutput:
+    check_by_name = check_source_address(rule, preceding_rule)
+    if check_by_name[0]:
+        return check_by_name
+
     for addr in rule.source_addresses_ip:
         if not any(
             addr.subnet_of(net) for net in preceding_rule.source_addresses_ip
@@ -50,6 +56,9 @@ def check_destination_addresses_by_ip(
     rule: "SecurityRule",
     preceding_rule: "SecurityRule",
 ) -> CheckOutput:
+    check_by_name = check_destination_address(rule, preceding_rule)
+    if check_by_name[0]:
+        return check_by_name
     for addr in rule.destination_addresses_ip:
         if not any(
             addr.subnet_of(net)

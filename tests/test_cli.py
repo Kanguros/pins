@@ -4,8 +4,8 @@ import click
 import pytest
 from click.testing import CliRunner
 
-from policy_inspector.__main__ import main, run_example, examples
-from policy_inspector.param import verbose_option
+from policy_inspector.__main__ import examples_by_name, main, run_example
+from policy_inspector.utils import verbose_option
 
 
 @click.command()
@@ -54,15 +54,12 @@ def test_run_list_command(arg):
 
     result = CliRunner().invoke(main, args)
     assert result.exit_code == 0
-    # phrases = [
-    #     " Available Scenarios:",
-    # ]
-    # for phrase in phrases:
-    #     assert phrase in result.output
 
 
-@pytest.mark.parametrize("name", list(examples.keys()))
+@pytest.mark.parametrize("name", list(examples_by_name.keys()))
 def test_run_example(name):
-    result = CliRunner().invoke(run_example, [name], color=False, catch_exceptions=False)
+    result = CliRunner().invoke(
+        run_example, [name], color=False, catch_exceptions=False
+    )
     print(result.stdout)
     assert result.exit_code == 0

@@ -44,5 +44,7 @@ class Scenario:
             try:
                 results[check.__name__] = check(*rules)
             except Exception as ex:
-                logger.exception(f"Error occur during running {check}. {ex}")  # noqa: TRY401
+                logger.exception(
+                    f"Error '{ex}' occur during running: \n{check}\n{rules}. "
+                )  # noqa: TRY401
         return results
