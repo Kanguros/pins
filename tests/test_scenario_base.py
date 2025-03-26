@@ -20,8 +20,8 @@ class TestScenarioWithImplementation:
             return True
 
     def test_list_with_subclasses(self):
-        assert self.MyScenario in Scenario.list()
-        assert self.MyScenario2 in Scenario.list()
+        assert self.MyScenario in Scenario.get_available()
+        assert self.MyScenario2 in Scenario.get_available()
 
     def test_raise_notimplementederror(self):
         scenario = self.MyScenario("arg")

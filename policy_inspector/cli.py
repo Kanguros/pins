@@ -34,7 +34,7 @@ def main():
 def main_list() -> None:
     """List available Scenarios."""
     logger.info("Available Scenarios:")
-    scenarios = Scenario.list()
+    scenarios = Scenario.get_available()
     for scenario in scenarios:
         logger.info(f"- {scenario.__name__}")
         logger.debug(f"  {scenario.__doc__}")
