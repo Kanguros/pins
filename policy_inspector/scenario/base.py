@@ -43,8 +43,8 @@ class Scenario:
         for check in self.checks:
             try:
                 results[check.__name__] = check(*rules)
-            except Exception as ex:
+            except Exception as ex:  # noqa: BLE001
                 logger.exception(
-                    f"Error '{ex}' occur during running: \n{check}\n{rules}. "
-                )  # noqa: TRY401
+                    f"Error '{ex}' occur during running: \n{check}\n{rules}. "  # noqa: TRY401
+                )
         return results
