@@ -15,7 +15,7 @@ from policy_inspector.scenario.complex_shadowing import ShadowingByValue
 from policy_inspector.scenario.shadowing import Shadowing
 from policy_inspector.utils import Example, config_logger, verbose_option
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 config_logger(logger)
 click.rich_click.SHOW_ARGUMENTS = True
 click.rich_click.TEXT_MARKUP = "markdown"
@@ -58,7 +58,9 @@ def main_run():
 def run_shadowing(security_rules_path: Path) -> None:
     security_rules = load_from_file(SecurityRule, security_rules_path)
     scenario = Shadowing(security_rules)
+    logger.info(f"Executing {scenario} scenario")
     output = scenario.execute()
+    logger.debug("Analyzing results...")
     scenario.analyze(output)
 
 
@@ -94,12 +96,12 @@ def run_complex_shadowing(
 
 examples = [
     Example(
-        name="shadowing_by_name",
+        name="shadowing",
         args=[Path("1/securityrule.json")],
         cmd=run_shadowing,
     ),
     Example(
-        name="shadowing_by_value",
+        name="complex_shadowing",
         args=[
             Path("1/securityrule.json"),
             Path("1/addressgroup.json"),

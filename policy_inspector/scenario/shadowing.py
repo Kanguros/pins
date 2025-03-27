@@ -146,7 +146,12 @@ def check_services(
 
 
 class Shadowing(Scenario):
-    """Scenario to find what Security Rules are being shadowed by which preceding Security Rules."""
+    """
+    This scenario identifies when a rule is completely shadowed by a
+    preceding rule. Shadowing occurs when a rule will never be matched
+    because a rule earlier in the processing order would always match
+    first.
+    """
 
     checks: list[ShadowingCheckFunction] = [
         check_action,
@@ -168,7 +173,7 @@ class Shadowing(Scenario):
         results = {}
         for i, rule in enumerate(rules):
             cid = f"[{i + 1}/{rules_count}][{rule.name}]"
-            logger.info(f"{cid} Checking rule against {i} preceding Rules")
+            logger.debug(f"{cid} Checking rule against {i} preceding Rules")
 
             output = {}
             for j in range(i):
@@ -177,10 +182,9 @@ class Shadowing(Scenario):
                     rule,
                     preceding_rule,
                 )
-            logger.info(f"{cid} Checking rule finished.")
             results[rule.name] = output
 
-        logger.info("Shadowed rules detection complete")
+        logger.debug("Shadowed rules detection complete")
         return results
 
     def analyze(
@@ -188,15 +192,16 @@ class Shadowing(Scenario):
         results: dict[str, PrecedingRulesOutputs],
     ):
         for rule_name, rule_results in results.items():
-            shadowed = False
+            shadowing_rules = []
             for preceding_rule_name, checks_results in rule_results.items():
                 if all(
                     check_result[0] for check_result in checks_results.values()
                 ):
-                    shadowed = True
-                    logger.info(
-                        f"[{rule_name}] Rule is shadowed by: {preceding_rule_name}",
-                    )
+                    shadowing_rules.append(preceding_rule_name)
 
-            if not shadowed:
-                logger.info(f"[{rule_name}] Rule not shadowed")
+            if shadowing_rules:
+                logger.info(
+                    f"[{rule_name}] Rule is shadowed by: {shadowing_rules}",
+                )
+            else:
+                logger.debug(f"[{rule_name}] Rule not shadowed")

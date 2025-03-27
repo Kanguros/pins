@@ -78,6 +78,7 @@ def load_from_file(
             print(item)
 
     """
+    logger.debug(f"Loading {model_cls.__name__} from {str(file_path)}")
     return FileHandler.load_for_model(model_cls, file_path)
 
 

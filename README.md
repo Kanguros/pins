@@ -5,12 +5,14 @@
 
 # Policy Inspector
 
-Analysis of a firewall security policies.
+Find out which firewall security policy is being shadowed and
+write your own custom checks.
 
 ## What _Policy Inspector_ really is?
 
-It is a CLI tool to analyze firewall security policies against a
-predefined scenarios.
+It is a CLI tool to run a analysis of provided firewall security
+policies against a predefined series of checks called [Scenarios]
+(#scenarios).
 
 It started as a tool to detect shadowing firewall rules. It evolved
 into a small framework that allows to define different scenario very
@@ -43,31 +45,24 @@ command:
 pi --help
 ```
 
-To see an example how does it works, run:
-
-```shell
-pi run example1
-```
-
 To check your own firewall rules:
 
 ```shell
 pi run shadowing policies.json
 ```
 
-## Example
+To see how it works for yourself, run scenario on example data:
 
 ```shell
-[1/3][rule-example1] Checking rule against 0 preceding Rules
-[1/3][rule-example1] Checking rule finished.
-[2/3][rule-example2] Checking rule against 1 preceding Rules
-[2/3][rule-example2] Checking rule finished.
-[3/3][rule3-allow-dns] Checking rule against 2 preceding Rules
-[3/3][rule3-allow-dns] Checking rule finished.
+pi run example shadowing
+```
+
+```shell
+$ pi run example shadowing
+Executing Shadowing scenario
 Shadowed rules detection complete
-[rule-example1] Rule not shadowed
-[rule-example2] Rule is shadowed by: rule-example1
-[rule3-allow-dns] Rule not shadowed
+Analyzing results...
+[rule-example2] Rule is shadowed by: ['rule-example1']
 
 ```
 

@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Any, Callable, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar
 
 if TYPE_CHECKING:
     from policy_inspector.models import SecurityRule
@@ -29,14 +29,18 @@ class Scenario:
         checks: A list of callable check functions to be executed on security rules.
     """
 
-    _scenarios: set[type["Scenario"]] = set()
-
+    name: Optional[str] = None
     checks: list[Check] = []
+
+    _scenarios: set[type["Scenario"]] = set()
 
     def __init_subclass__(cls, **kwargs) -> None:
         """Registers subclasses automatically in the `scenarios` set."""
         super().__init_subclass__(**kwargs)
         cls._scenarios.add(cls)
+
+    def __str__(self):
+        return self.name or self.__class__.__name__
 
     @classmethod
     def get_available(cls) -> set[type["Scenario"]]:
