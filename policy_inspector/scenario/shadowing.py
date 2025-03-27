@@ -54,7 +54,10 @@ def check_destination_zone(
         return True, "Destination zones are the same"
 
     if rule.destination_zones.issubset(preceding_rule.destination_zones):
-        return True, "Preceding rule destination zones cover rule's destination zones"
+        return (
+            True,
+            "Preceding rule destination zones cover rule's destination zones",
+        )
 
     if AnyObj in preceding_rule.destination_zones:
         return True, "Preceding rule destination zones is 'any'"

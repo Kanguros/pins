@@ -143,11 +143,7 @@ def generate_checks_test_data() -> list[ParameterSet]:
     for func, cases in TEST_CASES.items():
         for case_name, case_params in cases.items():
             case_id = f"{func.__name__}][{case_name}"
-            values.append(
-                pytest.param(
-                    func, *case_params, id=case_id
-                )
-            )
+            values.append(pytest.param(func, *case_params, id=case_id))
     return values
 
 
@@ -159,8 +155,9 @@ CHECK_TEST_VALUES = generate_checks_test_data()
     CHECK_TEST_VALUES,
 )
 def test_(check_func, rule_params, preceding_rule_params, expected_result):
-    __traceback_hide__ = True
     rule = SecurityRule(name="rule0", **rule_params)
-    preceding_rule = SecurityRule(name="rule_before_rule0", **preceding_rule_params)
+    preceding_rule = SecurityRule(
+        name="rule_before_rule0", **preceding_rule_params
+    )
     result = check_func(rule, preceding_rule)
     assert result == expected_result
