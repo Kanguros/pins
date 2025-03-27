@@ -51,15 +51,15 @@ def check_destination_zone(
 ) -> CheckResult:
     """Checks the destination zones of the preceding rule."""
     if rule.destination_zones == preceding_rule.destination_zones:
-        return True, "Source zones are the same"
+        return True, "Destination zones are the same"
 
-    if preceding_rule.destination_zones.issubset(rule.destination_zones):
-        return True, "Preceding rule source zones cover rule's source zones"
+    if rule.destination_zones.issubset(preceding_rule.destination_zones):
+        return True, "Preceding rule destination zones cover rule's destination zones"
 
     if AnyObj in preceding_rule.destination_zones:
-        return True, "Preceding rule source zones is 'any'"
+        return True, "Preceding rule destination zones is 'any'"
 
-    return False, "Source zones differ"
+    return False, "Destination zones differ"
 
 
 def check_source_address(
@@ -73,7 +73,7 @@ def check_source_address(
     if rule.source_addresses == preceding_rule.source_addresses:
         return True, "Source addresses are the same"
 
-    if preceding_rule.source_addresses.issubset(rule.source_addresses):
+    if rule.source_addresses.issubset(preceding_rule.source_addresses):
         return (
             True,
             "Preceding rule source addresses cover rule's source addresses",
@@ -92,15 +92,15 @@ def check_destination_address(
     if AnyObj in preceding_rule.destination_addresses:
         return True, "Preceding rule allows any destination address"
 
-    if rule.source_addresses == preceding_rule.destination_addresses:
+    if rule.destination_addresses == preceding_rule.destination_addresses:
         return True, "Destination addresses are the same"
 
-    if preceding_rule.destination_addresses.issubset(
-        rule.destination_addresses,
+    if rule.destination_addresses.issubset(
+        preceding_rule.destination_addresses,
     ):
         return (
             True,
-            "Preceding rule destination addresses cover rule's source addresses",
+            "Preceding rule destination addresses cover rule's destination addresses",
         )
 
     return False, "Destination addresses not covered at all"
@@ -114,16 +114,16 @@ def check_application(
     rule_apps = rule.applications
     preceding_apps = preceding_rule.applications
 
+    if rule_apps == preceding_apps:
+        return True, "The same applications"
+
     if AnyObj in preceding_apps:
         return True, "Preceding rule allows any application"
 
-    if AnyObj in rule_apps:
-        return "any" in preceding_apps, "Rule allows any application"
-
-    if all(rule_app in preceding_apps for rule_app in rule_apps):
+    if rule_apps.issubset(preceding_apps):
         return True, "Preceding rule contains rule's applications"
 
-    return False, "Preceding rule does not contain all rule's applications"
+    return False, "Rule doesn't cover"
 
 
 def check_services(

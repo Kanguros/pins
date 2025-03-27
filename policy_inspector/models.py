@@ -30,7 +30,7 @@ class SecurityRule(MainModel):
         description="Whether the policy is enabled or disabled",
     )
     action: Action = Field(
-        ...,
+        default="allow",
         description="Whether the traffic should be allowed or denied.",
     )
     source_zones: Union[SetStr, AnyObjType] = Field(

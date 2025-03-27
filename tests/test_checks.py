@@ -1,10 +1,9 @@
-# test_check_functions.py
 from typing import Callable
 
 import pytest
 from _pytest.mark import ParameterSet
 
-from policy_inspector.models import AnyObj
+from policy_inspector.models import AnyObj, SecurityRule
 from policy_inspector.scenario.shadowing import (
     check_action,
     check_application,
@@ -13,23 +12,6 @@ from policy_inspector.scenario.shadowing import (
     check_source_address,
     check_source_zone,
 )
-
-
-class MockSecurityRule:
-    """Mock SecurityRule for testing."""
-
-    def __init__(self, **kwargs):
-        self.name = kwargs.get("name", "test_rule")
-        self.action = kwargs.get("action", "allow")
-        self.source_zones = set(kwargs.get("source_zones", {}))
-        self.destination_zones = set(kwargs.get("destination_zones", {}))
-        self.source_addresses = set(kwargs.get("source_addresses", {}))
-        self.destination_addresses = set(
-            kwargs.get("destination_addresses", {})
-        )
-        self.applications = set(kwargs.get("applications", {}))
-        self.services = set(kwargs.get("services", {}))
-
 
 TEST_CASES: dict[Callable, dict[str, list]] = {
     check_action: {
@@ -45,20 +27,30 @@ TEST_CASES: dict[Callable, dict[str, list]] = {
         ],
     },
     check_source_zone: {
-        "same zones": [
+        "same source zones": [
             {"source_zones": {"trust"}},
             {"source_zones": {"trust"}},
             (True, "Source zones are the same"),
         ],
-        "zone subnet": [
-            {"source_zones": {"trust", "dmz"}},
+        "cover source zone": [
             {"source_zones": {"trust"}},
-            (True, "Preceding rule source zones cover rule's source zones"),
+            {"source_zones": {"trust", "dmz"}},
+            (False, "Source zones differ"),
         ],
         "any zones": [
             {"source_zones": {"trust"}},
             {"source_zones": {AnyObj}},
             (True, "Preceding rule source zones is 'any'"),
+        ],
+        "any and any": [
+            {"source_zones": {AnyObj}},
+            {"source_zones": {AnyObj}},
+            (True, "Source zones are the same"),
+        ],
+        "any not covered by": [
+            {"source_zones": {AnyObj}},
+            {"source_zones": {"somezone", "second_zone"}},
+            (False, "Source zones differ"),
         ],
     },
     check_destination_zone: {
@@ -72,7 +64,7 @@ TEST_CASES: dict[Callable, dict[str, list]] = {
             {"destination_zones": {"untrust", "dmz"}},
             (
                 True,
-                "Preceding rule destination zones cover rule's source zones",
+                "Preceding rule destination zones cover rule's destination zones",
             ),
         ],
         "any destination zone": [
@@ -80,14 +72,19 @@ TEST_CASES: dict[Callable, dict[str, list]] = {
             {"destination_zones": {AnyObj}},
             (True, "Preceding rule destination zones is 'any'"),
         ],
+        "any not covered by": [
+            {"destination_zones": {AnyObj}},
+            {"destination_zones": {"dmz"}},
+            (False, "Destination zones differ"),
+        ],
     },
     check_source_address: {
-        "same source addresses": [
+        "the same source addresses": [
             {"source_addresses": {"192.168.1.1"}},
             {"source_addresses": {"192.168.1.1"}},
             (True, "Source addresses are the same"),
         ],
-        "subset of source addresses": [
+        "cover source addresses": [
             {"source_addresses": {"192.168.1.1"}},
             {"source_addresses": {"192.168.1.1", "192.168.1.2"}},
             (
@@ -108,11 +105,11 @@ TEST_CASES: dict[Callable, dict[str, list]] = {
             (True, "Destination addresses are the same"),
         ],
         "subset of destination addresses": [
-            {"destination_addresses": {"10.0.0.1", "10.0.0.2"}},
             {"destination_addresses": {"10.0.0.1"}},
+            {"destination_addresses": {"10.0.0.1", "10.0.0.2"}},
             (
                 True,
-                "Preceding rule destination addresses cover rule's source addresses",
+                "Preceding rule destination addresses cover rule's destination addresses",
             ),
         ],
         "any destination address": [
@@ -125,9 +122,9 @@ TEST_CASES: dict[Callable, dict[str, list]] = {
         "same applications": [
             {"applications": {"app1", "app2"}},
             {"applications": {"app2", "app1"}},
-            (True, "Preceding rule contains rule's applications"),
+            (True, "The same applications"),
         ],
-        "subset of applications covered by preceding rule": [
+        "any in preceding rule": [
             {"applications": {"app2"}},
             {"applications": {AnyObj}},
             (True, "Preceding rule allows any application"),
@@ -141,19 +138,20 @@ TEST_CASES: dict[Callable, dict[str, list]] = {
 }
 
 
-def _generate_params() -> list[ParameterSet]:
+def generate_checks_test_data() -> list[ParameterSet]:
     values = []
     for func, cases in TEST_CASES.items():
-        for case_id, case_params in cases.items():
+        for case_name, case_params in cases.items():
+            case_id = f"{func.__name__}][{case_name}"
             values.append(
                 pytest.param(
-                    func, *case_params, id=f"{func.__name__}][{case_id}"
+                    func, *case_params, id=case_id
                 )
             )
     return values
 
 
-CHECK_TEST_VALUES = _generate_params()
+CHECK_TEST_VALUES = generate_checks_test_data()
 
 
 @pytest.mark.parametrize(
@@ -161,7 +159,8 @@ CHECK_TEST_VALUES = _generate_params()
     CHECK_TEST_VALUES,
 )
 def test_(check_func, rule_params, preceding_rule_params, expected_result):
-    rule = MockSecurityRule(**rule_params)
-    preceding_rule = MockSecurityRule(**preceding_rule_params)
+    __traceback_hide__ = True
+    rule = SecurityRule(name="rule0", **rule_params)
+    preceding_rule = SecurityRule(name="rule_before_rule0", **preceding_rule_params)
     result = check_func(rule, preceding_rule)
     assert result == expected_result
