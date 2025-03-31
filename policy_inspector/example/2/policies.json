@@ -1,0 +1,1443 @@
+[
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-external-web-access",
+    "action": "allow",
+    "application": {
+      "member": [
+        "web-browsing",
+        "ssl"
+      ]
+    },
+    "category": {
+      "member": [
+        "any"
+      ]
+    },
+    "destination": {
+      "member": [
+        "dmz-web-servers"
+      ]
+    },
+    "from": {
+      "member": [
+        "internet"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "any"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "any"
+      ]
+    },
+    "to": {
+      "member": [
+        "dmz"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-internal-traffic",
+    "action": "allow",
+    "application": {
+      "member": [
+        "any"
+      ]
+    },
+    "category": {
+      "member": [
+        "any"
+      ]
+    },
+    "destination": {
+      "member": [
+        "internal-networks"
+      ]
+    },
+    "from": {
+      "member": [
+        "trusted-zone"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "internal-devices"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "any"
+      ]
+    },
+    "to": {
+      "member": [
+        "trusted-zone"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "block-malicious-destinations",
+    "action": "deny",
+    "application": {
+      "member": [
+        "any"
+      ]
+    },
+    "category": {
+      "member": [
+        "malware",
+        "phishing",
+        "command-and-control"
+      ]
+    },
+    "destination": {
+      "member": [
+        "any"
+      ]
+    },
+    "from": {
+      "member": [
+        "any"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "any"
+      ]
+    },
+    "source": {
+      "member": [
+        "any"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "any"
+      ]
+    },
+    "to": {
+      "member": [
+        "internet"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-vpn-users",
+    "action": "allow",
+    "application": {
+      "member": [
+        "ssl-vpn",
+        "globalprotect-gateway"
+      ]
+    },
+    "category": {
+      "member": [
+        "any"
+      ]
+    },
+    "destination": {
+      "member": [
+        "vpn-gateways"
+      ]
+    },
+    "from": {
+      "member": [
+        "internet"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "any"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "any"
+      ]
+    },
+    "to": {
+      "member": [
+        "dmz"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-dns-internal",
+    "action": "allow",
+    "application": {
+      "member": [
+        "dns"
+      ]
+    },
+    "category": {
+      "member": [
+        "any"
+      ]
+    },
+    "destination": {
+      "member": [
+        "internal-dns-servers"
+      ]
+    },
+    "from": {
+      "member": [
+        "trusted-zone",
+        "dmz",
+        "iot-zone"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "any"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "any"
+      ]
+    },
+    "to": {
+      "member": [
+        "server-zone"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-workstation-web-browsing",
+    "action": "allow",
+    "application": {
+      "member": [
+        "web-browsing",
+        "ssl"
+      ]
+    },
+    "category": {
+      "member": [
+        "business-services",
+        "education",
+        "reference-and-research"
+      ]
+    },
+    "destination": {
+      "member": [
+        "any"
+      ]
+    },
+    "from": {
+      "member": [
+        "trusted-zone"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "corporate-workstations"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "domain\\employees"
+      ]
+    },
+    "to": {
+      "member": [
+        "internet"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "block-social-media-executive",
+    "action": "deny",
+    "application": {
+      "member": [
+        "facebook-base",
+        "twitter",
+        "instagram",
+        "tiktok"
+      ]
+    },
+    "category": {
+      "member": [
+        "social-networking"
+      ]
+    },
+    "destination": {
+      "member": [
+        "any"
+      ]
+    },
+    "from": {
+      "member": [
+        "trusted-zone"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "executive-workstations"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "domain\\executives"
+      ]
+    },
+    "to": {
+      "member": [
+        "internet"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-database-access",
+    "action": "allow",
+    "application": {
+      "member": [
+        "ms-sql-db",
+        "oracle-db",
+        "postgresql",
+        "mysql"
+      ]
+    },
+    "category": {
+      "member": [
+        "any"
+      ]
+    },
+    "destination": {
+      "member": [
+        "database-servers"
+      ]
+    },
+    "from": {
+      "member": [
+        "trusted-zone",
+        "dmz"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "application-servers",
+        "data-analytics-servers"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "domain\\app-services"
+      ]
+    },
+    "to": {
+      "member": [
+        "database-zone"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-admin-ssh",
+    "action": "allow",
+    "application": {
+      "member": [
+        "ssh"
+      ]
+    },
+    "category": {
+      "member": [
+        "any"
+      ]
+    },
+    "destination": {
+      "member": [
+        "linux-servers",
+        "network-devices"
+      ]
+    },
+    "from": {
+      "member": [
+        "trusted-zone"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "host-anti-malware"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "admin-workstations"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "domain\\network-admins",
+        "domain\\system-admins"
+      ]
+    },
+    "to": {
+      "member": [
+        "server-zone",
+        "dmz"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-admin-rdp",
+    "action": "allow",
+    "application": {
+      "member": [
+        "ms-rdp"
+      ]
+    },
+    "category": {
+      "member": [
+        "any"
+      ]
+    },
+    "destination": {
+      "member": [
+        "windows-servers"
+      ]
+    },
+    "from": {
+      "member": [
+        "trusted-zone"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "host-anti-malware"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "admin-workstations"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "domain\\system-admins"
+      ]
+    },
+    "to": {
+      "member": [
+        "server-zone"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "deny-iot-to-internal",
+    "action": "deny",
+    "application": {
+      "member": [
+        "any"
+      ]
+    },
+    "category": {
+      "member": [
+        "any"
+      ]
+    },
+    "destination": {
+      "member": [
+        "internal-networks"
+      ]
+    },
+    "from": {
+      "member": [
+        "iot-zone"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "any"
+      ]
+    },
+    "source": {
+      "member": [
+        "smart-devices"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "any"
+      ]
+    },
+    "to": {
+      "member": [
+        "trusted-zone",
+        "server-zone",
+        "database-zone"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-iot-monitoring",
+    "action": "allow",
+    "application": {
+      "member": [
+        "snmp",
+        "syslog"
+      ]
+    },
+    "category": {
+      "member": [
+        "any"
+      ]
+    },
+    "destination": {
+      "member": [
+        "monitoring-servers"
+      ]
+    },
+    "from": {
+      "member": [
+        "iot-zone"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "smart-devices"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "any"
+      ]
+    },
+    "to": {
+      "member": [
+        "server-zone"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-email-services",
+    "action": "allow",
+    "application": {
+      "member": [
+        "smtp",
+        "smtps",
+        "imap",
+        "imaps",
+        "pop3",
+        "pop3s"
+      ]
+    },
+    "category": {
+      "member": [
+        "any"
+      ]
+    },
+    "destination": {
+      "member": [
+        "mail-servers"
+      ]
+    },
+    "from": {
+      "member": [
+        "internet",
+        "trusted-zone"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "any"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "any"
+      ]
+    },
+    "to": {
+      "member": [
+        "dmz"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-outbound-ntp",
+    "action": "allow",
+    "application": {
+      "member": [
+        "ntp"
+      ]
+    },
+    "category": {
+      "member": [
+        "any"
+      ]
+    },
+    "destination": {
+      "member": [
+        "ntp-servers",
+        "public-ntp-servers"
+      ]
+    },
+    "from": {
+      "member": [
+        "trusted-zone",
+        "server-zone",
+        "dmz"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "any"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "any"
+      ]
+    },
+    "to": {
+      "member": [
+        "server-zone",
+        "internet"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-finance-servers",
+    "action": "allow",
+    "application": {
+      "member": [
+        "web-browsing",
+        "ssl",
+        "oracle-db"
+      ]
+    },
+    "category": {
+      "member": [
+        "any"
+      ]
+    },
+    "destination": {
+      "member": [
+        "finance-servers"
+      ]
+    },
+    "from": {
+      "member": [
+        "trusted-zone"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "host-anti-malware"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "finance-workstations"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "domain\\finance-users"
+      ]
+    },
+    "to": {
+      "member": [
+        "server-zone"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-hr-servers",
+    "action": "allow",
+    "application": {
+      "member": [
+        "web-browsing",
+        "ssl",
+        "ms-sql-db"
+      ]
+    },
+    "category": {
+      "member": [
+        "any"
+      ]
+    },
+    "destination": {
+      "member": [
+        "hr-servers"
+      ]
+    },
+    "from": {
+      "member": [
+        "trusted-zone"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "host-anti-malware"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "hr-workstations"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "domain\\hr-users"
+      ]
+    },
+    "to": {
+      "member": [
+        "server-zone"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-client-vpn",
+    "action": "allow",
+    "application": {
+      "member": [
+        "ssl",
+        "web-browsing",
+        "ms-rdp",
+        "ssh"
+      ]
+    },
+    "category": {
+      "member": [
+        "any"
+      ]
+    },
+    "destination": {
+      "member": [
+        "internal-resources"
+      ]
+    },
+    "from": {
+      "member": [
+        "vpn-zone"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "host-anti-malware",
+        "host-firewall"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "vpn-pool"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "domain\\vpn-users"
+      ]
+    },
+    "to": {
+      "member": [
+        "trusted-zone",
+        "server-zone"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "block-p2p-applications",
+    "action": "deny",
+    "application": {
+      "member": [
+        "bittorrent",
+        "utorrent",
+        "edonkey",
+        "gnutella"
+      ]
+    },
+    "category": {
+      "member": [
+        "p2p-file-sharing"
+      ]
+    },
+    "destination": {
+      "member": [
+        "any"
+      ]
+    },
+    "from": {
+      "member": [
+        "trusted-zone"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "corporate-workstations"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "any"
+      ]
+    },
+    "to": {
+      "member": [
+        "internet"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-video-conferencing",
+    "action": "allow",
+    "application": {
+      "member": [
+        "zoom",
+        "webex",
+        "ms-teams",
+        "google-meet"
+      ]
+    },
+    "category": {
+      "member": [
+        "collaboration"
+      ]
+    },
+    "destination": {
+      "member": [
+        "any"
+      ]
+    },
+    "from": {
+      "member": [
+        "trusted-zone"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "corporate-workstations"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "domain\\employees"
+      ]
+    },
+    "to": {
+      "member": [
+        "internet"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-ldap-auth",
+    "action": "allow",
+    "application": {
+      "member": [
+        "ldap",
+        "ldaps"
+      ]
+    },
+    "category": {
+      "member": [
+        "any"
+      ]
+    },
+    "destination": {
+      "member": [
+        "directory-servers"
+      ]
+    },
+    "from": {
+      "member": [
+        "trusted-zone",
+        "dmz",
+        "server-zone"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "any"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "any"
+      ]
+    },
+    "to": {
+      "member": [
+        "server-zone"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-guest-internet",
+    "action": "allow",
+    "application": {
+      "member": [
+        "web-browsing",
+        "ssl"
+      ]
+    },
+    "category": {
+      "member": [
+        "any"
+      ]
+    },
+    "destination": {
+      "member": [
+        "any"
+      ]
+    },
+    "from": {
+      "member": [
+        "guest-wifi"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "guest-network"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "any"
+      ]
+    },
+    "to": {
+      "member": [
+        "internet"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "deny-guest-to-corporate",
+    "action": "deny",
+    "application": {
+      "member": [
+        "any"
+      ]
+    },
+    "category": {
+      "member": [
+        "any"
+      ]
+    },
+    "destination": {
+      "member": [
+        "internal-networks"
+      ]
+    },
+    "from": {
+      "member": [
+        "guest-wifi"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "any"
+      ]
+    },
+    "source": {
+      "member": [
+        "guest-network"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "any"
+      ]
+    },
+    "to": {
+      "member": [
+        "trusted-zone",
+        "server-zone",
+        "database-zone",
+        "dmz"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-cloud-saas",
+    "action": "allow",
+    "application": {
+      "member": [
+        "ms-office365",
+        "salesforce-app",
+        "gsuite"
+      ]
+    },
+    "category": {
+      "member": [
+        "business-systems"
+      ]
+    },
+    "destination": {
+      "member": [
+        "any"
+      ]
+    },
+    "from": {
+      "member": [
+        "trusted-zone"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "corporate-workstations"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "domain\\employees"
+      ]
+    },
+    "to": {
+      "member": [
+        "internet"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-partner-access",
+    "action": "allow",
+    "application": {
+      "member": [
+        "ssh",
+        "web-browsing",
+        "ssl"
+      ]
+    },
+    "category": {
+      "member": [
+        "any"
+      ]
+    },
+    "destination": {
+      "member": [
+        "partner-accessible-servers"
+      ]
+    },
+    "from": {
+      "member": [
+        "internet"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "log-setting": "log-forwarding-partner",
+    "log-start": "yes",
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "trusted-partner-ips"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "any"
+      ]
+    },
+    "to": {
+      "member": [
+        "dmz"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-syslog-monitoring",
+    "action": "allow",
+    "application": {
+      "member": [
+        "syslog"
+      ]
+    },
+    "category": {
+      "member": [
+        "any"
+      ]
+    },
+    "destination": {
+      "member": [
+        "log-collectors"
+      ]
+    },
+    "from": {
+      "member": [
+        "any"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "all-systems"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "any"
+      ]
+    },
+    "to": {
+      "member": [
+        "server-zone"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-user-web-access-specific",
+    "action": "allow",
+    "application": {
+      "member": [
+        "web-browsing",
+        "ssl"
+      ]
+    },
+    "category": {
+      "member": [
+        "business-services",
+        "education",
+        "reference-and-research"
+      ]
+    },
+    "destination": {
+      "member": [
+        "any"
+      ]
+    },
+    "from": {
+      "member": [
+        "trusted-zone"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "executive-workstations"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "domain\\executives"
+      ]
+    },
+    "to": {
+      "member": [
+        "internet"
+      ]
+    }
+  },
+  {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "deny-all",
+    "action": "deny",
+    "application": {
+      "member": [
+        "any"
+      ]
+    },
+    "category": {
+      "member": [
+        "any"
+      ]
+    },
+    "destination": {
+      "member": [
+        "any"
+      ]
+    },
+    "from": {
+      "member": [
+        "any"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "any"
+      ]
+    },
+    "source": {
+      "member": [
+        "any"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "any"
+      ]
+    },
+    "to": {
+      "member": [
+        "any"
+      ]
+    }
+  }
+]

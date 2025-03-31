@@ -61,7 +61,7 @@ curl -k -o policies.xml "https://<FIREWALL-IP>/api/?type=config&action=show&key=
 Invoke-RestMethod -SkipCertificateCheck -Uri "https://<FIREWALL-IP>/api/?type=config&action=show&key=$API_KEY&xpath=/config/devices/entry[@name='localhost.localdomain']/vsys/entry[@name='vsys1']/rulebase/security" -OutFile policies.xml
 ```
 
-> [!NOTE]
+> [!INFO]
 > You may need to update the `xpath` to match your specific
 > environment.
 
@@ -114,42 +114,27 @@ List of currently available scenarios.
 
 ### Shadowing
 
-Identifies firewall rules that will never be triggered because they're
+Identifies policies that will never be triggered because they're
 completely hidden behind earlier rules in the processing order.
+It checks if all these elements are covered by a preceding rule:
 
-#### How it works
-
-Policy Inspector analyzes your rules in their processing order and
-flags any rule that would be completely overshadowed by an earlier
-rule. It checks if all these elements are covered by a preceding rule:
-
-- Same action (allow/deny/monitor)
+- Same action (allow/deny)
 - Same or broader source and destination zones
 - Same or broader source and destination addresses
 - Same or broader applications
 - Same or broader services (ports)
 
-When **all these conditions match**, the later rule is **flagged as
+When **all conditions match**, the later rule is **flagged as
 shadowed**.
 
 ### Shadowing by Value
 
-Takes shadowing detection to the next level by analyzing the actual IP
-addresses behind your named objects and groups.
+Advanced version of [Shadowing](#shadowing). It analyze the
+actual IP addresses behind Address Objects and Address Groups. This scenario identifies
+shadowing at the precise IP subnet level by resolving Address's
+name to actual IP address.
 
-Standard shadowing checks might miss partial overlaps when using
-address objects and groups. This scenario identifies shadowing at the
-precise IP subnet level.
-
-#### How it works
-
-Instead of just comparing object names, this scenario resolves all
-address objects and groups to their actual IP addresses. It then
-performs subnet analysis to determine if the IP ranges in a rule are
-completely contained within IP ranges of earlier rules, revealing
-shadowing that might be hidden when only comparing object names.
-
-#### Additional requirements
+#### Requirements
 
 This scenario needs three input files:
 

@@ -13,7 +13,12 @@ from policy_inspector.models import (
 from policy_inspector.scenario import Scenario
 from policy_inspector.scenario.complex_shadowing import ShadowingByValue
 from policy_inspector.scenario.shadowing import Shadowing
-from policy_inspector.utils import Example, config_logger, verbose_option
+from policy_inspector.utils import (
+    Choice,
+    Example,
+    config_logger,
+    verbose_option,
+)
 
 logger = logging.getLogger()
 config_logger(logger)
@@ -97,13 +102,18 @@ def run_complex_shadowing(
 examples = [
     Example(
         name="shadowing",
-        args=[Path("1/securityrule.json")],
+        args=[Path("1/policies.json")],
+        cmd=run_shadowing,
+    ),
+    Example(
+        name="shadowing_long",
+        args=[Path("2/policies.json")],
         cmd=run_shadowing,
     ),
     Example(
         name="complex_shadowing",
         args=[
-            Path("1/securityrule.json"),
+            Path("1/policies.json"),
             Path("1/addressgroup.json"),
             Path("1/addressobject.json"),
         ],
@@ -111,25 +121,18 @@ examples = [
     ),
 ]
 
-examples_by_name = {e.name: e for e in examples}
-
-examples_dir: Path = Path(__file__).parent / "example"
-
 
 @main_run.command("example", no_args_is_help=True)
 @verbose_option(logger)
 @click.argument(
     "name",
-    # metavar="EXAMPLE",
-    type=click.Choice(list(examples_by_name.keys())),
-    # help="Name of the example"
+    type=Choice(examples),
 )
 @click.pass_context
 def run_example(ctx, name: str) -> None:
     """Run one of the examples."""
-    example = examples_by_name[name]
-    args = [examples_dir / arg for arg in example.args]
-    ctx.invoke(example.cmd.callback, *args)
+    example = next(e for e in examples if e.name == name)
+    ctx.invoke(example.cmd.callback, *example.args)
 
 
 if __name__ == "__main__":
