@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from click import Context, Parameter, option, UsageError
+from click import Context, Parameter, UsageError, option
 from click.types import Choice as clickChoice
 from pydantic import BaseModel
 from rich.logging import RichHandler
@@ -55,10 +55,10 @@ def verbose_option(logger) -> Callable:
 
 
 def config_logger(
-        logger: logging.Logger,
-        level: str = "INFO",
-        log_format: str = "%(message)s",
-        date_format: str = "[%X]",
+    logger: logging.Logger,
+    level: str = "INFO",
+    log_format: str = "%(message)s",
+    date_format: str = "[%X]",
 ) -> None:
     """
     Configure ``logger`` with ``RichHandler``
@@ -87,7 +87,7 @@ class ExampleChoice(clickChoice):
         super().__init__(list(self.examples.keys()), False)  # noqa: FBT003
 
     def convert(
-            self, value: Any, param: Optional["Parameter"], ctx: Optional["Context"]
+        self, value: Any, param: Optional["Parameter"], ctx: Optional["Context"]
     ) -> Any:
         normed_value = value
         normed_choices = self.examples

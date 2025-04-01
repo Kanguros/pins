@@ -8,15 +8,14 @@ from pins.loader import FileHandler, ModelClass
 from pins.models import (
     AddressGroup,
     AddressObject,
-    MainModel,
     SecurityRule,
 )
 from pins.scenario import Scenario
 from pins.scenario.complex_shadowing import ShadowingByValue
 from pins.scenario.shadowing import Shadowing
 from pins.utils import (
-    ExampleChoice,
     Example,
+    ExampleChoice,
     config_logger,
     verbose_option,
 )
@@ -32,7 +31,9 @@ click.rich_click.SHOW_METAVARS_COLUMN = False
 @click.group(no_args_is_help=True, add_help_option=True)
 @verbose_option(logger)
 def main():
-    """Policy Inspector"""
+    """*PINS*
+    as Policy Inspector
+    """
 
 
 @main.command("list")
@@ -105,7 +106,9 @@ def process(scenario: Scenario):
     logger.info("✓ Analysis finished")
 
 
-def load_model(model_cls: type[ModelClass], file_path: Path) -> list[ModelClass]:
+def load_model(
+    model_cls: type[ModelClass], file_path: Path
+) -> list[ModelClass]:
     """Helper function for loading models from file."""
     logger.info(f"▶ Loading {model_cls.name_plural} from {str(file_path)}")
     instances = FileHandler.load_for_model(model_cls, file_path)
