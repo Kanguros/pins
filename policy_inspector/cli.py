@@ -4,10 +4,11 @@ from pathlib import Path
 import rich_click as click
 from click import Path as ClickPath
 
-from policy_inspector.loader import load_from_file
+from policy_inspector.loader import FileHandler
 from policy_inspector.models import (
     AddressGroup,
     AddressObject,
+    MainModel,
     SecurityRule,
 )
 from policy_inspector.scenario import Scenario
@@ -61,12 +62,9 @@ def main_run():
     type=ClickPath(dir_okay=False, path_type=Path),
 )
 def run_shadowing(security_rules_path: Path) -> None:
-    security_rules = load_from_file(SecurityRule, security_rules_path)
+    security_rules = load_model(SecurityRule, security_rules_path)
     scenario = Shadowing(security_rules)
-    logger.info(f"Executing {scenario} scenario")
-    output = scenario.execute()
-    logger.debug("Analyzing results...")
-    scenario.analyze(output)
+    process(scenario)
 
 
 @main_run.command("complex_shadowing", no_args_is_help=True)
@@ -91,12 +89,29 @@ def run_complex_shadowing(
     address_groups_path: Path,
     address_objects_path: Path,
 ) -> None:
-    security_rules = load_from_file(SecurityRule, security_rules_path)
-    address_groups = load_from_file(AddressGroup, address_groups_path)
-    address_objects = load_from_file(AddressObject, address_objects_path)
+    security_rules = load_model(SecurityRule, security_rules_path)
+    address_groups = load_model(AddressGroup, address_groups_path)
+    address_objects = load_model(AddressObject, address_objects_path)
     scenario = ShadowingByValue(security_rules, address_groups, address_objects)
+    process(scenario)
+
+
+def process(scenario: Scenario):
+    """Helper function"""
+    logger.info(f"▶ Executing '{scenario.name}' scenario...")
     output = scenario.execute()
+    logger.info(f"▶ Analyzing '{scenario.name}' results...")
     scenario.analyze(output)
+    logger.info("✓ Analysis finished")
+
+
+def load_model(model_cls: type[MainModel], file_path: Path) -> list[MainModel]:
+    logger.info(f"▶ Loading {model_cls.name_plural} from {str(file_path)}")
+    instances = FileHandler.load_for_model(model_cls, file_path)
+    logger.info(
+        f"✓ Loaded {len(instances)} {model_cls.name_plural} successfully"
+    )
+    return instances
 
 
 examples = [
@@ -132,6 +147,7 @@ examples = [
 def run_example(ctx, name: str) -> None:
     """Run one of the examples."""
     example = next(e for e in examples if e.name == name)
+    logger.info(f"▶ Selected '{example.name}' example")
     ctx.invoke(example.cmd.callback, *example.args)
 
 

@@ -153,6 +153,7 @@ class Shadowing(Scenario):
     first.
     """
 
+    name: str = "Shadowing"
     checks: list[ShadowingCheckFunction] = [
         check_action,
         check_application,

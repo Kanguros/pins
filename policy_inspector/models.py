@@ -1,5 +1,5 @@
 import logging
-from typing import Literal, Optional, Union, ClassVar
+from typing import ClassVar, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 from pydantic.networks import IPv4Network
@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 class MainModel(BaseModel):
     """Base class for all example models. Mainly for common methods."""
+
     name_single: ClassVar[Optional[str]] = None
     name_plural: ClassVar[Optional[str]] = None
 

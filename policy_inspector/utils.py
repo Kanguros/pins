@@ -2,12 +2,18 @@
 import logging
 from gettext import ngettext
 from pathlib import Path
-from typing import Any, Callable, ClassVar, Optional
+from typing import Any, Callable, Optional
 
 from click import Context, Parameter, option
 from click.types import Choice as clickChoice
 from pydantic import BaseModel
 from rich.logging import RichHandler
+
+EXAMPLES_DIR = Path(__file__).parent / "example"
+
+
+def get_example_file_path(file_path: Path) -> Path:
+    return EXAMPLES_DIR / file_path
 
 
 # It's just make use of pydantic because it's available ;)
@@ -16,10 +22,8 @@ class Example(BaseModel):
     args: list
     cmd: Callable
 
-    _files_dir: ClassVar = Path(__file__).parent / "example"
-
     def model_post_init(self, data):
-        self.args = [self._files_dir / arg for arg in self.args]
+        self.args = [get_example_file_path(arg) for arg in self.args]
 
 
 def verbose_option(logger) -> Callable:
