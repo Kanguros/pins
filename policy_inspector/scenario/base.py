@@ -32,18 +32,18 @@ class Scenario:
     name: Optional[str] = None
     checks: list[Check] = []
 
-    _scenarios: set[type["Scenario"]] = set()
+    _scenarios: dict[str, type["Scenario"]] = {}
 
     def __init_subclass__(cls, **kwargs) -> None:
         """Registers subclasses automatically in the `scenarios` set."""
         super().__init_subclass__(**kwargs)
-        cls._scenarios.add(cls)
+        cls._scenarios[str(cls)] = cls
 
     def __str__(self):
         return self.name or self.__class__.__name__
 
     @classmethod
-    def get_available(cls) -> set[type["Scenario"]]:
+    def get_available(cls) -> dict[str, type["Scenario"]]:
         """
         Retrieve all registered ``Scenario`` subclasses.
 
@@ -51,6 +51,10 @@ class Scenario:
             A set containing all subclasses of ``Scenario``.
         """
         return cls._scenarios
+
+    @classmethod
+    def get_by_name(cls, name: str) -> type["Scenario"]:
+        return cls._scenarios[name]
 
     def execute(self) -> ScenarioResults:
         """

@@ -1,5 +1,5 @@
 import logging
-from typing import Literal, Optional, Union
+from typing import Literal, Optional, Union, ClassVar
 
 from pydantic import BaseModel, Field
 from pydantic.networks import IPv4Network
@@ -18,9 +18,14 @@ logger = logging.getLogger(__name__)
 
 class MainModel(BaseModel):
     """Base class for all example models. Mainly for common methods."""
+    name_single: ClassVar[Optional[str]] = None
+    name_plural: ClassVar[Optional[str]] = None
 
 
 class SecurityRule(MainModel):
+    name_single: ClassVar[str] = "Security Rule"
+    name_plural: ClassVar[str] = "Security Rules"
+
     name: str = Field(
         ...,
         description="Name of a rule.",
@@ -133,6 +138,9 @@ class SecurityRule(MainModel):
 
 
 class AddressGroup(MainModel):
+    name_single: ClassVar[str] = "Address Group"
+    name_plural: ClassVar[str] = "Address Groups"
+
     name: str = Field(..., description="Name of the address group.")
     description: str = Field(default="")
     tag: set[str] = Field(default_factory=set)
@@ -155,6 +163,9 @@ class AddressGroup(MainModel):
 
 
 class AddressObject(MainModel):
+    name_single: ClassVar[str] = "Address Object"
+    name_plural: ClassVar[str] = "Address Objects"
+
     name: str = Field(..., description="Name of the address object.")
     ip_netmask: str = Field(
         ...,
