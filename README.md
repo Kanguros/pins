@@ -1,14 +1,11 @@
-# Policy Inspector
+# pins
 
 Find out which firewall security policy is being shadowed and write
 your own custom checks.
 
-> [!CAUTION]
-> Package is under active development. Things might and will change.
-
 ![logo.png](logo.png)
 
-## What _Policy Inspector_ really is?
+## What _pins_ really is?
 
 It is a CLI tool to run a analysis of provided firewall security
 policies against a predefined series of checks
@@ -18,8 +15,8 @@ It started as a tool to detect shadowing firewall rules. It evolved
 into a small framework that allows to define different scenario very
 easily.
 
-> [!INFO]
-> As of today, _Policy Inspector_ only supports security policies
+> [!NOTE]
+> As of today, _pins_ only supports security policies
 > from Palo Alto Firewall (and Panorama).
 
 ## Installation
@@ -39,7 +36,7 @@ pipx install pins
 
 ## Quick Start
 
-To use Policy Inspector with Palo Alto firewalls, you'll first
+To use _pins_ with Palo Alto firewalls, you'll first
 need to export security rules. The simplest way to export security
 rules is using `curl`. First, get API key:
 
@@ -61,7 +58,7 @@ curl -k -o policies.xml "https://<FIREWALL-IP>/api/?type=config&action=show&key=
 Invoke-RestMethod -SkipCertificateCheck -Uri "https://<FIREWALL-IP>/api/?type=config&action=show&key=$API_KEY&xpath=/config/devices/entry[@name='localhost.localdomain']/vsys/entry[@name='vsys1']/rulebase/security" -OutFile policies.xml
 ```
 
-> [!INFO]
+> [!IMPORTANT]
 > You may need to update the `xpath` to match your specific
 > environment.
 
@@ -69,38 +66,37 @@ Once you have your security policies file, from the same directory,
 run:
 
 ```shell
-pi run shadowing policies.xml
+pins run shadowing policies.xml
 ```
 
 ## Usage
 
-Once installed, you can run it using `policyinspector` or just `pi`
-command:
+Once installed, you can run it using `pins` command:
 
 ```shell
-pi --help
+pins
 ```
 
 To list available scenarios:
 
 ```shell
-pi list
+pins list
 ```
 
 To run scenario on your own firewall rules:
 
 ```shell
-pi run shadowing policies.json
+pins run shadowing policies.json
 ```
 
 To see how it works for yourself, run scenario on example data:
 
 ```shell
-pi run example shadowing
+pins run example shadowing
 ```
 
 ```shell
-$ pi run example shadowing
+$ pins run example shadowing
 Executing Shadowing scenario
 Shadowed rules detection complete
 Analyzing results...
@@ -116,6 +112,7 @@ List of currently available scenarios.
 
 Identifies policies that will never be triggered because they're
 completely hidden behind earlier rules in the processing order.
+
 It checks if all these elements are covered by a preceding rule:
 
 - Same action (allow/deny)
@@ -130,8 +127,9 @@ shadowed**.
 ### Shadowing by Value
 
 Advanced version of [Shadowing](#shadowing). It analyze the
-actual IP addresses behind Address Objects and Address Groups. This scenario identifies
-shadowing at the precise IP subnet level by resolving Address's
+actual IP addresses behind Address Objects and Address Groups.
+
+It identifies shadowing at the precise IP subnet level by resolving Address's
 name to actual IP address.
 
 #### Requirements
@@ -161,9 +159,8 @@ flowchart TD
 ### What _Scenarios_ is?
 
 A scenario is a set of [checks](#what-_check_-is) that **evaluate firewall rules
-against
-specific issues or configurations**. Each scenario is designed to
-identify particular problem, such as shadowing rules, rules without
+against specific issues or configurations**. Each scenario is
+designed to identify particular problem, such as shadowing rules, rules without
 logging, or other security policy issues.
 
 ### What _Check_ is?
@@ -176,7 +173,7 @@ as an argument, assess whether the policies fulfill a check or not.
 If you'd like to contribute, follow these steps:
 
 ```shell
-git clone https://github.com/Kanguros/policy_inspector
+git clone https://github.com/Kanguros/pins
 cd pins
 poetry install --with=dev
 pre-commit install --install-hooks

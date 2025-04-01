@@ -17,13 +17,14 @@ pydantic = "^2.10.6"
 click = "^8.1.8"
 rich-click = "^1.8.7"
 
+
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.8.0"
 pytest = "^8.3.5"
+rich-codex = "^1.2.10"
 
 [project.scripts]
 pins = 'pins.cli:main'
-
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
