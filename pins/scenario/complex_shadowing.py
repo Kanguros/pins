@@ -1,8 +1,8 @@
 import logging
 from typing import TYPE_CHECKING
 
-from policy_inspector.resolve import resolve_rules_addresses
-from policy_inspector.scenario.shadowing import (
+from pins.resolve import resolve_rules_addresses
+from pins.scenario.shadowing import (
     CheckResult,
     Shadowing,
     ShadowingCheckFunction,
@@ -16,7 +16,7 @@ from policy_inspector.scenario.shadowing import (
 )
 
 if TYPE_CHECKING:
-    from policy_inspector.models import (
+    from pins.models import (
         AddressGroup,
         AddressObject,
         SecurityRule,

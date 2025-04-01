@@ -28,13 +28,13 @@ You can install using:
 
 ```shell
 # pip
-pip install policy_inspector
+pip install pins
 
 # poetry
-poetry add policy_inspector
+poetry add pins
 
 # pipx
-pipx install policy_inspector
+pipx install pins
 ```
 
 ## Quick Start
@@ -177,7 +177,7 @@ If you'd like to contribute, follow these steps:
 
 ```shell
 git clone https://github.com/Kanguros/policy_inspector
-cd policy_inspector
+cd pins
 poetry install --with=dev
 pre-commit install --install-hooks
 pre-commit run --all-files

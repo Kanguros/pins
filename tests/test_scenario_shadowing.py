@@ -1,7 +1,7 @@
 import pytest
 
-from policy_inspector.models import SecurityRule
-from policy_inspector.scenario.shadowing import Shadowing
+from pins.models import SecurityRule
+from pins.scenario.shadowing import Shadowing
 
 
 @pytest.fixture

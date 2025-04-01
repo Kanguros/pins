@@ -1,6 +1,6 @@
 import pytest
 
-from policy_inspector.filters import (
+from pins.filters import (
     apply_filters,
     exclude_deny,
     exclude_disabled,

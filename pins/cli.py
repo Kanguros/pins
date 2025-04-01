@@ -4,18 +4,18 @@ from pathlib import Path
 import rich_click as click
 from click import Path as ClickPath
 
-from policy_inspector.loader import FileHandler
-from policy_inspector.models import (
+from pins.loader import FileHandler, ModelClass
+from pins.models import (
     AddressGroup,
     AddressObject,
     MainModel,
     SecurityRule,
 )
-from policy_inspector.scenario import Scenario
-from policy_inspector.scenario.complex_shadowing import ShadowingByValue
-from policy_inspector.scenario.shadowing import Shadowing
-from policy_inspector.utils import (
-    Choice,
+from pins.scenario import Scenario
+from pins.scenario.complex_shadowing import ShadowingByValue
+from pins.scenario.shadowing import Shadowing
+from pins.utils import (
+    ExampleChoice,
     Example,
     config_logger,
     verbose_option,
@@ -97,7 +97,7 @@ def run_complex_shadowing(
 
 
 def process(scenario: Scenario):
-    """Helper function"""
+    """Helper function for executing and analyzing a Scenario."""
     logger.info(f"▶ Executing '{scenario.name}' scenario...")
     output = scenario.execute()
     logger.info(f"▶ Analyzing '{scenario.name}' results...")
@@ -105,7 +105,8 @@ def process(scenario: Scenario):
     logger.info("✓ Analysis finished")
 
 
-def load_model(model_cls: type[MainModel], file_path: Path) -> list[MainModel]:
+def load_model(model_cls: type[ModelClass], file_path: Path) -> list[ModelClass]:
+    """Helper function for loading models from file."""
     logger.info(f"▶ Loading {model_cls.name_plural} from {str(file_path)}")
     instances = FileHandler.load_for_model(model_cls, file_path)
     logger.info(
@@ -141,12 +142,11 @@ examples = [
 @verbose_option(logger)
 @click.argument(
     "name",
-    type=Choice(examples),
+    type=ExampleChoice(examples),
 )
 @click.pass_context
-def run_example(ctx, name: str) -> None:
+def run_example(ctx, example: Example) -> None:
     """Run one of the examples."""
-    example = next(e for e in examples if e.name == name)
     logger.info(f"▶ Selected '{example.name}' example")
     ctx.invoke(example.cmd.callback, *example.args)
 

@@ -2,7 +2,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar
 
 if TYPE_CHECKING:
-    from policy_inspector.models import SecurityRule
+    from pins.models import SecurityRule
 
 logger = logging.getLogger(__name__)
 

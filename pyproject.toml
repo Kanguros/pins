@@ -1,5 +1,5 @@
 [project]
-name = "policy_inspector"
+name = "pins"
 version = "0.1.1"
 description = ""
 authors = [
@@ -22,8 +22,7 @@ pre-commit = "^3.8.0"
 pytest = "^8.3.5"
 
 [project.scripts]
-policyinspector = 'policy_inspector.cli:main'
-pi = 'policy_inspector.cli:main'
+pins = 'pins.cli:main'
 
 
 [build-system]

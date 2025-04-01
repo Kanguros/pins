@@ -1,4 +1,4 @@
 if __name__ == "__main__":
-    from policy_inspector import cli
+    from pins import cli
 
     cli.main()

@@ -1,13 +1,13 @@
 # ruff: noqa: N802
 import pytest
 
-from policy_inspector.loader import FileHandler
-from policy_inspector.models import (
+from pins.loader import FileHandler
+from pins.models import (
     AddressGroup,
     AddressObject,
     SecurityRule,
 )
-from policy_inspector.utils import get_example_file_path
+from pins.utils import get_example_file_path
 
 
 @pytest.fixture(
