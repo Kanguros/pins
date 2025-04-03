@@ -109,10 +109,11 @@ class SecurityRule(MainModel):
     def parse_csv(cls, data: dict) -> "SecurityRule":
         """Map a CSV row to a SecurityRule."""
         mapping = {
-            "Source": "source_addresses",
-            "Destination": "destination_addresses",
-            "From": "source_zones",
-            "To": "destination_zones",
+            "Name": "name",
+            "Source Address": "source_addresses",
+            "Destination Address": "destination_addresses",
+            "Source Zone": "source_zones",
+            "Destination Zone": "destination_zones",
             "Application": "applications",
             "Service": "services",
             "Category": "category",
