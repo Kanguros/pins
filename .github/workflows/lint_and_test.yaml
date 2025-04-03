@@ -73,7 +73,7 @@ jobs:
 
             - name: Configure poetry
               env:
-                  PYPI_TOKEN: ${{ vars.PYPI_TOKEN }}
+                  PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
               run: |
                   poetry config virtualenvs.create true --local
                   poetry config virtualenvs.in-project true --local
