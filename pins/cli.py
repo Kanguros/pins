@@ -25,7 +25,7 @@ config_logger(logger)
 click.rich_click.SHOW_ARGUMENTS = True
 click.rich_click.TEXT_MARKUP = "markdown"
 # click.rich_click.APPEND_METAVARS_HELP = True
-click.rich_click.SHOW_METAVARS_COLUMN = False
+click.rich_click.SHOW_METAVARS_COLUMN = True
 
 
 @click.group(no_args_is_help=True, add_help_option=True)
@@ -99,20 +99,21 @@ def run_complex_shadowing(
 
 def process(scenario: Scenario):
     """Helper function for executing and analyzing a Scenario."""
-    logger.info(f"▶ Executing '{scenario.name}' scenario...")
+    logger.info(f"→ Executing '{scenario.name}' scenario")
     output = scenario.execute()
-    logger.info(f"▶ Analyzing '{scenario.name}' results...")
+    logger.info("")
+    logger.info("▶ Results")
+    logger.info("―――――――――")
     scenario.analyze(output)
-    logger.info("✓ Analysis finished")
 
 
 def load_model(
     model_cls: type[ModelClass], file_path: Path
 ) -> list[ModelClass]:
     """Helper function for loading models from file."""
-    logger.info(f"▶ Loading {model_cls.name_plural} from {str(file_path)}")
+    logger.info(f"↺ Loading {model_cls.name_plural}")
     instances = FileHandler.load_for_model(model_cls, file_path)
-    logger.info(
+    logger.debug(
         f"✓ Loaded {len(instances)} {model_cls.name_plural} successfully"
     )
     return instances
@@ -144,7 +145,7 @@ examples = [
 @main_run.command("example", no_args_is_help=True)
 @verbose_option(logger)
 @click.argument(
-    "name",
+    "example",
     type=ExampleChoice(examples),
 )
 @click.pass_context

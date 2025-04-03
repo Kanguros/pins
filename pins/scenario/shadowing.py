@@ -169,13 +169,8 @@ class Shadowing(Scenario):
 
     def execute(self) -> dict[str, PrecedingRulesOutputs]:
         rules = self.security_rules
-        rules_count = len(rules)
-
         results = {}
         for i, rule in enumerate(rules):
-            cid = f"[{i + 1}/{rules_count}][{rule.name}]"
-            logger.debug(f"{cid} Checking rule against {i} preceding Rules")
-
             output = {}
             for j in range(i):
                 preceding_rule = rules[j]
@@ -184,8 +179,6 @@ class Shadowing(Scenario):
                     preceding_rule,
                 )
             results[rule.name] = output
-
-        logger.debug("Shadowed rules detection complete")
         return results
 
     def analyze(
@@ -201,8 +194,8 @@ class Shadowing(Scenario):
                     shadowing_rules.append(preceding_rule_name)
 
             if shadowing_rules:
-                logger.info(
-                    f"[{rule_name}] Rule is shadowed by: {shadowing_rules}",
-                )
+                logger.info(f"✖ '{rule_name}' shadowed by:")
+                for rule in shadowing_rules:
+                    logger.info(f"   • {rule}")
             else:
-                logger.debug(f"[{rule_name}] Rule not shadowed")
+                logger.debug(f"✔ '{rule_name}' not shadowed")
