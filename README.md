@@ -1,4 +1,4 @@
-# pins
+# **pins**
 
 Find out which firewall security policy is being shadowed and write
 your own custom checks.
