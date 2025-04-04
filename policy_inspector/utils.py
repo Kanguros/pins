@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from click import Context, Parameter, UsageError, option
+import rich_click as click
 from click.types import Choice as clickChoice
 from pydantic import BaseModel
 from rich.logging import RichHandler
@@ -28,17 +28,19 @@ class Example(BaseModel):
 def verbose_option(logger) -> Callable:
     """Wrapper around Click ``option``. Sets logger and its handlers to the ``DEBUG`` level."""
 
-    def callback(ctx, param, value) -> None:
+    def callback(ctx: click.Context, param, value) -> None:
         if not value:
             return
+        package_logger = logging.getLogger("policy_inspector")
         count = len(value)
         if count > 0:
-            logger.setLevel(logging.DEBUG)
-            for handler in logger.handlers:
-                handler.setLevel(logging.DEBUG)
+            package_logger.setLevel(logging.INFO)
         if count > 1:
+            logger.setLevel(logging.DEBUG)
+        if count > 2:
+            package_logger.setLevel(logging.DEBUG)
+        if count > 3:
             handler: RichHandler = logger.handlers[0]
-            handler.enable_link_path = True
             handler._log_render.show_path = True
             handler._log_render.show_time = True
             handler._log_render.show_level = True
@@ -49,9 +51,9 @@ def verbose_option(logger) -> Callable:
         "callback": callback,
         "expose_value": False,
         "is_eager": True,
-        "help": "Set log messages to DEBUG",
+        "help": "More verbose and detailed output with each `-v` up to `-vvvv`",
     }
-    return option("-v", "--verbose", **kwargs)
+    return click.option("-v", "--verbose", **kwargs)
 
 
 def config_logger(
@@ -67,15 +69,18 @@ def config_logger(
         logger: Instance of a ``logging.Logger``
     """
     logger.setLevel(level)
+    package_logger = logging.getLogger("policy_inspector")
+    package_logger.setLevel(logging.WARNING)
+    package_logger.propagate = True
     rich_handler = RichHandler(
-        level=level,
+        # level=level,
         rich_tracebacks=True,
-        # tracebacks_suppress=[click],
         show_path=False,
         show_time=False,
         show_level=False,
         omit_repeated_times=False,
     )
+    rich_handler.enable_link_path = True
     formatter = logging.Formatter(log_format, date_format, "%")
     rich_handler.setFormatter(formatter)
     logger.handlers = [rich_handler]
@@ -87,7 +92,10 @@ class ExampleChoice(clickChoice):
         super().__init__(list(self.examples.keys()), False)  # noqa: FBT003
 
     def convert(
-        self, value: Any, param: Optional["Parameter"], ctx: Optional["Context"]
+        self,
+        value: Any,
+        param: Optional["click.Parameter"],
+        ctx: Optional["click.Context"],
     ) -> Any:
         normed_value = value
         normed_choices = self.examples
@@ -121,4 +129,4 @@ class ExampleChoice(clickChoice):
         else:
             choices_str = ", ".join(map(repr, matching_choices))
             message = f"{value!r} too many matches: {choices_str}."
-        raise UsageError(message=message, ctx=ctx)
+        raise click.UsageError(message=message, ctx=ctx)

@@ -972,7 +972,8 @@
         "zoom",
         "webex",
         "ms-teams",
-        "google-meet"
+        "google-meet",
+        "https"
       ]
     },
     "category": {
@@ -1002,7 +1003,8 @@
     },
     "source": {
       "member": [
-        "corporate-workstations"
+        "corporate-workstations",
+        "smart-devices"
       ]
     },
     "source-user": {
@@ -1332,6 +1334,60 @@
     "to": {
       "member": [
         "server-zone"
+      ]
+    }
+  },
+    {
+    "@device-group": "production-firewalls",
+    "@location": "device-group",
+    "@name": "allow-cam",
+    "action": "allow",
+    "application": {
+      "member": [
+        "zoom",
+        "webex",
+        "ms-teams",
+        "google-meet"
+      ]
+    },
+    "category": {
+      "member": [
+        "collaboration"
+      ]
+    },
+    "destination": {
+      "member": [
+        "any"
+      ]
+    },
+    "from": {
+      "member": [
+        "trusted-zone"
+      ]
+    },
+    "hip-profiles": {
+      "member": [
+        "any"
+      ]
+    },
+    "service": {
+      "member": [
+        "application-default"
+      ]
+    },
+    "source": {
+      "member": [
+        "corporate-workstations"
+      ]
+    },
+    "source-user": {
+      "member": [
+        "domain\\employees"
+      ]
+    },
+    "to": {
+      "member": [
+        "internet"
       ]
     }
   },

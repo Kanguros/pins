@@ -2,8 +2,8 @@ import logging
 from pathlib import Path
 
 import rich_click as click
-from click import Path as ClickPath
-from click import UsageError
+from rich_click import Path as ClickPath
+from rich_click import UsageError, rich_config
 
 from policy_inspector.loader import Loader, ModelClass
 from policy_inspector.models import (
@@ -25,6 +25,7 @@ logger = logging.getLogger()
 config_logger(logger)
 click.rich_click.SHOW_ARGUMENTS = True
 click.rich_click.TEXT_MARKUP = "markdown"
+click.rich_click.USE_MARKDOWN = True
 # click.rich_click.APPEND_METAVARS_HELP = True
 click.rich_click.SHOW_METAVARS_COLUMN = True
 
@@ -52,8 +53,25 @@ def main_list() -> None:
 
 @main.group("run", no_args_is_help=True)
 @verbose_option(logger)
+@rich_config(
+    help_config={
+        "style_argument": "bold yellow",
+        "commands_panel_title": "Scenarios",
+    }
+)
 def main_run():
-    """Execute Scenario."""
+    """Execute a Scenario.
+
+
+    To see how it works, run one of the examples
+
+
+    ```
+    pins run example
+
+    ```
+
+    """
 
 
 @main_run.command("shadowing", no_args_is_help=True)
@@ -69,7 +87,7 @@ def run_shadowing(security_rules_path: Path) -> None:
     process(scenario)
 
 
-@main_run.command("complex_shadowing", no_args_is_help=True)
+@main_run.command("shadowingvalue", no_args_is_help=True)
 @verbose_option(logger)
 @click.argument(
     "security_rules_path",
@@ -86,7 +104,7 @@ def run_shadowing(security_rules_path: Path) -> None:
     required=True,
     type=ClickPath(dir_okay=False, path_type=Path),
 )
-def run_complex_shadowing(
+def run_shadowingvalue(
     security_rules_path: Path,
     address_groups_path: Path,
     address_objects_path: Path,
@@ -139,7 +157,7 @@ examples = [
             Path("1/address_groups.json"),
             Path("1/address_objects.json"),
         ],
-        cmd=run_complex_shadowing,
+        cmd=run_shadowingvalue,
     ),
     Example(
         name="shadowing_with_addresses2",
@@ -148,7 +166,7 @@ examples = [
             Path("2/address_groups.json"),
             Path("2/address_objects.json"),
         ],
-        cmd=run_complex_shadowing,
+        cmd=run_shadowingvalue,
     ),
 ]
 
