@@ -27,9 +27,7 @@ def load_csv(
 ) -> Union[list[dict], Any]:
     """Loads CSV file from given file_path and return it's content."""
     return list(
-        csv.DictReader(
-            file_path.open(encoding=encoding), dialect="unix_dialect"
-        )
+        csv.DictReader(file_path.open(encoding=encoding), dialect="unix")
     )
 
 
