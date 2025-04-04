@@ -173,6 +173,8 @@ class AddressGroup(MainModel):
         parsed = {}
         for key, value in data.items():
             mapped_key = mapping.get(key, key)
+            if not mapped_key:
+                continue
             key_value = value
             if mapped_key in list_fields:
                 key_value = set(value.split(";")) if value else set()
@@ -199,10 +201,11 @@ class AddressObject(MainModel):
 
     @classmethod
     def parse_csv(cls, data: dict) -> "AddressObject":
-        """Map a JSON object to an AddressObject."""
+        """Map a CSV object to an AddressObject."""
         mapping = {"Name": "name", "Address": "ip_netmask"}
         parsed = {}
         for key, value in data.items():
-            mapped_key = mapping.get(key, key)
-            parsed[mapped_key] = value
+            mapped_key = mapping.get(key)
+            if mapped_key:
+                parsed[mapped_key] = value
         return cls(**parsed)
