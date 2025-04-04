@@ -133,11 +133,13 @@ dmypy.json
 
 # PyCharm .idea
 .idea/
-local_output
-cache/
+
+# Obsidian config
 .obsidian
-raw_notes
-local_notes
-/fontawesome-free-6.4.0-web/
+
 _output
 .local_notes
+cache/
+
+# Any .csv
+/*.csv
