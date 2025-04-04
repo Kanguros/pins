@@ -17,17 +17,17 @@ logger = logging.getLogger(__name__)
 
 
 class MainModel(BaseModel):
-    """Base class for all example models. Mainly for common methods."""
+    """Base class for all models."""
 
-    name_single: ClassVar[Optional[str]] = None
+    singular: ClassVar[Optional[str]] = None
     """Display name of a single model."""
-    name_plural: ClassVar[Optional[str]] = None
+    plural: ClassVar[Optional[str]] = None
     """Display name of a many models."""
 
 
 class SecurityRule(MainModel):
-    name_single: ClassVar[str] = "Security Rule"
-    name_plural: ClassVar[str] = "Security Rules"
+    singular: ClassVar[str] = "Security Rule"
+    plural: ClassVar[str] = "Security Rules"
 
     name: str = Field(
         ...,
@@ -142,8 +142,8 @@ class SecurityRule(MainModel):
 
 
 class AddressGroup(MainModel):
-    name_single: ClassVar[str] = "Address Group"
-    name_plural: ClassVar[str] = "Address Groups"
+    singular: ClassVar[str] = "Address Group"
+    plural: ClassVar[str] = "Address Groups"
 
     name: str = Field(..., description="Name of the address group.")
     description: str = Field(default="")
@@ -160,15 +160,15 @@ class AddressGroup(MainModel):
         for key, value in data.items():
             mapped_key = mapping.get(key, key)
             key_value = value
-            if mapped_key in list_fields:
+            if value and mapped_key in list_fields:
                 key_value = set(value) if value else set()
             parsed[mapped_key] = key_value
         return cls(**parsed)
 
 
 class AddressObject(MainModel):
-    name_single: ClassVar[str] = "Address Object"
-    name_plural: ClassVar[str] = "Address Objects"
+    singular: ClassVar[str] = "Address Object"
+    plural: ClassVar[str] = "Address Objects"
 
     name: str = Field(..., description="Name of the address object.")
     ip_netmask: str = Field(

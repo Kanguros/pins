@@ -3,6 +3,7 @@ from pathlib import Path
 
 import rich_click as click
 from click import Path as ClickPath
+from click import UsageError
 
 from policy_inspector.loader import Loader, ModelClass
 from policy_inspector.models import (
@@ -11,8 +12,8 @@ from policy_inspector.models import (
     SecurityRule,
 )
 from policy_inspector.scenario import Scenario
-from policy_inspector.scenario.complex_shadowing import ShadowingByValue
 from policy_inspector.scenario.shadowing import Shadowing
+from policy_inspector.scenario.shadowing_by_value import ShadowingByValue
 from policy_inspector.utils import (
     Example,
     ExampleChoice,
@@ -93,29 +94,30 @@ def run_complex_shadowing(
     security_rules = load_model(SecurityRule, security_rules_path)
     address_groups = load_model(AddressGroup, address_groups_path)
     address_objects = load_model(AddressObject, address_objects_path)
-    scenario = ShadowingByValue(security_rules, address_groups, address_objects)
+    scenario = ShadowingByValue(security_rules, address_objects, address_groups)
     process(scenario)
 
 
 def process(scenario: Scenario):
     """Helper function for executing and analyzing a Scenario."""
     logger.info(f"→ Executing '{scenario.name}' scenario")
-    output = scenario.execute()
-    logger.info("")
-    logger.info("▶ Results")
-    logger.info("―――――――――")
-    scenario.analyze(output)
+    try:
+        output = scenario.execute()
+        logger.info("")
+        logger.info("▶ Results")
+        logger.info("―――――――――")
+        scenario.analyze(output)
+    except Exception as ex:  # noqa: BLE001
+        raise UsageError(str(ex))  # noqa: B904
 
 
 def load_model(
     model_cls: type[ModelClass], file_path: Path
 ) -> list[ModelClass]:
     """Helper function for loading models from file."""
-    logger.info(f"↺ Loading {model_cls.name_plural}")
+    logger.info(f"↺ Loading {model_cls.plural}")
     instances = Loader.load_model(model_cls, file_path)
-    logger.debug(
-        f"✓ Loaded {len(instances)} {model_cls.name_plural} successfully"
-    )
+    logger.debug(f"✓ Loaded {len(instances)} {model_cls.plural} successfully")
     return instances
 
 
@@ -131,11 +133,20 @@ examples = [
         cmd=run_shadowing,
     ),
     Example(
-        name="complex_shadowing",
+        name="shadowing_with_addresses",
         args=[
             Path("1/policies.json"),
-            Path("1/addressgroup.json"),
-            Path("1/addressobject.json"),
+            Path("1/address_groups.json"),
+            Path("1/address_objects.json"),
+        ],
+        cmd=run_complex_shadowing,
+    ),
+    Example(
+        name="shadowing_with_addresses2",
+        args=[
+            Path("2/policies.json"),
+            Path("2/address_groups.json"),
+            Path("2/address_objects.json"),
         ],
         cmd=run_complex_shadowing,
     ),

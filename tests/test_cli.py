@@ -76,10 +76,10 @@ def test_list_command_verbose(runner):
         assert phrase in result.output
 
 
-# @pytest.mark.parametrize("name", list(cli.examples_by_name.keys()))
-# def test_run_example(name):
-#     result = CliRunner().invoke(
-#         cli.run_example, [name], color=False, catch_exceptions=False
-#     )
-#     print(result.stdout)
-#     assert result.exit_code == 0
+@pytest.mark.parametrize("name", [example.name for example in cli.examples])
+def test_run_example(name):
+    result = CliRunner().invoke(
+        cli.run_example, [name], color=False, catch_exceptions=False
+    )
+    print(result.stdout)
+    assert result.exit_code == 0

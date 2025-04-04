@@ -195,7 +195,6 @@ class Shadowing(Scenario):
                     check_result[0] for check_result in checks_results.values()
                 ):
                     shadowing_rules.append(preceding_rule_name)
-
             if shadowing_rules:
                 logger.info(f"✖ '{rule_name}' shadowed by:")
                 for rule in shadowing_rules:

@@ -101,6 +101,7 @@ ignore = [
     "EM102", # Exception must not use an f-string literal, assign to variable first
     "S311",  # Standard pseudo-random generators are not suitable for cryptographic purposes
     "D100",  # Missing docstring in public module
+    "TRY300" # Consider moving this statement to an `else` block
 ]
 
 

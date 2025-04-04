@@ -13,8 +13,8 @@ from policy_inspector.utils import get_example_file_path
 @pytest.fixture(
     params=[
         (SecurityRule, "1/policies.json"),
-        (AddressGroup, "1/addressgroup.json"),
-        (AddressObject, "1/addressobject.json"),
+        (AddressGroup, "1/address_groups.json"),
+        (AddressObject, "1/address_objects.json"),
         (SecurityRule, "2/policies.json"),
     ]
 )

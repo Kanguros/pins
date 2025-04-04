@@ -1,5 +1,5 @@
 from .base import Scenario
 from .shadowing import Shadowing
-from .complex_shadowing import ShadowingByValue
+from .shadowing_by_value import ShadowingByValue
 
 __all__ = ["Scenario", "Shadowing", "ShadowingByValue"]
