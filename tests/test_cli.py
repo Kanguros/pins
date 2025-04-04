@@ -1,7 +1,7 @@
 import pytest
 from click.testing import CliRunner
 
-from pins import cli
+from policy_inspector import cli
 
 
 @pytest.fixture

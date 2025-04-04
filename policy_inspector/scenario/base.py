@@ -2,7 +2,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar
 
 if TYPE_CHECKING:
-    from pins.models import SecurityRule
+    from policy_inspector.models import SecurityRule
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +100,9 @@ class Scenario:
             try:
                 results[check.__name__] = check(*rules)
             except Exception as ex:  # noqa: BLE001
-                logger.exception(
-                    f"Error '{ex}' occur during running: \n{check}\n{rules}. "  # noqa: TRY401
-                )
+                logger.warning(f"☠ Error: {ex}")
+                logger.warning(f"☠ Check function: '{check.__name__}'")
+                for i, rule in enumerate(rules, start=1):
+                    logger.warning(f"☠ Rule {i}: {rule.name}")
+                    logger.debug(f"☠ Rule {i}: {rule.model_dump()}")
         return results

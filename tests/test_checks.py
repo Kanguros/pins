@@ -3,8 +3,8 @@ from typing import Callable
 import pytest
 from _pytest.mark import ParameterSet
 
-from pins.models import AnyObj, SecurityRule
-from pins.scenario.shadowing import (
+from policy_inspector.models import AnyObj, SecurityRule
+from policy_inspector.scenario.shadowing import (
     check_action,
     check_application,
     check_destination_address,

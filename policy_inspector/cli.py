@@ -4,16 +4,16 @@ from pathlib import Path
 import rich_click as click
 from click import Path as ClickPath
 
-from pins.loader import FileHandler, ModelClass
-from pins.models import (
+from policy_inspector.loader import Loader, ModelClass
+from policy_inspector.models import (
     AddressGroup,
     AddressObject,
     SecurityRule,
 )
-from pins.scenario import Scenario
-from pins.scenario.complex_shadowing import ShadowingByValue
-from pins.scenario.shadowing import Shadowing
-from pins.utils import (
+from policy_inspector.scenario import Scenario
+from policy_inspector.scenario.complex_shadowing import ShadowingByValue
+from policy_inspector.scenario.shadowing import Shadowing
+from policy_inspector.utils import (
     Example,
     ExampleChoice,
     config_logger,
@@ -112,7 +112,7 @@ def load_model(
 ) -> list[ModelClass]:
     """Helper function for loading models from file."""
     logger.info(f"↺ Loading {model_cls.name_plural}")
-    instances = FileHandler.load_for_model(model_cls, file_path)
+    instances = Loader.load_model(model_cls, file_path)
     logger.debug(
         f"✓ Loaded {len(instances)} {model_cls.name_plural} successfully"
     )

@@ -4,13 +4,13 @@
 # import rich
 # from loader import load_json
 #
-# from pins.models import (
+# from policy_inspector.models import (
 #     AddressGroup,
 #     AddressObject,
 #     SecurityRule,
 # )
-# from pins.resolve import resolve_rules_addresses
-# from pins.shadowing import run_checks_on_rules
+# from policy_inspector.resolve import resolve_rules_addresses
+# from policy_inspector.shadowing import run_checks_on_rules
 #
 # data_dir = Path(__file__).parent.parent / "example"
 # security_rules_data = load_json(data_dir / "securityrule.example1.json")

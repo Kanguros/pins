@@ -20,7 +20,9 @@ class MainModel(BaseModel):
     """Base class for all example models. Mainly for common methods."""
 
     name_single: ClassVar[Optional[str]] = None
+    """Display name of a single model."""
     name_plural: ClassVar[Optional[str]] = None
+    """Display name of a many models."""
 
 
 class SecurityRule(MainModel):

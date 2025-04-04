@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypeVar, Union
 
 if TYPE_CHECKING:
-    from pins.models import MainModel
+    from policy_inspector.models import MainModel
 
 logger = logging.getLogger(__name__)
 
@@ -29,16 +29,13 @@ def load_csv(
     return list(csv.DictReader(file_path.open(encoding=encoding)))
 
 
-class FileHandler:
+class Loader:
     _loaders = {"json": load_json, "csv": load_csv}
     """Mapping of file extensions to example loading functions."""
+    parser_suffix: str = "parse_"
 
     @classmethod
-    def add_loader(cls, extension: str, loader: callable):
-        cls._loaders[extension] = loader
-
-    @classmethod
-    def load_for_model(
+    def load_model(
         cls, model_cls: type[ModelClass], file_path: Path
     ) -> list[ModelClass]:
         """Load given file and create instances of the specified model class.
@@ -58,7 +55,7 @@ class FileHandler:
         loader = cls._loaders[ext]
         raw_items = loader(file_path)
 
-        parser_name = f"parse_{ext}"
+        parser_name = f"{cls.parser_suffix}{ext}"
         parser_method = getattr(model_cls, parser_name, None)
         if parser_method is None:
             raise ValueError(f"{model_cls.__name__} lacks {parser_name} method")

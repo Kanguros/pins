@@ -1,6 +1,6 @@
 import pytest
 
-from pins.scenario.base import Scenario
+from policy_inspector.scenario.base import Scenario
 
 
 class TestScenarioWithImplementation:

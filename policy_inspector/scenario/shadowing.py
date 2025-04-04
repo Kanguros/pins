@@ -1,11 +1,11 @@
 import logging
 from typing import TYPE_CHECKING, Callable
 
-from pins.models import AnyObj
-from pins.scenario.base import CheckResult, Scenario
+from policy_inspector.models import AnyObj
+from policy_inspector.scenario.base import CheckResult, Scenario
 
 if TYPE_CHECKING:
-    from pins.models import SecurityRule
+    from policy_inspector.models import SecurityRule
 
 logger = logging.getLogger(__name__)
 
@@ -70,11 +70,14 @@ def check_source_address(
     preceding_rule: "SecurityRule",
 ) -> CheckResult:
     """Checks the source addresses of the preceding rule's addresses."""
+    if rule.source_addresses == preceding_rule.source_addresses:
+        return True, "Source addresses are the same"
+
     if AnyObj in preceding_rule.source_addresses:
         return True, "Preceding rule allows any source address"
 
-    if rule.source_addresses == preceding_rule.source_addresses:
-        return True, "Source addresses are the same"
+    if AnyObj in rule.source_addresses:
+        return False, "Rule not covered due to 'any' source"
 
     if rule.source_addresses.issubset(preceding_rule.source_addresses):
         return (

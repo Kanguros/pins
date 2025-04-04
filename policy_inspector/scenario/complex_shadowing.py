@@ -1,8 +1,9 @@
 import logging
 from typing import TYPE_CHECKING
 
-from pins.resolve import resolve_rules_addresses
-from pins.scenario.shadowing import (
+from policy_inspector.models import AnyObj
+from policy_inspector.resolve import resolve_rules_addresses
+from policy_inspector.scenario.shadowing import (
     CheckResult,
     Shadowing,
     ShadowingCheckFunction,
@@ -11,12 +12,11 @@ from pins.scenario.shadowing import (
     check_destination_address,
     check_destination_zone,
     check_services,
-    check_source_address,
     check_source_zone,
 )
 
 if TYPE_CHECKING:
-    from pins.models import (
+    from policy_inspector.models import (
         AddressGroup,
         AddressObject,
         SecurityRule,
@@ -36,9 +36,14 @@ def check_source_addresses_by_ip(
     rule: "SecurityRule",
     preceding_rule: "SecurityRule",
 ) -> CheckResult:
-    check_by_name = check_source_address(rule, preceding_rule)
-    if check_by_name[0]:
-        return check_by_name
+    if rule.source_addresses == preceding_rule.source_addresses:
+        return True, "Source addresses are the same"
+
+    if AnyObj in preceding_rule.source_addresses:
+        return True, "Preceding rule allows any source address"
+
+    if AnyObj in rule.source_addresses:
+        return False, "Rule not covered due to 'any' source"
 
     for addr in rule.source_addresses_ip:
         if not any(
