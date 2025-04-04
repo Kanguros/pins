@@ -147,8 +147,8 @@ class AddressGroup(MainModel):
 
     name: str = Field(..., description="Name of the address group.")
     description: str = Field(default="")
-    tag: set[str] = Field(default_factory=set)
-    static: set[str] = Field(default_factory=set)
+    tag: SetStr = Field(default_factory=set)
+    static: SetStr = Field(default_factory=set)
 
     @classmethod
     def parse_json(cls, data: dict) -> "AddressGroup":
@@ -162,6 +162,20 @@ class AddressGroup(MainModel):
             key_value = value
             if value and mapped_key in list_fields:
                 key_value = set(value) if value else set()
+            parsed[mapped_key] = key_value
+        return cls(**parsed)
+
+    @classmethod
+    def parse_csv(cls, data: dict) -> "AddressGroup":
+        """Map a JSON object to an AddressObject."""
+        mapping = {"Name": "name", "Addresses": "static", "Tags": "tag"}
+        list_fields = ("tag", "static")
+        parsed = {}
+        for key, value in data.items():
+            mapped_key = mapping.get(key, key)
+            key_value = value
+            if mapped_key in list_fields:
+                key_value = set(value.split(";")) if value else set()
             parsed[mapped_key] = key_value
         return cls(**parsed)
 
@@ -181,4 +195,14 @@ class AddressObject(MainModel):
         """Map a JSON object to an AddressObject."""
         mapping = {"@name": "name", "ip-netmask": "ip_netmask"}
         parsed = {mapping.get(k, k): v for k, v in data.items()}
+        return cls(**parsed)
+
+    @classmethod
+    def parse_csv(cls, data: dict) -> "AddressObject":
+        """Map a JSON object to an AddressObject."""
+        mapping = {"Name": "name", "Address": "ip_netmask"}
+        parsed = {}
+        for key, value in data.items():
+            mapped_key = mapping.get(key, key)
+            parsed[mapped_key] = value
         return cls(**parsed)
