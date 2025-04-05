@@ -3,20 +3,20 @@
 import pytest
 
 from policy_inspector.loader import Loader
-from policy_inspector.models import (
-    AddressGroup,
-    AddressObject,
-    SecurityRule,
-)
+from policy_inspector.model.address_group import AddressGroup
+from policy_inspector.model.address_object import AddressObject
+from policy_inspector.model.security_rule import SecurityRule
 from policy_inspector.utils import get_example_file_path
 
 
 @pytest.fixture(
     params=[
         (SecurityRule, "1/policies.json"),
-        (AddressGroup, "1/address_groups.json"),
-        (AddressObject, "1/address_objects.json"),
         (SecurityRule, "2/policies.json"),
+        (AddressGroup, "1/address_groups.json"),
+        (AddressGroup, "2/address_groups.json"),
+        (AddressObject, "1/address_objects.json"),
+        (AddressObject, "2/address_objects.json"),
     ]
 )
 def model_with_path(request):
@@ -35,9 +35,9 @@ def temp_address_objects(tmp_path):
     rows = 50000
     file_path = tmp_path / "address_objects_large.csv"
     with open(file_path, mode="w+") as f:
-        f.write('"Name","Address","Tags"\r')
+        f.write('"Name","Type","Address","Tags"\r')
         for i in range(rows):
-            f.write(f'"ObjName_{i}","8.8.8.8","t1;t2"\r')
+            f.write(f'"ObjName_{i}","IP Address","8.8.8.8","t1;t2"\r')
         return file_path
 
 

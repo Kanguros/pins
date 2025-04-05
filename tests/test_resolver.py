@@ -2,17 +2,26 @@ from ipaddress import IPv4Network
 
 import pytest
 
-from policy_inspector.models import AddressGroup, AddressObject
+from policy_inspector.model.address_group import AddressGroup
+from policy_inspector.model.address_object import AddressObject, AddressType
 from policy_inspector.resolver import AddressResolver
 
 
 @pytest.fixture
 def address_objects():
     return [
-        AddressObject(name="web1", ip_netmask="192.168.1.1/32"),
-        AddressObject(name="web2", ip_netmask="192.168.1.2/32"),
-        AddressObject(name="web3", ip_netmask="222.222.222.222/32"),
-        AddressObject(name="web4_TEMP", ip_netmask="10.10.1.10/32"),
+        AddressObject(
+            name="web1", type=AddressType.IP_NETMASK, value="192.168.1.1/32"
+        ),
+        AddressObject(
+            name="web2", type=AddressType.IP_NETMASK, value="192.168.1.2/32"
+        ),
+        AddressObject(
+            name="web3", type=AddressType.IP_NETMASK, value="222.222.222.222/32"
+        ),
+        AddressObject(
+            name="web4_TEMP", type=AddressType.IP_NETMASK, value="10.10.1.10/32"
+        ),
     ]
 
 
@@ -82,10 +91,18 @@ def test_cache_usage(address_objects, address_groups):
 
 def test_complex_hierarchy():
     objects = [
-        AddressObject(name="db1", ip_netmask="10.0.0.5/32"),
-        AddressObject(name="db2", ip_netmask="10.0.0.6/32"),
-        AddressObject(name="web1", ip_netmask="192.168.1.1/32"),
-        AddressObject(name="web2", ip_netmask="192.168.1.2/32"),
+        AddressObject(
+            name="db1", type=AddressType.IP_NETMASK, value="10.0.0.5/32"
+        ),
+        AddressObject(
+            name="db2", type=AddressType.IP_NETMASK, value="10.0.0.6/32"
+        ),
+        AddressObject(
+            name="web1", type=AddressType.IP_NETMASK, value="192.168.1.1/32"
+        ),
+        AddressObject(
+            name="web2", type=AddressType.IP_NETMASK, value="192.168.1.2/32"
+        ),
     ]
     groups = [
         AddressGroup(name="databases", static={"db1", "db2"}),

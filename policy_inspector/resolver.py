@@ -3,7 +3,8 @@ from ipaddress import IPv4Network
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from policy_inspector.models import AddressGroup, AddressObject
+    from policy_inspector.model.address_group import AddressGroup
+    from policy_inspector.model.address_object import AddressObject
 
 logger = logging.getLogger(__name__)
 

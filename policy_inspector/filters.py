@@ -2,7 +2,7 @@ from collections.abc import Iterable, Iterator
 from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
-    from policy_inspector.models import SecurityRule
+    from policy_inspector.model.security_rule import SecurityRule
 
 FilterFunction = Callable[["SecurityRule"], bool]
 

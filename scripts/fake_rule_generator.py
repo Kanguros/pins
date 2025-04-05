@@ -6,7 +6,8 @@ from typing import Union
 
 import rich
 
-from policy_inspector.models import AnyObj, AppDefault, SecurityRule
+from policy_inspector.model.base import AnyObj, AppDefault
+from policy_inspector.model.security_rule import SecurityRule
 
 ACTIONS = ["allow"] * 95 + ["deny"] * 5
 ZONES = [

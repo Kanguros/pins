@@ -6,11 +6,9 @@ from rich_click import Path as ClickPath
 from rich_click import UsageError, rich_config
 
 from policy_inspector.loader import Loader, ModelClass
-from policy_inspector.models import (
-    AddressGroup,
-    AddressObject,
-    SecurityRule,
-)
+from policy_inspector.model.address_group import AddressGroup
+from policy_inspector.model.address_object import AddressObject
+from policy_inspector.model.security_rule import SecurityRule
 from policy_inspector.scenario import Scenario
 from policy_inspector.scenario.shadowing import Shadowing
 from policy_inspector.scenario.shadowing_by_value import ShadowingByValue

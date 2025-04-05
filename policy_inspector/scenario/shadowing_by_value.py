@@ -1,7 +1,6 @@
 import logging
 from typing import TYPE_CHECKING
 
-from policy_inspector.models import AnyObj
 from policy_inspector.resolver import AddressResolver
 from policy_inspector.scenario.shadowing import (
     CheckResult,
@@ -14,14 +13,13 @@ from policy_inspector.scenario.shadowing import (
     check_source_zone,
 )
 
+from ..model.base import AnyObj
 from .shadowing import PrecedingRulesOutputs
 
 if TYPE_CHECKING:
-    from policy_inspector.models import (
-        AddressGroup,
-        AddressObject,
-        SecurityRule,
-    )
+    from ..model.address_group import AddressGroup
+    from ..model.address_object import AddressObject
+    from ..model.security_rule import SecurityRule
 
 logger = logging.getLogger(__name__)
 

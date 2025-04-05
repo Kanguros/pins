@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypeVar, Union
 
 if TYPE_CHECKING:
-    from policy_inspector.models import MainModel
+    from policy_inspector.model.base import MainModel
 
 logger = logging.getLogger(__name__)
 

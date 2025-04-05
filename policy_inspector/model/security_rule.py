@@ -1,28 +1,15 @@
-import logging
-from typing import ClassVar, Literal, Optional, Union
+from ipaddress import IPv4Network
+from typing import ClassVar, Optional, Union
 
-from pydantic import BaseModel, Field
-from pydantic.networks import IPv4Network
+from pydantic import Field
 
-AnyObj = "any"
-AnyObjType = set[Literal["any"]]
-
-AppDefault = "application-default"
-AppDefaultType = set[Literal["application-default"]]
-
-SetStr = set[str]
-Action = Literal["allow", "deny", "monitor"]
-
-logger = logging.getLogger(__name__)
-
-
-class MainModel(BaseModel):
-    """Base class for all models."""
-
-    singular: ClassVar[Optional[str]] = None
-    """Display name of a single model."""
-    plural: ClassVar[Optional[str]] = None
-    """Display name of a many models."""
+from policy_inspector.model.base import (
+    Action,
+    AnyObjType,
+    AppDefaultType,
+    MainModel,
+    SetStr,
+)
 
 
 class SecurityRule(MainModel):
@@ -139,73 +126,3 @@ class SecurityRule(MainModel):
             parsed_data[mapped_key] = key_value
 
         return cls(**parsed_data)
-
-
-class AddressGroup(MainModel):
-    singular: ClassVar[str] = "Address Group"
-    plural: ClassVar[str] = "Address Groups"
-
-    name: str = Field(..., description="Name of the address group.")
-    description: str = Field(default="")
-    tag: SetStr = Field(default_factory=set)
-    static: SetStr = Field(default_factory=set)
-
-    @classmethod
-    def parse_json(cls, data: dict) -> "AddressGroup":
-        """Map a JSON object to an AddressGroup."""
-        mapping = {"@name": "name", "ip-address": "ip_address"}
-        list_fields = ("tag", "static")
-
-        parsed = {}
-        for key, value in data.items():
-            mapped_key = mapping.get(key, key)
-            key_value = value
-            if value and mapped_key in list_fields:
-                key_value = set(value) if value else set()
-            parsed[mapped_key] = key_value
-        return cls(**parsed)
-
-    @classmethod
-    def parse_csv(cls, data: dict) -> "AddressGroup":
-        """Map a JSON object to an AddressObject."""
-        mapping = {"Name": "name", "Addresses": "static", "Tags": "tag"}
-        list_fields = ("tag", "static")
-        parsed = {}
-        for key, value in data.items():
-            mapped_key = mapping.get(key, key)
-            if not mapped_key:
-                continue
-            key_value = value
-            if mapped_key in list_fields:
-                key_value = set(value.split(";")) if value else set()
-            parsed[mapped_key] = key_value
-        return cls(**parsed)
-
-
-class AddressObject(MainModel):
-    singular: ClassVar[str] = "Address Object"
-    plural: ClassVar[str] = "Address Objects"
-
-    name: str = Field(..., description="Name of the address object.")
-    ip_netmask: str = Field(
-        ...,
-        description="IP address and netmask of the address object.",
-    )
-
-    @classmethod
-    def parse_json(cls, data: dict) -> "AddressObject":
-        """Map a JSON object to an AddressObject."""
-        mapping = {"@name": "name", "ip-netmask": "ip_netmask"}
-        parsed = {mapping.get(k, k): v for k, v in data.items()}
-        return cls(**parsed)
-
-    @classmethod
-    def parse_csv(cls, data: dict) -> "AddressObject":
-        """Map a CSV object to an AddressObject."""
-        mapping = {"Name": "name", "Address": "ip_netmask"}
-        parsed = {}
-        for key, value in data.items():
-            mapped_key = mapping.get(key)
-            if mapped_key:
-                parsed[mapped_key] = value
-        return cls(**parsed)

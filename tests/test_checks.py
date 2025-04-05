@@ -3,7 +3,8 @@ from typing import Callable
 import pytest
 from _pytest.mark import ParameterSet
 
-from policy_inspector.models import AnyObj, SecurityRule
+from policy_inspector.model.base import AnyObj
+from policy_inspector.model.security_rule import SecurityRule
 from policy_inspector.scenario.shadowing import (
     check_action,
     check_application,

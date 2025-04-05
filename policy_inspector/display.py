@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from rich.table import Table
 
 if TYPE_CHECKING:
-    from policy_inspector.models import SecurityRule
+    from policy_inspector.model.security_rule import SecurityRule
 
 
 def display_rules(*rules: "SecurityRule", title: str = "Rules"):

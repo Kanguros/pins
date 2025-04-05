@@ -1,11 +1,11 @@
 import logging
 from typing import TYPE_CHECKING, Callable
 
-from policy_inspector.models import AnyObj
+from policy_inspector.model.base import AnyObj
 from policy_inspector.scenario.base import CheckResult, Scenario
 
 if TYPE_CHECKING:
-    from policy_inspector.models import SecurityRule
+    from policy_inspector.model.security_rule import SecurityRule
 
 logger = logging.getLogger(__name__)
 

@@ -1,70 +1,70 @@
 [
   {
-    "name": "internal-devices",
+    "@name": "internal-devices",
     "static": ["internal-subnet-1", "internal-subnet-2"]
   },
   {
-    "name": "admin-workstations",
+    "@name": "admin-workstations",
     "static": ["admin-subnet"]
   },
   {
-    "name": "smart-devices",
+    "@name": "smart-devices",
     "static": ["iot-subnet"]
   },
   {
-    "name": "corporate-workstations",
+    "@name": "corporate-workstations",
     "static": ["corp-subnet-1", "corp-subnet-2"]
   },
   {
-    "name": "dmz-web-servers",
+    "@name": "dmz-web-servers",
     "static": ["web-server-1", "web-server-2"]
   },
   {
-    "name": "linux-servers",
+    "@name": "linux-servers",
     "static": ["linux-server-1", "linux-server-2"]
   },
   {
-    "name": "windows-servers",
+    "@name": "windows-servers",
     "static": ["windows-server-1", "windows-server-2"]
   },
   {
-    "name": "all-systems",
+    "@name": "all-systems",
     "static": ["internal-subnet-1", "corp-subnet-1", "admin-subnet"]
   },
   {
-    "name": "application-servers",
+    "@name": "application-servers",
     "static": ["corp-subnet-1", "internal-subnet-2"]
   },
   {
-    "name": "data-analytics-servers",
+    "@name": "data-analytics-servers",
     "static": ["internal-subnet-2", "database-servers"]
   },
   {
-    "name": "executive-workstations",
+    "@name": "executive-workstations",
     "static": ["executive-subnet"]
   },
   {
-    "name": "finance-workstations",
+    "@name": "finance-workstations",
     "static": ["finance-subnet"]
   },
   {
-    "name": "hr-workstations",
+    "@name": "hr-workstations",
     "static": ["hr-subnet"]
   },
   {
-    "name": "guest-network",
+    "@name": "guest-network",
     "static": ["guest-subnet"]
   },
   {
-    "name": "internal-networks",
+    "@name": "internal-networks",
     "static": ["internal-subnet-1", "internal-subnet-2", "corp-subnet-1"]
   },
   {
-    "name": "internal-resources",
+    "@name": "internal-resources",
     "static": ["database-servers", "directory-servers", "mail-servers"]
   },
   {
-    "name": "database-zone",
+    "@name": "database-zone",
     "static": ["database-servers"]
   }
 ]
