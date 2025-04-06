@@ -25,7 +25,7 @@ class AddressResolver:
         address_groups: list["AddressGroup"],
     ):
         self.address_objects: dict[str, str] = {
-            ao.name: ao.ip_netmask for ao in address_objects
+            ao.name: ao.value for ao in address_objects
         }
         self.address_groups: dict[str, set[str]] = {
             ag.name: ag.static for ag in address_groups
