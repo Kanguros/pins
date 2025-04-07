@@ -1,18 +1,18 @@
 import logging
 from ipaddress import IPv4Network
-from typing import TYPE_CHECKING
+from policy_inspector.model.address_object import AddressObject, AddressObjectIPNetwork
+from typing import TYPE_CHECKING, Iterable
 
 if TYPE_CHECKING:
     from policy_inspector.model.address_group import AddressGroup
-    from policy_inspector.model.address_object import AddressObject
 
 logger = logging.getLogger(__name__)
 
 
 class AddressResolver:
-    """Process type of class to resolve Address Groups and Address Objects into their actual IP addresses.
+    """Process Address Groups into their Address Objects or IP Network object.
 
-    It expands Address Groups (AG) recursively and converts Address Objects (AO) into IP networks.
+    It expands Address Groups (AG) recursively.
 
     Args:
         address_objects: A list of ``AddressObject``.
@@ -20,54 +20,55 @@ class AddressResolver:
     """
 
     def __init__(
-        self,
-        address_objects: list["AddressObject"],
-        address_groups: list["AddressGroup"],
+            self,
+            address_objects: list["AddressObject"],
+            address_groups: list["AddressGroup"],
     ):
-        self.address_objects: dict[str, str] = {
-            ao.name: ao.value for ao in address_objects
+        self.address_objects: dict[str, 'AddressObject'] = {
+            ao.name: ao for ao in address_objects
         }
         self.address_groups: dict[str, set[str]] = {
             ag.name: ag.static for ag in address_groups
         }
-        self.cache: dict[str, set[IPv4Network]] = {}
+        self.cache: dict[str, list['AddressObject']] = {}
 
-    def resolve(self, names: set[str]) -> set[IPv4Network]:
-        """Resolve given names of ``Address Groups`` or ``Address Objects`` to actual IP address.
+    def resolve(self, names: Iterable[str]) -> list['AddressObject']:
+        """Resolve given names.
 
         Args:
             names: Names of ``Address Groups`` or ``Address Objects``
 
-        Returns:
-            Set of ``IPv4Network`` of all ``names``.
-
         """
-        result = set()
+        result = []
         for name in names:
-            result.update(self._resolve_name(name))
+            result.extend(self._resolve_name(name))
         return result
 
-    def _resolve_name(self, name: str) -> set[IPv4Network]:
+    def _resolve_name(self, name: str) -> list['AddressObject']:
         """Resolve single ``name``"""
+        print(f"Resolving {name=}")
         if name in self.cache:
             return self.cache[name]
 
         if name in self.address_groups:
             logger.debug(f"Resolving group: {name}")
-            resolved = set()
+            resolved = []
             for member in self.address_groups[name]:
-                resolved.update(self._resolve_name(member))
+                resolved.extend(self._resolve_name(member))
             self.cache[name] = resolved
             return resolved
 
-        if name in self.address_objects:
+        try:
             logger.debug(f"Resolving object: {name}")
-            try:
-                network = IPv4Network(self.address_objects[name], strict=False)
-                result = {network}
-                self.cache[name] = result
-                return result
-            except ValueError as e:
-                raise ValueError(f"Invalid IP network for {name}: {e}") from e
+            resolved = [self.address_objects[name]]
+            self.cache[name] = resolved
+            return resolved
+        except KeyError:
+            pass
 
-        raise ValueError(f"Unknown address object/group: {name}")
+        try:
+            resolved = [AddressObjectIPNetwork(name=name, value=name)]
+            self.cache[name] = resolved
+            return resolved
+        except ValueError as ex:
+            raise ValueError(f"Unknown address object/group: {name}") from ex

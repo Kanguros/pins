@@ -45,12 +45,6 @@ def test_run_command(arg):
     result = CliRunner().invoke(cli.main, args)
 
     assert result.exit_code == 0
-    # for phrase in [
-    #     "Execute Scenario.",
-    #     "shadowing",
-    #     "shadowingvalue",
-    # ]:
-    #     assert phrase in result.output
 
 
 def test_list_command(runner):
@@ -81,5 +75,4 @@ def test_run_example(name):
     result = CliRunner().invoke(
         cli.run_example, [name], color=False, catch_exceptions=False
     )
-    print(result.stdout)
     assert result.exit_code == 0

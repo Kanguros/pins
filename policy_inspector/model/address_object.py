@@ -3,7 +3,7 @@ import re
 from ipaddress import IPv4Address, IPv4Network
 from typing import ClassVar
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, ConfigDict
 
 from policy_inspector.model.base import MainModel
 
@@ -11,6 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 class AddressObject(MainModel):
+    """Base class representing a network address object."""
+
+
     singular: ClassVar[str] = "Address Object"
     plural: ClassVar[str] = "Address Objects"
 
@@ -64,17 +67,33 @@ class AddressObject(MainModel):
 
 
 class AddressObjectIPNetwork(AddressObject):
-    value: IPv4Network = Field(..., description="Address IP subnet value")
+    """Represents an IPv4 network range using CIDR notation."""
+
+    value: IPv4Network = Field(
+        ..., description="IPv4 network address and mask in CIDR format"
+    )
 
     @field_validator("value", mode="before")
     @classmethod
     def convert(cls, v) -> IPv4Network:
+        """Convert string to IPv4Network instance.
+
+        Raises:
+            ValueError: For invalid network formats
+        """
         try:
             return IPv4Network(v, strict=False)
         except ValueError as ex:
             raise ValueError(f"value '{v}' is not a valid IPv4 network") from ex
 
     def is_covered_by(self, other: type["AddressObject"]) -> bool:
+        """Check if this network is fully contained within another object.
+
+        Returns:
+            True if either:
+            - Contained within another IP network
+            - Fully inside an IP range
+        """
         if isinstance(other, AddressObjectIPNetwork):
             return self.value.subnet_of(other.value)
         if isinstance(other, AddressObjectIPRange):
@@ -86,6 +105,8 @@ class AddressObjectIPNetwork(AddressObject):
 
 
 class AddressObjectIPRange(AddressObject):
+    """Represents a contiguous range of IPv4 addresses."""
+
     value: tuple[IPv4Address, IPv4Address] = Field(
         ..., description="Address IP range value"
     )
@@ -93,6 +114,7 @@ class AddressObjectIPRange(AddressObject):
     @field_validator("value", mode="before")
     @classmethod
     def convert(cls, v) -> tuple[IPv4Address, IPv4Address]:
+        """Convert string or list to IPv4Address tuple."""
         if isinstance(v, str):
             parts = tuple(v.split("-"))
             return tuple(map(IPv4Address, parts))
@@ -102,13 +124,24 @@ class AddressObjectIPRange(AddressObject):
 
     @field_validator("value", mode="after")
     @classmethod
-    def check(cls, v):
-        print(v)
+    def validate(cls, v):
+        """Ensure valid IP range ordering.
+
+        Raises:
+            ValueError: If end address precedes start address
+        """
         if v[0] > v[1]:
             raise ValueError("last IP address must be greater than first")
         return v
 
     def is_covered_by(self, other: type["AddressObject"]) -> bool:
+        """Check if this range is fully contained within another object.
+
+        Returns:
+            True if either:
+            - Fully inside another IP network
+            - Contained within another IP range
+        """
         if isinstance(other, AddressObjectIPNetwork):
             network_start = other.value.network_address
             network_end = other.value.broadcast_address
@@ -124,11 +157,18 @@ class AddressObjectIPRange(AddressObject):
 
 
 class AddressObjectFQDN(AddressObject):
+    """Represents a fully qualified domain name."""
+
     value: str = Field(..., description="Address FQDN value")
 
-    @field_validator("value", mode="before")
+    @field_validator("value", mode="after")
     @classmethod
     def validate(cls, v: str) -> str:
+        """Normalize and validate FQDN format.
+
+        Raises:
+            ValueError: For invalid domain name formats
+        """
         v = v.lower()
         fqdn_regex = r"^([a-z0-9-]{1,63}\.)+[a-z]{2,63}$"
         if not re.match(fqdn_regex, v):
@@ -138,6 +178,11 @@ class AddressObjectFQDN(AddressObject):
         return v
 
     def is_covered_by(self, other: type["AddressObject"]) -> bool:
+        """Check FQDN equivalence.
+
+        Returns:
+            True if both FQDNs match exactly (case-insensitive)
+        """
         if isinstance(other, AddressObjectFQDN):
             return self.value.lower() == other.value.lower()
         return False
