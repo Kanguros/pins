@@ -3,7 +3,7 @@ import re
 from ipaddress import IPv4Address, IPv4Network
 from typing import ClassVar
 
-from pydantic import Field, field_validator, ConfigDict
+from pydantic import Field, field_validator
 
 from policy_inspector.model.base import MainModel
 
@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 
 class AddressObject(MainModel):
     """Base class representing a network address object."""
-
 
     singular: ClassVar[str] = "Address Object"
     plural: ClassVar[str] = "Address Objects"

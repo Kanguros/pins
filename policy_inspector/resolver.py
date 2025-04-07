@@ -1,7 +1,11 @@
 import logging
-from ipaddress import IPv4Network
-from policy_inspector.model.address_object import AddressObject, AddressObjectIPNetwork
-from typing import TYPE_CHECKING, Iterable
+from collections.abc import Iterable
+from typing import TYPE_CHECKING
+
+from policy_inspector.model.address_object import (
+    AddressObject,
+    AddressObjectIPNetwork,
+)
 
 if TYPE_CHECKING:
     from policy_inspector.model.address_group import AddressGroup
@@ -20,19 +24,19 @@ class AddressResolver:
     """
 
     def __init__(
-            self,
-            address_objects: list["AddressObject"],
-            address_groups: list["AddressGroup"],
+        self,
+        address_objects: list["AddressObject"],
+        address_groups: list["AddressGroup"],
     ):
-        self.address_objects: dict[str, 'AddressObject'] = {
+        self.address_objects: dict[str, AddressObject] = {
             ao.name: ao for ao in address_objects
         }
         self.address_groups: dict[str, set[str]] = {
             ag.name: ag.static for ag in address_groups
         }
-        self.cache: dict[str, list['AddressObject']] = {}
+        self.cache: dict[str, list[AddressObject]] = {}
 
-    def resolve(self, names: Iterable[str]) -> list['AddressObject']:
+    def resolve(self, names: Iterable[str]) -> list["AddressObject"]:
         """Resolve given names.
 
         Args:
@@ -44,7 +48,7 @@ class AddressResolver:
             result.extend(self._resolve_name(name))
         return result
 
-    def _resolve_name(self, name: str) -> list['AddressObject']:
+    def _resolve_name(self, name: str) -> list["AddressObject"]:
         """Resolve single ``name``"""
         print(f"Resolving {name=}")
         if name in self.cache:
