@@ -37,7 +37,7 @@ def check_source_addresses_by_ip(
     rule: "AdvancedSecurityRule",
     preceding_rule: "AdvancedSecurityRule",
 ) -> CheckResult:
-    """Check if rule's destination IP addresses are covered by preceding rule.
+    """Check if rule's source IP addresses are covered by preceding rule.
 
     Excludes FQDN address objects from comparison and logs warnings when encountered.
     """

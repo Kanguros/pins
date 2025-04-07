@@ -75,4 +75,5 @@ def test_run_example(name):
     result = CliRunner().invoke(
         cli.run_example, [name], color=False, catch_exceptions=False
     )
+    print(result.stdout)
     assert result.exit_code == 0
