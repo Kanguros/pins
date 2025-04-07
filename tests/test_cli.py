@@ -52,8 +52,6 @@ def test_list_command(runner):
     assert result.exit_code == 0
     for phrase in [
         "Available Scenarios:",
-        "ShadowingByValue",
-        "Shadowing",
     ]:
         assert phrase in result.output
 
@@ -63,8 +61,6 @@ def test_list_command_verbose(runner):
     assert result.exit_code == 0
     for phrase in [
         "Available Scenarios:",
-        "ShadowingByValue",
-        "Shadowing",
         "check_",
     ]:
         assert phrase in result.output

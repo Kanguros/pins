@@ -431,7 +431,8 @@
     "action": "allow",
     "application": {
       "member": [
-        "ssh"
+        "ssh",
+         "ms-rdp"
       ]
     },
     "category": {
@@ -442,7 +443,8 @@
     "destination": {
       "member": [
         "linux-servers",
-        "network-devices"
+        "network-devices",
+        "windows-servers"
       ]
     },
     "from": {
@@ -525,7 +527,8 @@
     },
     "to": {
       "member": [
-        "server-zone"
+        "server-zone",
+        "dmz"
       ]
     }
   },

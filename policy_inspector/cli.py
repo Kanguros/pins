@@ -39,11 +39,10 @@ def main():
 @verbose_option(logger)
 def main_list() -> None:
     """List available Scenarios."""
-    logger.info("Available Scenarios:")
-    scenarios = Scenario.get_available()
-    for name, scenario in scenarios.items():
-        logger.info(f"- {name}")
-        logger.debug(f"  {scenario.__doc__}")
+    logger.info("↺ Available Scenarios:")
+    for scenario in Scenario.get_available().values():
+        logger.info(f"→ '{scenario.name}'")
+        logger.debug(f"\t{scenario.__doc__}")
         for check in scenario.checks:
             logger.debug(f"  - {check.__name__}")
 
@@ -80,8 +79,7 @@ def main_run():
 )
 def run_shadowing(security_rules_path: Path) -> None:
     security_rules = load_model(SecurityRule, security_rules_path)
-    scenario = Shadowing(security_rules)
-    process(scenario)
+    process(Shadowing, security_rules)
 
 
 @main_run.command("shadowingvalue", no_args_is_help=True)
@@ -109,14 +107,15 @@ def run_shadowingvalue(
     security_rules = load_model(SecurityRule, security_rules_path)
     address_groups = load_model(AddressGroup, address_groups_path)
     address_objects = load_model(AddressObject, address_objects_path)
-    scenario = ShadowingByValue(security_rules, address_objects, address_groups)
-    process(scenario)
+    process(ShadowingByValue, security_rules, address_objects, address_groups)
 
 
-def process(scenario: Scenario):
+def process(scenario: Scenario, *args, **kwargs):
     """Helper function for executing and analyzing a Scenario."""
-    logger.info(f"→ Executing '{scenario.name}' scenario")
     try:
+        logger.info(f"↺ Preparing '{scenario.name}' scenario")
+        scenario = scenario(*args, **kwargs)
+        logger.info(f"→ Executing '{scenario.name}' scenario")
         output = scenario.execute()
         logger.info("")
         logger.info("▶ Results")
@@ -130,9 +129,9 @@ def load_model(
     model_cls: type[ModelClass], file_path: Path
 ) -> list[ModelClass]:
     """Helper function for loading models from file."""
-    logger.info(f"↺ Loading {model_cls.plural}")
+    logger.info(f"↺ Loading {model_cls.plural} from {file_path.stem}")
     instances = Loader.load_model(model_cls, file_path)
-    logger.debug(f"✓ Loaded {len(instances)} {model_cls.plural} successfully")
+    logger.info(f"✓ Loaded {len(instances)} {model_cls.plural} successfully")
     return instances
 
 
@@ -143,12 +142,12 @@ examples = [
         cmd=run_shadowing,
     ),
     Example(
-        name="shadowing_long",
+        name="shadowing2",
         args=[Path("2/policies.json")],
         cmd=run_shadowing,
     ),
     Example(
-        name="shadowing_with_addresses",
+        name="shadowingaddr",
         args=[
             Path("1/policies.json"),
             Path("1/address_groups.json"),
@@ -157,7 +156,7 @@ examples = [
         cmd=run_shadowingvalue,
     ),
     Example(
-        name="shadowing_with_addresses2",
+        name="shadowingaddr2",
         args=[
             Path("2/policies.json"),
             Path("2/address_groups.json"),
