@@ -41,7 +41,6 @@ class AddressResolver:
 
         Args:
             names: Names of ``Address Groups`` or ``Address Objects``
-
         """
         result = []
         for name in names:
@@ -50,7 +49,6 @@ class AddressResolver:
 
     def _resolve_name(self, name: str) -> list["AddressObject"]:
         """Resolve single ``name``"""
-        print(f"Resolving {name=}")
         if name in self.cache:
             return self.cache[name]
 

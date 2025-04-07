@@ -1,9 +1,14 @@
 import logging
 from typing import TYPE_CHECKING
 
+from policy_inspector.model.address_object import AddressObjectFQDN
+from policy_inspector.model.advanced_security_rule import AdvancedSecurityRule
+from policy_inspector.model.base import AnyObj
+from policy_inspector.model.security_rule import SecurityRule
 from policy_inspector.resolver import AddressResolver
 from policy_inspector.scenario.shadowing import (
     CheckResult,
+    PrecedingRulesOutputs,
     Shadowing,
     ShadowingCheckFunction,
     check_action,
@@ -13,13 +18,10 @@ from policy_inspector.scenario.shadowing import (
     check_source_zone,
 )
 
-from ..model.base import AnyObj
-from .shadowing import PrecedingRulesOutputs
-
 if TYPE_CHECKING:
-    from ..model.address_group import AddressGroup
-    from ..model.address_object import AddressObject
-    from ..model.security_rule import SecurityRule
+    from policy_inspector.model.address_group import AddressGroup
+    from policy_inspector.model.address_object import AddressObject
+
 
 logger = logging.getLogger(__name__)
 
@@ -32,54 +34,100 @@ def check_services_and_application(
 
 
 def check_source_addresses_by_ip(
-    rule: "SecurityRule",
-    preceding_rule: "SecurityRule",
+    rule: "AdvancedSecurityRule",
+    preceding_rule: "AdvancedSecurityRule",
 ) -> CheckResult:
+    """Check if rule's destination IP addresses are covered by preceding rule.
+
+    Excludes FQDN address objects from comparison and logs warnings when encountered.
+    """
     if rule.source_addresses == preceding_rule.source_addresses:
-        return True, "Source addresses are the same"
+        return True, "Destination addresses are identical"
 
     if AnyObj in preceding_rule.source_addresses:
-        return True, "Preceding rule allows any source address"
+        return True, "Preceding rule allows any destination"
 
     if AnyObj in rule.source_addresses:
-        return False, "Rule not covered due to 'any' source"
+        return False, "Current rule allows any destination (too broad)"
 
-    for addr in rule.source_addresses_ip:
+    fqdn_count = 0
+    for addr_obj in rule.resolved_source_addresses:
+        if isinstance(addr_obj, AddressObjectFQDN):
+            logger.warning(
+                f"Skipping FQDN comparison for {addr_obj.name}={addr_obj.value}"
+            )
+            fqdn_count += 1
+            continue
+
         if not any(
-            addr.subnet_of(net) for net in preceding_rule.source_addresses_ip
+            addr_obj.is_covered_by(preceding_addr_obj)
+            for preceding_addr_obj in preceding_rule.resolved_source_addresses
+            if not isinstance(preceding_addr_obj, AddressObjectFQDN)
         ):
             return (
                 False,
-                f"Source ip address {addr} is not covered by preceding rule",
+                f"Destination {addr_obj.name} ({addr_obj.value}) not covered by preceding rule",
             )
 
-    return True, "Preceding rule covers all source ip addresses"
+    if fqdn_count == len(rule.resolved_source_addresses):
+        logger.warning(
+            "All destination addresses are FQDNs - comparison skipped"
+        )
+        return True, "FQDN destinations excluded from coverage check"
+
+    return (
+        True,
+        "All non-FQDN destination addresses are covered by preceding rule(s)",
+    )
 
 
 def check_destination_addresses_by_ip(
-    rule: "SecurityRule",
-    preceding_rule: "SecurityRule",
+    rule: "AdvancedSecurityRule",
+    preceding_rule: "AdvancedSecurityRule",
 ) -> CheckResult:
+    """Check if rule's destination IP addresses are covered by preceding rule.
+
+    Excludes FQDN address objects from comparison and logs warnings when encountered.
+    """
     if rule.destination_addresses == preceding_rule.destination_addresses:
-        return True, "Source addresses are the same"
+        return True, "Destination addresses are identical"
 
     if AnyObj in preceding_rule.destination_addresses:
-        return True, "Preceding rule allows any source address"
+        return True, "Preceding rule allows any destination"
 
     if AnyObj in rule.destination_addresses:
-        return False, "Rule not covered due to 'any' source"
+        return False, "Current rule allows any destination (too broad)"
 
-    for addr in rule.destination_addresses_ip:
+    fqdn_count = 0
+    for addr_obj in rule.resolved_destination_addresses:
+        if isinstance(addr_obj, AddressObjectFQDN):
+            logger.warning(
+                f"Skipping FQDN comparison for {addr_obj.name}={addr_obj.value}"
+            )
+            fqdn_count += 1
+            continue
+
         if not any(
-            addr.subnet_of(net)
-            for net in preceding_rule.destination_addresses_ip
+            addr_obj.is_covered_by(preceding_addr_obj)
+            for preceding_addr_obj in preceding_rule.resolved_destination_addresses
+            if not isinstance(preceding_addr_obj, AddressObjectFQDN)
         ):
             return (
                 False,
-                f"Source ip address {addr} is not covered by preceding rule",
+                f"Destination {addr_obj.name} ({addr_obj.value}) not covered by preceding rule",
             )
 
-    return True, "Preceding rule covers all source ip addresses"
+    # Handle case where all addresses were FQDNs
+    if fqdn_count == len(rule.resolved_destination_addresses):
+        logger.warning(
+            "All destination addresses are FQDNs - comparison skipped"
+        )
+        return True, "FQDN destinations excluded from coverage check"
+
+    return (
+        True,
+        "All non-FQDN destination addresses are covered by preceding rule(s)",
+    )
 
 
 class ShadowingByValue(Shadowing):
@@ -107,39 +155,29 @@ class ShadowingByValue(Shadowing):
         super().__init__(security_rules)
 
     def execute(self) -> dict[str, PrecedingRulesOutputs]:
-        self.resolve_addresses()
+        self.resolve_security_rules()
         return super().execute()
 
-    def resolve_addresses(
-        self,
-    ) -> None:
-        """Resolve Security Rules ``source_addresses`` and ``destination_addresses`` values
-        of Address Objects and Address Groups to an actual IP addresses.
-        """
+    def resolve_security_rules(self):
+        resolved = []
         logger.info(
             "↺ Resolving Address Groups and Address Objects actual IP addresses"
         )
-        errors = []
-        attr_pairs = (
-            ("source_addresses", "source_addresses_ip"),
-            ("destination_addresses", "destination_addresses_ip"),
-        )
-        for rule in self.security_rules:
-            for origin_attr, desire_attr in attr_pairs:
-                current_value = getattr(rule, origin_attr)
-                if not current_value or AnyObj in current_value:
-                    continue
-                try:
-                    resolved_value = self.resolver.resolve(current_value)
-                    if resolved_value:
-                        setattr(rule, desire_attr, resolved_value)
-                except ValueError as ex:
-                    logger.debug(ex)
-                    errors.append(
-                        f"rule={rule.name} {origin_attr}={current_value}"
-                    )
+        for security_rule in self.security_rules:
+            resolved.append(self.enhance_rule(security_rule))
+        self.security_rules = resolved
 
-        if errors:
-            raise ValueError(
-                f"Failed to resolve rules addresses: {' | '.join(errors)}",
+    def enhance_rule(self, rule: "SecurityRule") -> AdvancedSecurityRule:
+        params = {}
+        src_addrs = rule.source_addresses
+        if src_addrs and AnyObj not in src_addrs:
+            params["resolved_source_addresses"] = self.resolver.resolve(
+                src_addrs
             )
+
+        dst_addrs = rule.destination_addresses
+        if dst_addrs and AnyObj not in dst_addrs:
+            params["resolved_destination_addresses"] = self.resolver.resolve(
+                dst_addrs
+            )
+        return AdvancedSecurityRule.from_security_rule(rule, **params)

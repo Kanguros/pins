@@ -1,5 +1,4 @@
-from ipaddress import IPv4Network
-from typing import ClassVar, Optional, Union
+from typing import ClassVar, Union
 
 from pydantic import Field
 
@@ -60,16 +59,6 @@ class SecurityRule(MainModel):
     category: Union[SetStr, AnyObjType] = Field(
         default={"any"},
         description="URL categories or 'any'",
-    )
-
-    source_addresses_ip: Optional[set[IPv4Network]] = Field(
-        default=None,
-        description="Resolved source addresses to a set of IP networks. ",
-    )
-
-    destination_addresses_ip: Optional[set[IPv4Network]] = Field(
-        default=None,
-        description="Resolved destination addresses to a set of IP networks.",
     )
 
     @classmethod

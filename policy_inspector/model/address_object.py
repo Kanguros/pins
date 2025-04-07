@@ -20,7 +20,7 @@ class AddressObject(MainModel):
     description: str = Field(default="", description="Object description")
     tags: set[str] = Field(default_factory=set, description="Tags")
 
-    def is_covered_by(self, other: type["AddressObject"]) -> bool:
+    def is_covered_by(self, other: "AddressObject") -> bool:
         raise NotImplementedError("To be implement in child class")
 
     @classmethod
@@ -85,7 +85,7 @@ class AddressObjectIPNetwork(AddressObject):
         except ValueError as ex:
             raise ValueError(f"value '{v}' is not a valid IPv4 network") from ex
 
-    def is_covered_by(self, other: type["AddressObject"]) -> bool:
+    def is_covered_by(self, other: "AddressObject") -> bool:
         """Check if this network is fully contained within another object.
 
         Returns:
@@ -133,7 +133,7 @@ class AddressObjectIPRange(AddressObject):
             raise ValueError("last IP address must be greater than first")
         return v
 
-    def is_covered_by(self, other: type["AddressObject"]) -> bool:
+    def is_covered_by(self, other: "AddressObject") -> bool:
         """Check if this range is fully contained within another object.
 
         Returns:
@@ -176,7 +176,7 @@ class AddressObjectFQDN(AddressObject):
             )
         return v
 
-    def is_covered_by(self, other: type["AddressObject"]) -> bool:
+    def is_covered_by(self, other: "AddressObject") -> bool:
         """Check FQDN equivalence.
 
         Returns:

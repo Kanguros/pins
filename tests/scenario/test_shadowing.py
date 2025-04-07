@@ -116,16 +116,7 @@ def test_rule_preceding_counts(base_rules, rule_index, expected_preceding):
     assert len(results[rule_name]) == expected_preceding
 
 
-# def test_no_shadowing(different_rules):
-#     """Test rules with completely different configurations"""
-#     scenario = ShadowingScenario(different_rules)
-#     results = scenario.execute()
-#     for v in results.values():
-#         assert not v
-
-
 def test_identical_rules(identical_rules):
-    """All rules are identical - last rule should be shadowed"""
     scenario = Shadowing(identical_rules)
     results = scenario.execute()
     for i, rule_result in enumerate(results.values()):
