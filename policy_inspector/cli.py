@@ -1,13 +1,15 @@
 import logging
 from pathlib import Path
+from typing import TypeVar
 
 import rich_click as click
-from rich_click import Path as ClickPath
+from click import ClickException
 from rich_click import UsageError, rich_config
 
 from policy_inspector.loader import Loader, ModelClass
 from policy_inspector.model.address_group import AddressGroup
 from policy_inspector.model.address_object import AddressObject
+from policy_inspector.model.base import MainModel
 from policy_inspector.model.security_rule import SecurityRule
 from policy_inspector.scenario import Scenario
 from policy_inspector.scenario.shadowing import Shadowing
@@ -15,7 +17,9 @@ from policy_inspector.scenario.shadowing_by_value import ShadowingByValue
 from policy_inspector.utils import (
     Example,
     ExampleChoice,
+    FilePath,
     config_logger,
+    exclude_check_option,
     verbose_option,
 )
 
@@ -25,6 +29,8 @@ click.rich_click.SHOW_ARGUMENTS = True
 click.rich_click.TEXT_MARKUP = "markdown"
 click.rich_click.USE_MARKDOWN = True
 click.rich_click.SHOW_METAVARS_COLUMN = True
+
+ConcreteScenario = TypeVar("ConcreteScenario", bound="Scenario")
 
 
 @click.group(no_args_is_help=True, add_help_option=True)
@@ -75,11 +81,17 @@ def main_run():
 @click.argument(
     "security_rules_path",
     required=True,
-    type=ClickPath(dir_okay=False, path_type=Path),
+    type=FilePath(),
 )
-def run_shadowing(security_rules_path: Path) -> None:
-    security_rules = load_model(SecurityRule, security_rules_path)
-    process(Shadowing, security_rules)
+@exclude_check_option()
+def run_shadowing(
+    security_rules_path: Path, exclude_checks: tuple[str]
+) -> None:
+    process_scenario(
+        Shadowing,
+        exclude_checks,
+        (SecurityRule, security_rules_path),
+    )
 
 
 @main_run.command("shadowingvalue", no_args_is_help=True)
@@ -87,80 +99,63 @@ def run_shadowing(security_rules_path: Path) -> None:
 @click.argument(
     "security_rules_path",
     required=True,
-    type=ClickPath(dir_okay=False, path_type=Path),
-)
-@click.argument(
-    "address_groups_path",
-    required=True,
-    type=ClickPath(dir_okay=False, path_type=Path),
+    type=FilePath(),
 )
 @click.argument(
     "address_objects_path",
     required=True,
-    type=ClickPath(dir_okay=False, path_type=Path),
+    type=FilePath(),
 )
+@click.argument(
+    "address_groups_path",
+    required=True,
+    type=FilePath(),
+)
+@exclude_check_option()
 def run_shadowingvalue(
     security_rules_path: Path,
+        address_objects_path: Path,
     address_groups_path: Path,
-    address_objects_path: Path,
+
+    exclude_checks: tuple[str],
 ) -> None:
-    security_rules = load_model(SecurityRule, security_rules_path)
-    address_groups = load_model(AddressGroup, address_groups_path)
-    address_objects = load_model(AddressObject, address_objects_path)
-    process(ShadowingByValue, security_rules, address_objects, address_groups)
+    process_scenario(
+        ShadowingByValue,
+        exclude_checks,
+        (SecurityRule, security_rules_path),
 
+        (AddressObject, address_objects_path),
+        (AddressGroup, address_groups_path)
+    )
 
-def process(scenario: Scenario, *args, **kwargs):
-    """Helper function for executing and analyzing a Scenario."""
-    try:
-        logger.info(f"↺ Preparing '{scenario.name}' scenario")
-        scenario = scenario(*args, **kwargs)
-        logger.info(f"→ Executing '{scenario.name}' scenario")
-        output = scenario.execute()
-        logger.info("")
-        logger.info("▶ Results")
-        logger.info("―――――――――")
-        scenario.analyze(output)
-    except Exception as ex:  # noqa: BLE001
-        raise UsageError(str(ex))  # noqa: B904
-
-
-def load_model(
-    model_cls: type[ModelClass], file_path: Path
-) -> list[ModelClass]:
-    """Helper function for loading models from file."""
-    logger.info(f"↺ Loading {model_cls.plural} from {file_path.stem}")
-    instances = Loader.load_model(model_cls, file_path)
-    logger.info(f"✓ Loaded {len(instances)} {model_cls.plural} successfully")
-    return instances
 
 
 examples = [
     Example(
-        name="shadowing",
+        name="1",
         args=[Path("1/policies.json")],
         cmd=run_shadowing,
     ),
     Example(
-        name="shadowing2",
+        name="2",
         args=[Path("2/policies.json")],
         cmd=run_shadowing,
     ),
     Example(
-        name="shadowingaddr",
+        name="3",
         args=[
             Path("1/policies.json"),
-            Path("1/address_groups.json"),
             Path("1/address_objects.json"),
+Path("1/address_groups.json"),
         ],
         cmd=run_shadowingvalue,
     ),
     Example(
-        name="shadowingaddr2",
+        name="4",
         args=[
             Path("2/policies.json"),
-            Path("2/address_groups.json"),
             Path("2/address_objects.json"),
+            Path("2/address_groups.json"),
         ],
         cmd=run_shadowingvalue,
     ),
@@ -169,15 +164,45 @@ examples = [
 
 @main_run.command("example", no_args_is_help=True)
 @verbose_option(logger)
+@exclude_check_option()
 @click.argument(
     "example",
     type=ExampleChoice(examples),
 )
 @click.pass_context
-def run_example(ctx, example: Example) -> None:
+def run_example(ctx, example: Example, exclude_checks: tuple[str]) -> None:
     """Run one of the examples."""
-    logger.info(f"▶ Selected '{example.name}' example")
-    ctx.invoke(example.cmd.callback, *example.args)
+    logger.info(f"▶ Selected example: '{example.name}'")
+    ctx.invoke(
+        example.cmd.callback, *example.args, exclude_checks=exclude_checks
+    )
+
+
+def process_scenario(
+    scenario: type[ConcreteScenario],
+    exclude_checks: tuple[str],
+    *cls_path: tuple[type[MainModel], Path],
+    **kwargs,
+):
+    try:
+        models_data = []
+        for model_cls, file_path in cls_path:
+            logger.info(f"↺ Loading {model_cls.plural} from {file_path.name}")
+            instances = Loader.load_model(model_cls, file_path)
+            logger.info(f"✓ Loaded {len(instances)} {model_cls.plural} successfully")
+            models_data.append(instances)
+
+        logger.info(f"↺ Preparing '{scenario.name}' scenario")
+        scenario = scenario(*models_data, **kwargs)
+        scenario.exclude_checks(exclude_checks)
+        logger.info(f"→ Executing scenario with {len(scenario.checks)} checks")
+        output = scenario.execute()
+        logger.info("")
+        logger.info("▶ Results")
+        logger.info("―――――――――")
+        scenario.analyze(output)
+    except Exception as ex:  # noqa: BLE001
+        raise ClickException(f"{str(ex)}\n{ex.args}\n{ex.__cause__}")  # noqa: B904
 
 
 if __name__ == "__main__":

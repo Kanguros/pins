@@ -5,6 +5,7 @@ from typing import Any, Callable, Optional
 
 import rich_click as click
 from click.types import Choice as clickChoice
+from click.types import Path as ClickPath
 from pydantic import BaseModel
 from rich.logging import RichHandler
 
@@ -34,9 +35,9 @@ def verbose_option(logger) -> Callable:
         package_logger = logging.getLogger("policy_inspector")
         count = len(value)
         if count > 0:
-            package_logger.setLevel(logging.INFO)
-        if count > 1:
             logger.setLevel(logging.DEBUG)
+        if count > 1:
+            package_logger.setLevel(logging.INFO)
         if count > 2:
             package_logger.setLevel(logging.DEBUG)
         if count > 3:
@@ -56,6 +57,18 @@ def verbose_option(logger) -> Callable:
     return click.option("-v", "--verbose", **kwargs)
 
 
+def exclude_check_option(arg_name: str = "exclude_checks") -> Callable:
+    return click.option(
+        "-ec",
+        "--exclude-check",
+        arg_name,
+        multiple=True,
+        type=click.STRING,
+        nargs=1,
+        help="Exclude 'check' from Scenario if it contains provided keyword",
+    )
+
+
 def config_logger(
     logger: logging.Logger,
     level: str = "INFO",
@@ -73,7 +86,6 @@ def config_logger(
     package_logger.setLevel(logging.WARNING)
     package_logger.propagate = True
     rich_handler = RichHandler(
-        # level=level,
         rich_tracebacks=True,
         show_path=False,
         show_time=False,
@@ -84,6 +96,13 @@ def config_logger(
     formatter = logging.Formatter(log_format, date_format, "%")
     rich_handler.setFormatter(formatter)
     logger.handlers = [rich_handler]
+
+
+class FilePath(ClickPath):
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            *args, exists=True, dir_okay=False, path_type=Path, **kwargs
+        )
 
 
 class ExampleChoice(clickChoice):

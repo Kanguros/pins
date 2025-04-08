@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar
 
 if TYPE_CHECKING:
@@ -55,6 +56,18 @@ class Scenario:
     @classmethod
     def get_by_name(cls, name: str) -> type["Scenario"]:
         return cls._scenarios[name]
+
+    def exclude_checks(self, keywords: Iterable[str]) -> None:
+        if not keywords:
+            return
+        checks = self.checks.copy()
+        logger.debug(f"Excluding checks by keywords: {', '.join(keywords)}")
+        for check in checks:
+            for keyword in keywords:
+                check_name = check.__name__
+                if keyword in check_name:
+                    logger.info(f"✖ Check '{check_name}' excluded")
+                    break
 
     def execute(self) -> ScenarioResults:
         """

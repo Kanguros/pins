@@ -149,19 +149,17 @@ class ShadowingByValue(Shadowing):
         address_groups: list["AddressGroup"],
         lookup_class: type = AddressResolver,
     ):
+        super().__init__(security_rules)
         self.address_objects = address_objects
         self.address_groups = address_groups
         self.resolver = lookup_class(address_objects, address_groups)
-        super().__init__(security_rules)
-
-    def execute(self) -> dict[str, PrecedingRulesOutputs]:
         self.resolve_security_rules()
-        return super().execute()
+
 
     def resolve_security_rules(self):
         resolved = []
         logger.info(
-            "↺ Resolving Address Groups and Address Objects actual IP addresses"
+            "↺ Resolving Address Groups and Address Objects"
         )
         for security_rule in self.security_rules:
             resolved.append(self.enhance_rule(security_rule))

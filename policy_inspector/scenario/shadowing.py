@@ -198,6 +198,6 @@ class Shadowing(Scenario):
             if shadowing_rules:
                 logger.info(f"✖ '{rule_name}' shadowed by:")
                 for rule in shadowing_rules:
-                    logger.info(f"   • {rule}")
+                    logger.info(f"   • '{rule}'")
             else:
                 logger.debug(f"✔ '{rule_name}' not shadowed")
