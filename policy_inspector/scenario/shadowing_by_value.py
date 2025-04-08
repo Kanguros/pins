@@ -8,7 +8,6 @@ from policy_inspector.model.security_rule import SecurityRule
 from policy_inspector.resolver import AddressResolver
 from policy_inspector.scenario.shadowing import (
     CheckResult,
-    PrecedingRulesOutputs,
     Shadowing,
     ShadowingCheckFunction,
     check_action,
@@ -155,12 +154,9 @@ class ShadowingByValue(Shadowing):
         self.resolver = lookup_class(address_objects, address_groups)
         self.resolve_security_rules()
 
-
     def resolve_security_rules(self):
         resolved = []
-        logger.info(
-            "↺ Resolving Address Groups and Address Objects"
-        )
+        logger.info("↺ Resolving Address Groups and Address Objects")
         for security_rule in self.security_rules:
             resolved.append(self.enhance_rule(security_rule))
         self.security_rules = resolved

@@ -4,9 +4,9 @@ from typing import TypeVar
 
 import rich_click as click
 from click import ClickException
-from rich_click import UsageError, rich_config
+from rich_click import rich_config
 
-from policy_inspector.loader import Loader, ModelClass
+from policy_inspector.loader import Loader
 from policy_inspector.model.address_group import AddressGroup
 from policy_inspector.model.address_object import AddressObject
 from policy_inspector.model.base import MainModel
@@ -114,20 +114,17 @@ def run_shadowing(
 @exclude_check_option()
 def run_shadowingvalue(
     security_rules_path: Path,
-        address_objects_path: Path,
+    address_objects_path: Path,
     address_groups_path: Path,
-
     exclude_checks: tuple[str],
 ) -> None:
     process_scenario(
         ShadowingByValue,
         exclude_checks,
         (SecurityRule, security_rules_path),
-
         (AddressObject, address_objects_path),
-        (AddressGroup, address_groups_path)
+        (AddressGroup, address_groups_path),
     )
-
 
 
 examples = [
@@ -146,7 +143,7 @@ examples = [
         args=[
             Path("1/policies.json"),
             Path("1/address_objects.json"),
-Path("1/address_groups.json"),
+            Path("1/address_groups.json"),
         ],
         cmd=run_shadowingvalue,
     ),
@@ -189,7 +186,9 @@ def process_scenario(
         for model_cls, file_path in cls_path:
             logger.info(f"↺ Loading {model_cls.plural} from {file_path.name}")
             instances = Loader.load_model(model_cls, file_path)
-            logger.info(f"✓ Loaded {len(instances)} {model_cls.plural} successfully")
+            logger.info(
+                f"✓ Loaded {len(instances)} {model_cls.plural} successfully"
+            )
             models_data.append(instances)
 
         logger.info(f"↺ Preparing '{scenario.name}' scenario")
