@@ -5,7 +5,7 @@ from policy_inspector.model.address_object import AddressObjectFQDN
 from policy_inspector.model.advanced_security_rule import AdvancedSecurityRule
 from policy_inspector.model.base import AnyObj
 from policy_inspector.model.security_rule import SecurityRule
-from policy_inspector.resolver import AddressResolver
+from policy_inspector.resolver import Resolver
 from policy_inspector.scenario.shadowing import (
     CheckResult,
     Shadowing,
@@ -130,7 +130,7 @@ def check_destination_addresses_by_ip(
 
 
 class ShadowingByValue(Shadowing):
-    name = "Shadowing with addresses"
+    name = "Advanced Shadowing"
     checks: list[ShadowingCheckFunction] = [
         check_action,
         check_application,
@@ -140,28 +140,28 @@ class ShadowingByValue(Shadowing):
         check_source_addresses_by_ip,
         check_destination_addresses_by_ip,
     ]
+    resolver_cls: type[Resolver] = Resolver
 
     def __init__(
         self,
         security_rules: list["SecurityRule"],
         address_objects: list["AddressObject"],
         address_groups: list["AddressGroup"],
-        lookup_class: type = AddressResolver,
     ):
-        super().__init__(security_rules)
+        self.security_rules = security_rules
         self.address_objects = address_objects
         self.address_groups = address_groups
-        self.resolver = lookup_class(address_objects, address_groups)
-        self.resolve_security_rules()
+        self.resolver = self.resolver_cls(address_objects, address_groups)
+        self.resolve_rules()
 
-    def resolve_security_rules(self):
+    def resolve_rules(self):
         resolved = []
         logger.info("↺ Resolving Address Groups and Address Objects")
         for security_rule in self.security_rules:
-            resolved.append(self.enhance_rule(security_rule))
+            resolved.append(self.resolve_rule(security_rule))
         self.security_rules = resolved
 
-    def enhance_rule(self, rule: "SecurityRule") -> AdvancedSecurityRule:
+    def resolve_rule(self, rule: "SecurityRule") -> AdvancedSecurityRule:
         params = {}
         src_addrs = rule.source_addresses
         if src_addrs and AnyObj not in src_addrs:

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class AddressResolver:
+class Resolver:
     """Process Address Groups into their Address Objects or IP Network object.
 
     It expands Address Groups (AG) recursively.

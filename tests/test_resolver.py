@@ -7,7 +7,7 @@ from policy_inspector.model.address_object import (
     AddressObjectIPNetwork,
     AddressObjectIPRange,
 )
-from policy_inspector.resolver import AddressResolver
+from policy_inspector.resolver import Resolver
 
 
 @pytest.fixture
@@ -45,7 +45,7 @@ def objects_and_groups(address_objects, address_groups):
 
 
 def test_resolve_address_object(address_objects):
-    resolver = AddressResolver(address_objects, [])
+    resolver = Resolver(address_objects, [])
     result = resolver.resolve({"web1"})
     desire_result = [
         AddressObjectIPNetwork(name="web1", value="192.168.1.1/32")
@@ -55,7 +55,7 @@ def test_resolve_address_object(address_objects):
 
 
 def test_resolve_address_group(objects_and_groups):
-    resolver = AddressResolver(*objects_and_groups)
+    resolver = Resolver(*objects_and_groups)
     result = resolver.resolve({"web-servers"})
     desire_result = [
         AddressObjectIPNetwork(name="web2", value="192.168.1.2/32"),
@@ -66,7 +66,7 @@ def test_resolve_address_group(objects_and_groups):
 
 
 def test_resolve_nested_address_group(objects_and_groups):
-    resolver = AddressResolver(*objects_and_groups)
+    resolver = Resolver(*objects_and_groups)
     result = resolver.resolve({"nested-group"})
     desire_result = [
         AddressObjectIPNetwork(
@@ -99,7 +99,7 @@ def test_resolve_nested_address_group(objects_and_groups):
 
 
 def test_complex_hierarchy(objects_and_groups):
-    resolver = AddressResolver(*objects_and_groups)
+    resolver = Resolver(*objects_and_groups)
     result = resolver.resolve({"app-tier"})
     desire_result = [
         AddressObjectIPNetwork(name="web1", value="192.168.1.1/32"),
@@ -113,7 +113,7 @@ def test_complex_hierarchy(objects_and_groups):
 
 
 def test_undefined_reference(address_objects):
-    resolver = AddressResolver(address_objects, [])
+    resolver = Resolver(address_objects, [])
     with pytest.raises(ValueError) as excinfo:
         resolver.resolve({"undefined"})
     assert "Unknown address object/group: undefined" in str(excinfo.value)
@@ -124,7 +124,7 @@ def test_circular_dependency():
         AddressGroup(name="groupA", static={"groupB"}),
         AddressGroup(name="groupB", static={"groupA"}),
     ]
-    resolver = AddressResolver([], groups)
+    resolver = Resolver([], groups)
 
     with pytest.raises(RecursionError) as excinfo:
         resolver.resolve({"groupA"})
@@ -132,14 +132,14 @@ def test_circular_dependency():
 
 
 def test_cache_usage(objects_and_groups):
-    resolver = AddressResolver(*objects_and_groups)
+    resolver = Resolver(*objects_and_groups)
     resolver.resolve({"web-servers"})
     assert "web-servers" in resolver.cache
     assert len(resolver.cache["web-servers"]) == 2
 
 
 def test_empty_resolution():
-    resolver = AddressResolver([], [])
+    resolver = Resolver([], [])
     resolved = resolver.resolve(set())
     assert resolved == []
 
@@ -148,6 +148,6 @@ def test_duplicate_entries(address_objects):
     groups = [
         AddressGroup(name="dupes", static={"web1"}),
     ]
-    resolver = AddressResolver(address_objects, groups)
+    resolver = Resolver(address_objects, groups)
     result = resolver.resolve({"dupes"})
     assert len(result) == 1

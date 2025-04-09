@@ -13,7 +13,7 @@ from policy_inspector.model.base import MainModel
 from policy_inspector.model.security_rule import SecurityRule
 from policy_inspector.scenario import Scenario
 from policy_inspector.scenario.shadowing import Shadowing
-from policy_inspector.scenario.shadowing_by_value import ShadowingByValue
+from policy_inspector.scenario.advanced_shadowing import ShadowingByValue
 from policy_inspector.utils import (
     Example,
     ExampleChoice,
