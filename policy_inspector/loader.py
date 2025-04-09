@@ -2,7 +2,7 @@ import csv
 import json
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypeVar, Union, Callable, Optional
+from typing import TYPE_CHECKING, Callable, Optional, TypeVar
 
 if TYPE_CHECKING:
     from policy_inspector.model.base import MainModel
@@ -17,16 +17,16 @@ ParserFunc = Callable[[dict], ModelClass]
 
 
 def load_json(
-        file_path: Path,
-        encoding: str = "utf-8",
+    file_path: Path,
+    encoding: str = "utf-8",
 ) -> list[dict]:
     """Loads JSON file from given file_path and return it's content."""
     return json.loads(file_path.read_text(encoding=encoding))
 
 
 def load_csv(
-        file_path: Path,
-        encoding: str = "utf-8",
+    file_path: Path,
+    encoding: str = "utf-8",
 ) -> list[dict]:
     """Loads CSV file from given file_path and return it's content."""
     # csv.field_size_limit(sys.maxsize)
@@ -42,9 +42,10 @@ parser_suffix: str = "parse_"
 
 
 def load_model(
-        model_cls: type[ModelClass], file_path: Path,
-        loader_func: Optional[LoaderFunc] = None,
-        parser_func: Optional[ParserFunc] = None
+    model_cls: type[ModelClass],
+    file_path: Path,
+    loader_func: Optional[LoaderFunc] = None,
+    parser_func: Optional[ParserFunc] = None,
 ) -> list[ModelClass]:
     """Load given file and create instances of the specified model class.
 
@@ -66,8 +67,8 @@ def load_model(
 
     if not parser_func:
         parser_name = f"{parser_suffix}{ext}"
-        parser_method = getattr(model_cls, parser_name, None)
-        if parser_method is None:
+        parser_func = getattr(model_cls, parser_name, None)
+        if parser_func is None:
             raise ValueError(f"{model_cls.__name__} lacks {parser_name} method")
 
     instances = []
