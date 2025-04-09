@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Literal
+from typing import Literal, Optional
 
 import requests
 from requests import RequestException
@@ -25,27 +25,30 @@ class PanoramaConnector:
     """
 
     def __init__(
-            self,
-            hostname: str,
-            username: str,
-            password: str,
-            port: int = 443,
-            verify_ssl: bool = False,
-            api_version: str = "v1",
-            timeout: int = 60,
+        self,
+        hostname: str,
+        username: str,
+        password: str,
+        port: int = 443,
+        verify_ssl: bool = False,
+        api_version: str = "v1",
+        timeout: int = 60,
     ):
         self.hostname = hostname
         self.port = port
         if not verify_ssl:
-            logger.warning(f"No SSL was provided")
+            logger.warning("No SSL was provided")
             import urllib3
-            urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
+
+            urllib3.disable_warnings(
+                category=urllib3.exceptions.InsecureRequestWarning
+            )
         self.verify_ssl = verify_ssl
         self.api_version = api_version
         self.base_url = f"https://{hostname}:{port}/restapi/{api_version}"
         self.headers = {
             "Content-Type": "application/json",
-            "Accept": "application/json"
+            "Accept": "application/json",
         }
         self.token = None
         self.timeout = timeout
@@ -57,16 +60,13 @@ class PanoramaConnector:
         logger.info(f"↺ Authenticating to Panorama REST API at {self.hostname}")
         try:
             auth_endpoint = f"{self.base_url}/auth"
-            auth_payload = {
-                "username": username,
-                "password": password
-            }
+            auth_payload = {"username": username, "password": password}
             response = requests.post(
                 auth_endpoint,
                 json=auth_payload,
                 headers=self.headers,
                 verify=self.verify_ssl,
-                timeout=self.timeout
+                timeout=self.timeout,
             )
             response.raise_for_status()
 
@@ -76,7 +76,7 @@ class PanoramaConnector:
                 self.headers["X-PAN-KEY"] = self.token
                 logger.info("✓ Successfully authenticated to Panorama REST API")
             else:
-                raise Exception("Authentication failed: No token in response")
+                raise ValueError("Authentication failed: No token in response")
 
         except RequestException as ex:
             logger.error(f"☠ Failed to connect to Panorama: {str(ex)}")
@@ -85,14 +85,12 @@ class PanoramaConnector:
             raise
 
     def _api_request(
-            self,
-            endpoint: str,
-            method: str,
-            params: Optional[dict] = None,
-            data: Optional[dict] = None
+        self,
+        endpoint: str,
+        method: str,
+        params: Optional[dict] = None,
+        data: Optional[dict] = None,
     ) -> dict:
-        if not self.token:
-            raise Exception("Not authenticated to Panorama")
         try:
             url = f"{self.base_url}/{endpoint}"
             response = requests.request(
@@ -114,12 +112,12 @@ class PanoramaConnector:
             raise
 
     def _paginated_api_request(
-            self,
-            endpoint: str,
-            items_key: str = "entry",
-            limit: int = 500,
-            offset: int = 0,
-            max_items: Optional[int] = None
+        self,
+        endpoint: str,
+        items_key: str = "entry",
+        limit: int = 500,
+        offset: int = 0,
+        max_items: Optional[int] = None,
     ) -> list[dict]:
         """Make paginated API requests to handle large result sets.
 
@@ -139,9 +137,13 @@ class PanoramaConnector:
 
         while more_pages:
             if "?" in endpoint:
-                paginated_endpoint = f"{endpoint}&limit={limit}&offset={current_offset}"
+                paginated_endpoint = (
+                    f"{endpoint}&limit={limit}&offset={current_offset}"
+                )
             else:
-                paginated_endpoint = f"{endpoint}?limit={limit}&offset={current_offset}"
+                paginated_endpoint = (
+                    f"{endpoint}?limit={limit}&offset={current_offset}"
+                )
 
             response_data = self._api_request("GET", paginated_endpoint)
 
@@ -167,11 +169,15 @@ class PanoramaConnector:
                 all_items = all_items[:max_items]
                 more_pages = False
 
-            logger.debug(f"Retrieved {len(items)} items, total so far: {len(all_items)}")
+            logger.debug(
+                f"Retrieved {len(items)} items, total so far: {len(all_items)}"
+            )
 
         return all_items
 
-    def get_address_objects(self, device_group: Optional[str] = None) -> list[AddressObject]:
+    def get_address_objects(
+        self, device_group: Optional[str] = None
+    ) -> list[AddressObject]:
         """Retrieve address objects from Panorama using REST API.
 
         Args:
@@ -199,7 +205,9 @@ class PanoramaConnector:
             logger.error(f"☠ Failed to retrieve address objects: {str(e)}")
             raise
 
-    def get_address_groups(self, device_group: Optional[str] = None) -> list[AddressGroup]:
+    def get_address_groups(
+        self, device_group: Optional[str] = None
+    ) -> list[AddressGroup]:
         """Retrieve address groups from Panorama using REST API.
 
         Args:
@@ -227,9 +235,11 @@ class PanoramaConnector:
             logger.error(f"☠ Failed to retrieve Address Groups: {str(e)}")
             raise
 
-    def get_security_rules(self,
-                           device_group: Optional[str] = None,
-                           rulebase: Literal["pre-rulebase", "post-rulebase"] = "post-rulebase") -> list[SecurityRule]:
+    def get_security_rules(
+        self,
+        device_group: Optional[str] = None,
+        rulebase: Literal["pre-rulebase", "post-rulebase"] = "post-rulebase",
+    ) -> list[SecurityRule]:
         """Retrieve security rules from Panorama using REST API.
 
         Args:
@@ -241,12 +251,16 @@ class PanoramaConnector:
         """
         logger.info("↺ Retrieving security rules from Panorama")
 
-        logger.info(f"↺ Retrieving security rules")
+        logger.info("↺ Retrieving security rules")
         if device_group:
-            endpoint = (f"Policies/SecurityRules?location=device-group&device-group={device_group}"
-                        f"&rulebase={rulebase}")
+            endpoint = (
+                f"Policies/SecurityRules?location=device-group&device-group={device_group}"
+                f"&rulebase={rulebase}"
+            )
         else:
-            endpoint = f"Policies/SecurityRules?location=shared&rulebase={rulebase}"
+            endpoint = (
+                f"Policies/SecurityRules?location=shared&rulebase={rulebase}"
+            )
 
         try:
             entries = self._paginated_api_request(endpoint)

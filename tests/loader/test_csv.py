@@ -2,7 +2,7 @@
 
 import pytest
 
-from policy_inspector.loader import load_model, load_csv
+from policy_inspector.loader import load_csv, load_model
 from policy_inspector.model.address_group import AddressGroup
 from policy_inspector.model.address_object import AddressObject
 from policy_inspector.model.security_rule import SecurityRule
@@ -74,6 +74,7 @@ INVALID_CSV = gather_data_files("invalid*.csv")
 #     print(data)
 
 VALID_CSV = gather_data_files("valid*.csv")
+
 
 @pytest.mark.parametrize("file_path", VALID_CSV)
 def test_valid_csv(file_path):

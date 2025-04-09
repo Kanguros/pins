@@ -6,7 +6,7 @@ import rich_click as click
 from click import ClickException
 from rich_click import rich_config
 
-from policy_inspector.loader import Loader
+from policy_inspector.loader import load_model
 from policy_inspector.model.address_group import AddressGroup
 from policy_inspector.model.address_object import AddressObject
 from policy_inspector.model.base import MainModel
@@ -185,7 +185,7 @@ def process_scenario(
         models_data = []
         for model_cls, file_path in cls_path:
             logger.info(f"↺ Loading {model_cls.plural} from {file_path.name}")
-            instances = Loader.load_model(model_cls, file_path)
+            instances = load_model(model_cls, file_path)
             logger.info(
                 f"✓ Loaded {len(instances)} {model_cls.plural} successfully"
             )

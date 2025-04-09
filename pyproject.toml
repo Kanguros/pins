@@ -92,18 +92,17 @@ select = [
 #    "D103",
 ]
 ignore = [
-    # only relevant if you run a script with `python -0`,
-    # which seems unlikely for any of the scripts in this repo
     "B011",
-    # Avoid specifying long messages outside the exception class
-    "TRY003",
-    # Logging statement uses f-string
-    "G004",
+    "TRY003", # Avoid specifying long messages outside the exception class
+    "TRY400", # Use `logging.exception` instead of `logging.error`
+    "G004", # Logging statement uses f-string
     "E501",
     "EM102", # Exception must not use an f-string literal, assign to variable first
     "S311",  # Standard pseudo-random generators are not suitable for cryptographic purposes
     "D100",  # Missing docstring in public module
-    "TRY300" # Consider moving this statement to an `else` block
+    "TRY300", # Consider moving this statement to an `else` block
+    "FBT001",  # Boolean-typed positional argument in function definition
+    "FBT002",  # Boolean default positional argument in function definition
 ]
 
 
