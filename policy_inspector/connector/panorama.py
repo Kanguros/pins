@@ -55,7 +55,7 @@ class PanoramaConnector:
         logger.info(f"↺ Authenticating to Panorama REST API at {self.hostname}")
         try:
             response = self.session.post(
-                f"{self.base_url}/api/?type=keygen",
+                f"https://{self.hostname}:{self.port}/api/?type=keygen",
                 json={"user": username, "password": password},
                 headers={"Content-Type":"application/x-www-form-urlencoded"},
                 verify=self.verify_ssl,
