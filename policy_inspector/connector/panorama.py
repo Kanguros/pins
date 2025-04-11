@@ -54,17 +54,16 @@ class PanoramaConnector:
         """Authenticate to Panorama REST API and get token."""
         logger.info(f"↺ Authenticating to Panorama REST API at {self.hostname}")
         try:
-            auth_endpoint = f"{self.base_url}/auth"
-            auth_payload = {"username": username, "password": password}
             response = self.session.post(
-                auth_endpoint,
-                json=auth_payload,
-                headers=self.headers,
+                f"{self.base_url}/api/?type=keygen",
+                json={"user": username, "password": password},
+                headers={"Content-Type":"application/x-www-form-urlencoded"},
                 verify=self.verify_ssl,
                 timeout=self.timeout,
             )
             response.raise_for_status()
 
+            logger.info(f"auth response {response.text}")
             data = response.json()
             if "result" in data and "key" in data["result"]:
                 self.token = data["result"]["key"]
