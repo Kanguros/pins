@@ -137,7 +137,7 @@ class PanoramaConnector:
                     f"{endpoint}?limit={limit}&offset={current_offset}"
                 )
 
-            response_data = self._api_request("GET", paginated_endpoint)
+            response_data = self._api_request(paginated_endpoint, "GET")
             items = response_data.get("result", {}).get(items_key, [])
             if isinstance(response_data.get("result", {}), list):
                 items = response_data.get("result", [])
