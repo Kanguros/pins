@@ -1,12 +1,8 @@
 import logging
 from typing import Literal, Optional
 
-import requests
-from requests import RequestException
-
-from policy_inspector.model.address_group import AddressGroup
-from policy_inspector.model.address_object import AddressObject
-from policy_inspector.model.security_rule import SecurityRule
+import urllib3
+from requests import RequestException, Session
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +34,6 @@ class PanoramaConnector:
         self.port = port
         if not verify_ssl:
             logger.warning("No SSL was provided")
-            import urllib3
-
             urllib3.disable_warnings(
                 category=urllib3.exceptions.InsecureRequestWarning
             )
@@ -52,6 +46,7 @@ class PanoramaConnector:
         }
         self.token = None
         self.timeout = timeout
+        self.session = Session()
 
         self._authenticate(username, password)
 
@@ -61,7 +56,7 @@ class PanoramaConnector:
         try:
             auth_endpoint = f"{self.base_url}/auth"
             auth_payload = {"username": username, "password": password}
-            response = requests.post(
+            response = self.session.post(
                 auth_endpoint,
                 json=auth_payload,
                 headers=self.headers,
@@ -81,7 +76,7 @@ class PanoramaConnector:
         except RequestException as ex:
             logger.error(f"☠ Failed to connect to Panorama: {str(ex)}")
             if hasattr(ex, "response") and ex.response:
-                logger.error(f"Response: {ex.response.text}")
+                logger.error(f"☠ Response: {ex.response.text}")
             raise
 
     def _api_request(
@@ -93,7 +88,7 @@ class PanoramaConnector:
     ) -> dict:
         try:
             url = f"{self.base_url}/{endpoint}"
-            response = requests.request(
+            response = self.session.request(
                 method,
                 url,
                 headers=self.headers,
@@ -105,7 +100,7 @@ class PanoramaConnector:
             response.raise_for_status()
             return response.json()
 
-        except requests.exceptions.RequestException as ex:
+        except RequestException as ex:
             logger.error(f"☠ API request failed: {str(ex)}")
             if hasattr(ex, "response") and ex.response:
                 logger.error(f"☠ Response: {ex.response.text}")
@@ -146,16 +141,12 @@ class PanoramaConnector:
                 )
 
             response_data = self._api_request("GET", paginated_endpoint)
-
-            # Extract items from response with proper path to results
             items = response_data.get("result", {}).get(items_key, [])
-            # Handle case where result might be a list directly
             if isinstance(response_data.get("result", {}), list):
                 items = response_data.get("result", [])
 
             all_items.extend(items)
 
-            # Check if we need to get more pages based on API response
             total_count = response_data.get("result", {}).get("@total-count", 0)
             if total_count and current_offset + len(items) >= total_count:
                 more_pages = False
@@ -164,7 +155,6 @@ class PanoramaConnector:
             else:
                 current_offset += limit
 
-            # Check if we've reached the maximum requested items
             if max_items and len(all_items) >= max_items:
                 all_items = all_items[:max_items]
                 more_pages = False
@@ -177,7 +167,7 @@ class PanoramaConnector:
 
     def get_address_objects(
         self, device_group: Optional[str] = None
-    ) -> list[AddressObject]:
+    ) -> list[dict]:
         """Retrieve address objects from Panorama using REST API.
 
         Args:
@@ -199,7 +189,7 @@ class PanoramaConnector:
                 logger.info("No address objects found")
                 return []
             logger.info(f"✓ Retrieved {len(entries)} address objects")
-            return list(map(AddressObject.parse_json, entries))
+            return entries
 
         except Exception as e:
             logger.error(f"☠ Failed to retrieve address objects: {str(e)}")
@@ -207,7 +197,7 @@ class PanoramaConnector:
 
     def get_address_groups(
         self, device_group: Optional[str] = None
-    ) -> list[AddressGroup]:
+    ) -> list[dict]:
         """Retrieve address groups from Panorama using REST API.
 
         Args:
@@ -229,7 +219,7 @@ class PanoramaConnector:
                 logger.info("No address groups found")
                 return []
             logger.info(f"✓ Retrieved {len(entries)} address groups")
-            return list(map(AddressGroup.parse_json, entries))
+            return entries
 
         except Exception as e:
             logger.error(f"☠ Failed to retrieve Address Groups: {str(e)}")
@@ -239,7 +229,7 @@ class PanoramaConnector:
         self,
         device_group: Optional[str] = None,
         rulebase: Literal["pre-rulebase", "post-rulebase"] = "post-rulebase",
-    ) -> list[SecurityRule]:
+    ) -> list[dict]:
         """Retrieve security rules from Panorama using REST API.
 
         Args:
@@ -268,7 +258,7 @@ class PanoramaConnector:
                 logger.info(f"No rules found in {rulebase}")
                 return []
             logger.info(f"✓ Retrieved {len(entries)} security rules")
-            return list(map(SecurityRule.parse_json, entries))
+            return entries
 
         except Exception as e:
             logger.error(f"☠ Failed to retrieve rules: {str(e)}")

@@ -75,3 +75,17 @@ def load_model(
     for item in items:
         instances.append(parser_func(item))
     return instances
+
+
+def save_json(items: list, filename: str) -> None:
+    """Save list of objects to a JSON file."""
+    if not items:
+        logger.warning(f"No items to save to {filename}")
+        return
+    try:
+        with open(filename, "w") as f:
+            json.dump(items, f, indent=2)
+        logger.info(f"✓ Saved {len(items)} items to {filename}")
+    except Exception as ex:
+        logger.error(f"☠ Failed to save to {filename}: {str(ex)}")
+        raise

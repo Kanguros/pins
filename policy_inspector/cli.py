@@ -6,7 +6,8 @@ import rich_click as click
 from click import ClickException
 from rich_click import rich_config
 
-from policy_inspector.loader import load_model
+from policy_inspector.connector.panorama import PanoramaConnector
+from policy_inspector.loader import load_model, save_json
 from policy_inspector.model.address_group import AddressGroup
 from policy_inspector.model.address_object import AddressObject
 from policy_inspector.model.base import MainModel
@@ -51,6 +52,105 @@ def main_list() -> None:
         logger.debug(f"\t{scenario.__doc__}")
         for check in scenario.checks:
             logger.debug(f"  - {check.__name__}")
+
+
+@main.command("pull")
+@verbose_option(logger)
+@click.option(
+    "-h",
+    "--host",
+    "hostname",
+    nargs=1,
+    type=click.STRING,
+    help="Panorama hostname",
+    required=True,
+)
+@click.option(
+    "-u",
+    "--username",
+    nargs=1,
+    type=click.STRING,
+    help="Panorama username",
+    required=True,
+)
+@click.option(
+    "-p",
+    "--password",
+    nargs=1,
+    type=click.STRING,
+    help="Panorama password",
+    required=True,
+)
+@click.option(
+    "-d",
+    "--device-group",
+    "device_groups",
+    nargs=1,
+    type=click.STRING,
+    help="Name of the Device Group",
+    required=True,
+    multiple=True,
+)
+@click.option(
+    "--ssl",
+    "verify_ssl",
+    nargs=1,
+    help="SSL",
+    default=False,
+)
+def main_pull(
+    hostname: str, username: str, password: str, device_groups: str, verify_ssl
+) -> None:
+    """Pull Security Rules, Address Objects and Address Groups from Panorama for given Device Group."""
+    try:
+        # Connect to Panorama
+        logger.info(f"↺ Connecting to Panorama at {hostname}")
+        connector = PanoramaConnector(
+            hostname=hostname,
+            username=username,
+            password=password,
+            verify_ssl=verify_ssl,
+        )
+
+        # Get shared objects
+        logger.info("↺ Retrieving shared objects...")
+        shared_address_objects = connector.get_address_objects()
+        shared_address_groups = connector.get_address_groups()
+
+        # Save shared objects to files
+        save_json(shared_address_objects, "shared_address_objects.json")
+        save_json(shared_address_groups, "shared_address_groups.json")
+
+        # Process each device group
+        for device_group in device_groups:
+            logger.info(f"↺ Processing device group: {device_group}")
+
+            # Get device group objects
+            address_objects = connector.get_address_objects(
+                device_group=device_group
+            )
+            address_groups = connector.get_address_groups(
+                device_group=device_group
+            )
+            pre_security_rules = connector.get_security_rules(
+                device_group=device_group, rulebase="pre-rulebase"
+            )
+            post_security_rules = connector.get_security_rules(
+                device_group=device_group, rulebase="post-rulebase"
+            )
+
+            # Save to files
+            prefix = f"{device_group.lower().replace(' ', '_')}_".strip()
+            save_json(address_objects, f"{prefix}address_objects.json")
+            save_json(address_groups, f"{prefix}address_groups.json")
+            save_json(pre_security_rules, f"{prefix}pre_security_rules.json")
+            save_json(post_security_rules, f"{prefix}post_security_rules.json")
+
+        logger.info("✓ All data successfully pulled and saved")
+
+    except Exception as e:
+        logger.error(f"☠ Failed to pull data: {str(e)}")
+        raise
 
 
 @main.group("run", no_args_is_help=True)
