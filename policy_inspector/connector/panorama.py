@@ -61,16 +61,14 @@ class PanoramaConnector:
                 verify=self.verify_ssl,
                 timeout=self.timeout,
             )
-            logger.info(f"auth response {response.text}")
             response.raise_for_status()
 
-            data = response.json()
-            if "result" in data and "key" in data["result"]:
-                self.token = data["result"]["key"]
-                self.headers["X-PAN-KEY"] = self.token
-                logger.info("✓ Successfully authenticated to Panorama REST API")
-            else:
-                raise ValueError("Authentication failed: No token in response")
+            data = response.text
+            token = data.split("<key>")[1].split("</key>")[0]
+            self.token = token
+            self.headers["X-PAN-KEY"] = token
+            logger.info("✓ Successfully authenticated to Panorama REST API")
+
 
         except RequestException as ex:
             logger.error(f"☠ Failed to connect to Panorama: {str(ex)}")
