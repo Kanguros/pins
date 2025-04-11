@@ -148,9 +148,8 @@ def main_pull(
 
         logger.info("✓ All data successfully pulled and saved")
 
-    except Exception as e:
-        logger.error(f"☠ Failed to pull data: {str(e)}")
-        raise
+    except Exception as ex:
+        raise ClickException(str(ex)) from None
 
 
 @main.group("run", no_args_is_help=True)

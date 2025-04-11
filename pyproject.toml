@@ -103,6 +103,7 @@ ignore = [
     "TRY300", # Consider moving this statement to an `else` block
     "FBT001",  # Boolean-typed positional argument in function definition
     "FBT002",  # Boolean default positional argument in function definition
+    "BLE001",  # Do not catch blind exception: `Exception`
 ]
 
 
