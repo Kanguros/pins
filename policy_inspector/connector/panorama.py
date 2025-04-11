@@ -56,14 +56,14 @@ class PanoramaConnector:
         try:
             response = self.session.post(
                 f"https://{self.hostname}:{self.port}/api/?type=keygen",
-                json={"user": username, "password": password},
+                data={"user": username, "password": password},
                 headers={"Content-Type":"application/x-www-form-urlencoded"},
                 verify=self.verify_ssl,
                 timeout=self.timeout,
             )
+            logger.info(f"auth response {response.text}")
             response.raise_for_status()
 
-            logger.info(f"auth response {response.text}")
             data = response.json()
             if "result" in data and "key" in data["result"]:
                 self.token = data["result"]["key"]
