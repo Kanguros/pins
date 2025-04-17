@@ -175,7 +175,7 @@ class AddressObjectFQDN(AddressObject):
             ValueError: For invalid domain name formats
         """
         v = v.lower()
-        fqdn_regex = r"^([a-z0-9-]{1,63}\.)+[a-z]{2,63}$"
+        fqdn_regex = r"^([a-z0-9-]{1,63}\.)+[a-z0-9-]{2,63}$"
         if not re.match(fqdn_regex, v):
             raise ValueError(
                 f"Invalid FQDN={v}. Not matches regex: {fqdn_regex}"
