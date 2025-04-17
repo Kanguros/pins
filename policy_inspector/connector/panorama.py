@@ -174,14 +174,10 @@ class PanoramaConnector:
         Returns:
             List of Address Objects as dict.
         """
-
+        logger.info("↺ Retrieving Address Objects")
         if device_group:
-            logger.info(
-                f"↺ Retrieving Device Group {device_group} Address Objects"
-            )
             endpoint = f"Objects/Addresses?location=device-group&device-group={device_group}"
         else:
-            logger.info("↺ Retrieving shared Address Objects")
             endpoint = "Objects/Addresses?location=shared"
 
         entries = self._paginated_api_request(endpoint)
@@ -202,13 +198,10 @@ class PanoramaConnector:
         Returns:
             List of ``AddressGroup`` instances
         """
+        logger.info("↺ Retrieving Address Groups")
         if device_group:
-            logger.info(
-                f"↺ Retrieving Device Group's {device_group} Address Groups"
-            )
             endpoint = f"Objects/AddressGroups?location=device-group&device-group={device_group}"
         else:
-            logger.info("↺ Retrieving shared Address Groups")
             endpoint = "Objects/AddressGroups?location=shared"
 
         entries = self._paginated_api_request(endpoint)
@@ -221,7 +214,7 @@ class PanoramaConnector:
     def get_security_rules(
         self,
         device_group: Optional[str] = None,
-        rulebase: Literal["pre-rulebase", "post-rulebase"] = "post-rulebase",
+        rulebase: Literal["pre", "post"] = "post",
     ) -> list[dict]:
         """Retrieve security rules from Panorama using REST API.
 
@@ -232,23 +225,22 @@ class PanoramaConnector:
         Returns:
             List of `SecurityRule` instances.
         """
+        if rulebase == "pre":
+            resource = "Policies/SecurityPreRules"
+        else:
+            resource = "Policies/SecurityPostRules"
+        logger.info("↺ Retrieving Security Rules")
         if device_group:
-            logger.info(
-                f"↺ Retrieving Device Group's {device_group} Security Rules"
-            )
             endpoint = (
-                f"Policies/SecurityRules?location=device-group&device-group={device_group}"
+                f"{resource}?location=device-group&device-group={device_group}"
                 f"&rulebase={rulebase}"
             )
         else:
-            logger.info("↺ Retrieving shared Security Rules")
-            endpoint = (
-                f"Policies/SecurityRules?location=shared&rulebase={rulebase}"
-            )
+            endpoint = f"{resource}?location=shared&rulebase={rulebase}"
 
         entries = self._paginated_api_request(endpoint)
         if not entries:
             logger.warning("No Security Rules found")
             return []
-        logger.info(f"✓ Retrieved {len(entries)} security rules")
+        logger.info(f"✓ Retrieved {len(entries)} Security Rules")
         return entries
