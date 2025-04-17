@@ -308,6 +308,8 @@ def process_scenario(
         scenario = scenario(*models_data, **kwargs)
         scenario.exclude_checks(exclude_checks)
         logger.info(f"→ Executing scenario with {len(scenario.checks)} checks")
+        for check in scenario.checks:
+            logger.debug(f"◉ '{check.__name__}'")
         output = scenario.execute()
         logger.info("▶ Results")
         logger.info("―――――――――")

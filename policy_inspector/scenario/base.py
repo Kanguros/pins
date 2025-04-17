@@ -61,13 +61,13 @@ class Scenario:
         if not keywords:
             return
         checks = self.checks.copy()
-        logger.debug(f"Excluding checks by keywords: {', '.join(keywords)}")
-        for check in checks:
-            for keyword in keywords:
-                check_name = check.__name__
-                if keyword in check_name:
-                    logger.info(f"✖ Check '{check_name}' excluded")
-                    break
+        logger.info(f"Excluding checks by keywords: {', '.join(keywords)}")
+        for i, check in enumerate(self.checks):
+            check_name = check.__name__
+            if any(keyword in check_name for keyword in keywords):
+                logger.info(f"✖ Check '{check_name}' excluded")
+                checks.pop(i)
+        self.checks = checks
 
     def execute(self) -> ScenarioResults:
         """
