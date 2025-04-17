@@ -143,7 +143,9 @@ class PanoramaConnector:
 
             all_items.extend(items)
 
-            total_count = response_data.get("result", {}).get("@total-count", 0)
+            total_count = int(
+                response_data.get("result", {}).get("@total-count", 0)
+            )
             if total_count and current_offset + len(items) >= total_count:
                 more_pages = False
             elif len(items) < limit:
