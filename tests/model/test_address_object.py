@@ -47,11 +47,18 @@ def test_ip_range_creation(input_value):
     assert obj.value == (IPv4Address("10.0.0.1"), IPv4Address("10.0.0.100"))
 
 
-def test_fqdn_creation():
+def test_fqdn_creation_1():
     obj = AddressObjectFQDN(
         name="test-fqdn", value="example.com", description="Test domain"
     )
     assert obj.value == "example.com"
+
+
+def test_fqdn_creation_2():
+    obj = AddressObjectFQDN(
+        name="test-fqdn", value="example.com-da", description="Test domain"
+    )
+    assert obj.value == "example.com-da"
 
 
 def test_invalid_ip_network():
