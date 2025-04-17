@@ -35,16 +35,17 @@ def verbose_option(logger) -> Callable:
         package_logger = logging.getLogger("policy_inspector")
         count = len(value)
         if count > 0:
-            logger.setLevel(logging.DEBUG)
-        if count > 1:
             package_logger.setLevel(logging.INFO)
+        if count > 1:
+            logger.setLevel(logging.DEBUG)
+            handler: RichHandler = logger.handlers[0]
+            handler._log_render.show_level = True
         if count > 2:
             package_logger.setLevel(logging.DEBUG)
         if count > 3:
             handler: RichHandler = logger.handlers[0]
             handler._log_render.show_path = True
             handler._log_render.show_time = True
-            handler._log_render.show_level = True
 
     kwargs = {
         "is_flag": True,
