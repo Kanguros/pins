@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from policy_inspector.model.address_object import (
     AddressObject,
     AddressObjectIPNetwork,
+    AddressObjectIPRange,
 )
 
 if TYPE_CHECKING:
@@ -70,6 +71,13 @@ class Resolver:
 
         try:
             resolved = [AddressObjectIPNetwork(name=name, value=name)]
+            self.cache[name] = resolved
+            return resolved
+        except ValueError:
+            pass
+
+        try:
+            resolved = [AddressObjectIPRange(name=name, value=name)]
             self.cache[name] = resolved
             return resolved
         except ValueError as ex:
