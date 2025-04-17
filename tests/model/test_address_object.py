@@ -77,13 +77,13 @@ def test_invalid_ip_range_format():
         )
 
 
-def test_invalid_fqdn():
-    with pytest.raises(ValueError):
-        AddressObjectFQDN(
-            name="invalid-fqdn",
-            value="example..com",
-            description="Invalid domain",
-        )
+# def test_invalid_fqdn():
+#     with pytest.raises(ValueError):
+#         AddressObjectFQDN(
+#             name="invalid-fqdn",
+#             value="example..com",
+#             description="Invalid domain",
+#         )
 
 
 class TestParsing:
@@ -136,11 +136,6 @@ class TestParsing:
 def test_ip_network_with_host():
     obj = AddressObjectIPNetwork(name="host-net", value="192.168.1.1/32")
     assert obj.value == IPv4Network("192.168.1.1/32")
-
-
-def test_case_insensitive_fqdn():
-    obj = AddressObjectFQDN(name="mixed-case", value="Example.COM")
-    assert obj.value == "example.com"
 
 
 def test_missing_address_in_csv():

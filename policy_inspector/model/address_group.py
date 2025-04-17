@@ -17,15 +17,16 @@ class AddressGroup(MainModel):
     @classmethod
     def parse_json(cls, data: dict) -> "AddressGroup":
         """Map a JSON object to an AddressGroup."""
-        mapping = {"@name": "name", "ip-address": "ip_address"}
+        mapping = {"@name": "name"}
         list_fields = ("tag", "static")
 
         parsed = {}
         for key, value in data.items():
             mapped_key = mapping.get(key, key)
             key_value = value
-            if value and mapped_key in list_fields:
-                key_value = set(value) if value else set()
+            if key_value and mapped_key in list_fields:
+                members = key_value.get("member", [])
+                key_value = set(members) if members else set()
             parsed[mapped_key] = key_value
         return cls(**parsed)
 

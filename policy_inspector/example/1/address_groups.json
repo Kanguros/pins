@@ -3,38 +3,50 @@
     "@location": "shared",
     "@name": "InternalAndExternal",
     "description": "Internal and external addresses",
-    "tag": [
-      "red",
-      "blue"
-    ],
-    "static": [
-      "SubnetExternal",
-      "SubnetInternal",
-      "cloud_log_server"
-    ]
+    "tag": {
+      "member": [
+        "red",
+        "blue"
+      ]
+    },
+    "static": {
+      "member": [
+        "SubnetExternal",
+        "SubnetInternal",
+        "cloud_log_server"
+      ]
+    }
   },
-    {
+  {
     "@location": "shared",
     "@name": "AllMain_Servers",
     "description": "All main servers",
-    "tag": [
-      "green"
-    ],
-    "static": [
-      "Main_DB_Server",
-      "Main_Linux_Server"
-    ]
+    "tag": {
+      "member": [
+        "green"
+      ]
+    },
+    "static": {
+      "member": [
+        "Main_DB_Server",
+        "Main_Linux_Server"
+      ]
+    }
   },
-    {
+  {
     "@location": "shared",
     "@name": "LogServers",
     "description": "All log servers",
-    "tag": [
-      "orange"
-    ],
-    "static": [
-      "cloud_log_server",
-      "Log_server"
-    ]
+    "tag": {
+      "member": [
+        "orange"
+      ]
+    },
+    "static": {
+      "member": [
+        "cloud_log_server",
+        "Log_server"
+      ]
+    }
   }
 ]
