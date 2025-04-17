@@ -66,6 +66,16 @@ def main_list() -> None:
     required=True,
 )
 @click.option(
+    "-pv",
+    "--panos-version",
+    "panos_version",
+    nargs=1,
+    type=click.STRING,
+    help="PAN-OS version. ",
+    default="v11.1",
+    show_default=True,
+)
+@click.option(
     "-u",
     "--username",
     nargs=1,
@@ -99,7 +109,12 @@ def main_list() -> None:
     default=False,
 )
 def main_pull(
-    hostname: str, username: str, password: str, device_groups: str, verify_ssl
+    hostname: str,
+    panos_version: str,
+    username: str,
+    password: str,
+    device_groups: str,
+    verify_ssl,
 ) -> None:
     """Pull Security Rules, Address Objects and Address Groups from Panorama for given Device Group."""
     try:
@@ -108,16 +123,17 @@ def main_pull(
             hostname=hostname,
             username=username,
             password=password,
+            api_version=panos_version,
             verify_ssl=verify_ssl,
         )
 
-        shared_address_objects = connector.get_address_objects()
-        save_json(shared_address_objects, "shared_address_objects.json")
-        shared_address_groups = connector.get_address_groups()
-        save_json(shared_address_groups, "shared_address_groups.json")
+        # shared_address_objects = connector.get_address_objects()
+        # save_json(shared_address_objects, "shared_address_objects.json")
+        # shared_address_groups = connector.get_address_groups()
+        # save_json(shared_address_groups, "shared_address_groups.json")
 
         for device_group in device_groups:
-            logger.info(f"↺ Processing device group: {device_group}")
+            logger.info(f"↺ Processing Device Group: {device_group}")
 
             prefix = f"{device_group.lower().replace(' ', '_')}_".strip()
 
