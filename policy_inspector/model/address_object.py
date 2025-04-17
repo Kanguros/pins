@@ -166,21 +166,21 @@ class AddressObjectFQDN(AddressObject):
 
     value: str = Field(..., description="Address FQDN value")
 
-    @field_validator("value", mode="after")
-    @classmethod
-    def validate(cls, v: str) -> str:
-        """Normalize and validate FQDN format.
-
-        Raises:
-            ValueError: For invalid domain name formats
-        """
-        v = v.lower()
-        fqdn_regex = r"^([a-z0-9-]{1,63}\.)+[a-z0-9-]{2,63}$"
-        if not re.match(fqdn_regex, v):
-            raise ValueError(
-                f"Invalid FQDN={v}. Not matches regex: {fqdn_regex}"
-            )
-        return v
+    # @field_validator("value", mode="after")
+    # @classmethod
+    # def validate(cls, v: str) -> str:
+    #     """Normalize and validate FQDN format.
+    #
+    #     Raises:
+    #         ValueError: For invalid domain name formats
+    #     """
+    #     v = v.lower()
+    #     fqdn_regex = r"^([a-z0-9-]{1,63}\.)+[a-z0-9-]{2,63}$"
+    #     if not re.match(fqdn_regex, v):
+    #         raise ValueError(
+    #             f"Invalid FQDN={v}. Not matches regex: {fqdn_regex}"
+    #         )
+    #     return v
 
     def is_covered_by(self, other: "AddressObject") -> bool:
         """Check FQDN equivalence.
