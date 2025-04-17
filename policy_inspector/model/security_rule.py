@@ -1,8 +1,12 @@
-from typing import ClassVar, Union, Optional
+from typing import ClassVar, Optional, Union
 
 from pydantic import Field
 
-from policy_inspector.model.address_object import AddressObjectIPNetwork, AddressObjectIPRange, AddressObjectFQDN
+from policy_inspector.model.address_object import (
+    AddressObjectFQDN,
+    AddressObjectIPNetwork,
+    AddressObjectIPRange,
+)
 from policy_inspector.model.base import (
     Action,
     AnyObjType,

@@ -99,7 +99,7 @@ def main_list() -> None:
     default=False,
 )
 def main_pull(
-        hostname: str, username: str, password: str, device_groups: str, verify_ssl
+    hostname: str, username: str, password: str, device_groups: str, verify_ssl
 ) -> None:
     """Pull Security Rules, Address Objects and Address Groups from Panorama for given Device Group."""
     try:
@@ -179,7 +179,7 @@ def main_run():
 )
 @exclude_check_option()
 def run_shadowing(
-        security_rules_path: Path, exclude_checks: tuple[str]
+    security_rules_path: Path, exclude_checks: tuple[str]
 ) -> None:
     process_scenario(
         Shadowing,
@@ -207,10 +207,10 @@ def run_shadowing(
 )
 @exclude_check_option()
 def run_shadowingvalue(
-        security_rules_path: Path,
-        address_objects_path: Path,
-        address_groups_path: Path,
-        exclude_checks: tuple[str],
+    security_rules_path: Path,
+    address_objects_path: Path,
+    address_groups_path: Path,
+    exclude_checks: tuple[str],
 ) -> None:
     process_scenario(
         ShadowingByValue,
@@ -270,10 +270,10 @@ def run_example(ctx, example: Example, exclude_checks: tuple[str]) -> None:
 
 
 def process_scenario(
-        scenario: type[ConcreteScenario],
-        exclude_checks: tuple[str],
-        *cls_path: tuple[type[MainModel], Path],
-        **kwargs,
+    scenario: type[ConcreteScenario],
+    exclude_checks: tuple[str],
+    *cls_path: tuple[type[MainModel], Path],
+    **kwargs,
 ):
     try:
         models_data = []

@@ -52,12 +52,12 @@ class PanoramaConnector:
 
     def _authenticate(self, username: str, password: str) -> None:
         """Authenticate to Panorama REST API and get token."""
-        logger.info(f"↺ Authenticating to Panorama")
+        logger.info("↺ Authenticating to Panorama")
         try:
             response = self.session.post(
                 f"https://{self.hostname}:{self.port}/api/?type=keygen",
                 data={"user": username, "password": password},
-                headers={"Content-Type":"application/x-www-form-urlencoded"},
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
                 verify=self.verify_ssl,
                 timeout=self.timeout,
             )
@@ -73,7 +73,7 @@ class PanoramaConnector:
             error_msg = f"Failed to connect to Panorama. \n{str(ex)}"
             if hasattr(ex, "response") and ex.response:
                 error_msg = f"{error_msg}\n{ex.response.text}"
-            raise ValueError(error_msg)
+            raise ValueError(error_msg) from ex
 
     def _api_request(
         self,
@@ -100,8 +100,7 @@ class PanoramaConnector:
             error_msg = f"Panorama API request failed \n{str(ex)}"
             if hasattr(ex, "response") and ex.response:
                 error_msg = f"{error_msg}\n{ex.response.text}"
-            raise ValueError(error_msg)
-
+            raise ValueError(error_msg) from ex
 
     def _paginated_api_request(
         self,
@@ -175,7 +174,9 @@ class PanoramaConnector:
         """
 
         if device_group:
-            logger.info(f"↺ Retrieving Device Group {device_group} Address Objects")
+            logger.info(
+                f"↺ Retrieving Device Group {device_group} Address Objects"
+            )
             endpoint = f"Objects/Addresses?location=device-group&device-group={device_group}"
         else:
             logger.info("↺ Retrieving shared Address Objects")
@@ -187,7 +188,6 @@ class PanoramaConnector:
             return []
         logger.info(f"✓ Retrieved {len(entries)} Address Objects")
         return entries
-
 
     def get_address_groups(
         self, device_group: Optional[str] = None
@@ -201,10 +201,12 @@ class PanoramaConnector:
             List of ``AddressGroup`` instances
         """
         if device_group:
-            logger.info(f"↺ Retrieving Device Group's {device_group} Address Groups")
+            logger.info(
+                f"↺ Retrieving Device Group's {device_group} Address Groups"
+            )
             endpoint = f"Objects/AddressGroups?location=device-group&device-group={device_group}"
         else:
-            logger.info(f"↺ Retrieving shared Address Groups")
+            logger.info("↺ Retrieving shared Address Groups")
             endpoint = "Objects/AddressGroups?location=shared"
 
         entries = self._paginated_api_request(endpoint)
@@ -213,7 +215,6 @@ class PanoramaConnector:
             return []
         logger.info(f"✓ Retrieved {len(entries)} Address Groups")
         return entries
-
 
     def get_security_rules(
         self,
@@ -230,7 +231,9 @@ class PanoramaConnector:
             List of `SecurityRule` instances.
         """
         if device_group:
-            logger.info(f"↺ Retrieving Device Group's {device_group} Security Rules")
+            logger.info(
+                f"↺ Retrieving Device Group's {device_group} Security Rules"
+            )
             endpoint = (
                 f"Policies/SecurityRules?location=device-group&device-group={device_group}"
                 f"&rulebase={rulebase}"
@@ -243,8 +246,7 @@ class PanoramaConnector:
 
         entries = self._paginated_api_request(endpoint)
         if not entries:
-            logger.warning(f"No Security Rules found")
+            logger.warning("No Security Rules found")
             return []
         logger.info(f"✓ Retrieved {len(entries)} security rules")
         return entries
-

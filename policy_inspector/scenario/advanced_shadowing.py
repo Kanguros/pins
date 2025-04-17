@@ -3,7 +3,10 @@ from typing import TYPE_CHECKING
 
 from policy_inspector.model.address_object import AddressObjectFQDN
 from policy_inspector.model.base import AnyObj
-from policy_inspector.model.security_rule import SecurityRule, AdvancedSecurityRule
+from policy_inspector.model.security_rule import (
+    AdvancedSecurityRule,
+    SecurityRule,
+)
 from policy_inspector.resolver import Resolver
 from policy_inspector.scenario.shadowing import (
     CheckResult,
