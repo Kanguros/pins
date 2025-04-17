@@ -14,7 +14,7 @@ from policy_inspector.model.base import MainModel
 from policy_inspector.model.security_rule import SecurityRule
 from policy_inspector.scenario import Scenario
 from policy_inspector.scenario.advanced_shadowing import ShadowingByValue
-from policy_inspector.scenario.shadowing import Shadowing
+from policy_inspector.scenario.shadowing import Shadowing, display_analysis
 from policy_inspector.utils import (
     Example,
     ExampleChoice,
@@ -313,7 +313,8 @@ def process_scenario(
         output = scenario.execute()
         logger.info("▶ Results")
         logger.info("―――――――――")
-        scenario.analyze(output)
+        results = scenario.analyze(output)
+        display_analysis(results)
     except Exception as ex:  # noqa: BLE001
         raise ClickException(f"{str(ex)}\n{ex.args}\n{ex.__cause__}")  # noqa: B904
 

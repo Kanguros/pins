@@ -187,7 +187,8 @@ class Shadowing(Scenario):
     def analyze(
         self,
         results: dict[str, PrecedingRulesOutputs],
-    ):
+    ) -> dict[str, list[str]]:
+        output = {}
         for rule_name, rule_results in results.items():
             shadowing_rules = []
             for preceding_rule_name, checks_results in rule_results.items():
@@ -195,9 +196,16 @@ class Shadowing(Scenario):
                     check_result[0] for check_result in checks_results.values()
                 ):
                     shadowing_rules.append(preceding_rule_name)
-            if shadowing_rules:
-                logger.info(f"✖ '{rule_name}' shadowed by:")
-                for rule in shadowing_rules:
-                    logger.info(f"   • '{rule}'")
-            else:
-                logger.debug(f"✔ '{rule_name}' not shadowed")
+
+            output[rule_name] = shadowing_rules
+        return output
+
+
+def display_analysis(output: dict[str, list[str]]):
+    for rule_name, shadowing_rules in output.items():
+        if shadowing_rules:
+            logger.info(f"✖ '{rule_name}' shadowed by:")
+            for rule in shadowing_rules:
+                logger.info(f"   • '{rule}'")
+        else:
+            logger.debug(f"✔ '{rule_name}' not shadowed")
