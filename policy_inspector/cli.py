@@ -295,10 +295,12 @@ def process_scenario(
     try:
         models_data = []
         for model_cls, file_path in cls_path:
-            logger.info(f"↺ Loading {model_cls.plural} from {file_path.name}")
+            logger.info(
+                f"↺ Loading '{model_cls.plural}' from '{file_path.name}'"
+            )
             instances = load_model(model_cls, file_path)
             logger.info(
-                f"✓ Loaded {len(instances)} {model_cls.plural} successfully"
+                f"✓ Loaded {len(instances)} '{model_cls.plural}' successfully"
             )
             models_data.append(instances)
 
@@ -307,7 +309,6 @@ def process_scenario(
         scenario.exclude_checks(exclude_checks)
         logger.info(f"→ Executing scenario with {len(scenario.checks)} checks")
         output = scenario.execute()
-        logger.info("")
         logger.info("▶ Results")
         logger.info("―――――――――")
         scenario.analyze(output)

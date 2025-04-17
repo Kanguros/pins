@@ -1,7 +1,7 @@
 import logging
 import re
 from ipaddress import IPv4Address, IPv4Network
-from typing import ClassVar
+from typing import ClassVar, Union
 
 from pydantic import Field, field_validator
 
@@ -34,11 +34,17 @@ class AddressObject(MainModel):
         key_name = next(k for k in type_map if k in data)
         subclass = type_map[key_name]
 
+        data_tag: Union[dict, None] = data.get("tag", None)
+        if not data_tag:
+            tags = set()
+        else:
+            tags = set(data_tag.get("member", []))
+
         return subclass(
             name=data.get("@name"),
             value=data[key_name],
             description=data.get("description", ""),
-            tags=data.get("tag", set()),
+            tags=tags,
         )
 
     @classmethod

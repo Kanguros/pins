@@ -85,7 +85,7 @@ class TestParsing:
         return {
             "@name": "json-test",
             "description": "JSON test",
-            "tag": {"json"},
+            "tag": {"member": ["json"]},
         }
 
     def test_parse_json_ip_netmask(self, json_data):
