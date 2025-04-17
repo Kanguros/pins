@@ -33,7 +33,7 @@ class PanoramaConnector:
         self.hostname = hostname
         self.port = port
         if not verify_ssl:
-            logger.warning("No SSL was provided")
+            logger.debug("! No SSL was provided")
             urllib3.disable_warnings(
                 category=urllib3.exceptions.InsecureRequestWarning
             )
@@ -52,7 +52,6 @@ class PanoramaConnector:
 
     def _authenticate(self, username: str, password: str) -> None:
         """Authenticate to Panorama REST API and get token."""
-        logger.info("↺ Authenticating to Panorama")
         try:
             response = self.session.post(
                 f"https://{self.hostname}:{self.port}/api/?type=keygen",

@@ -127,11 +127,13 @@ def main_pull(
             verify_ssl=verify_ssl,
         )
 
+        logger.info("▶ Retrieving shared items")
+
         shared_address_objects = connector.get_address_objects()
         shared_address_groups = connector.get_address_groups()
 
         for device_group in device_groups:
-            logger.info(f"↺ Processing Device Group: {device_group}")
+            logger.info(f"▶ Processing Device Group '{device_group}'")
 
             prefix = f"{device_group.lower().replace(' ', '_')}_".strip()
 
