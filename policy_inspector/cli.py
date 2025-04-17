@@ -99,11 +99,10 @@ def main_list() -> None:
     default=False,
 )
 def main_pull(
-    hostname: str, username: str, password: str, device_groups: str, verify_ssl
+        hostname: str, username: str, password: str, device_groups: str, verify_ssl
 ) -> None:
     """Pull Security Rules, Address Objects and Address Groups from Panorama for given Device Group."""
     try:
-        # Connect to Panorama
         logger.info(f"↺ Connecting to Panorama at {hostname}")
         connector = PanoramaConnector(
             hostname=hostname,
@@ -112,38 +111,34 @@ def main_pull(
             verify_ssl=verify_ssl,
         )
 
-        # Get shared objects
-        logger.info("↺ Retrieving shared objects...")
         shared_address_objects = connector.get_address_objects()
-        shared_address_groups = connector.get_address_groups()
-
-        # Save shared objects to files
         save_json(shared_address_objects, "shared_address_objects.json")
+        shared_address_groups = connector.get_address_groups()
         save_json(shared_address_groups, "shared_address_groups.json")
 
-        # Process each device group
         for device_group in device_groups:
             logger.info(f"↺ Processing device group: {device_group}")
 
-            # Get device group objects
+            prefix = f"{device_group.lower().replace(' ', '_')}_".strip()
+
             address_objects = connector.get_address_objects(
                 device_group=device_group
             )
+            save_json(address_objects, f"{prefix}address_objects.json")
+
             address_groups = connector.get_address_groups(
                 device_group=device_group
             )
+            save_json(address_groups, f"{prefix}address_groups.json")
+
             pre_security_rules = connector.get_security_rules(
                 device_group=device_group, rulebase="pre-rulebase"
             )
+            save_json(pre_security_rules, f"{prefix}pre_security_rules.json")
+
             post_security_rules = connector.get_security_rules(
                 device_group=device_group, rulebase="post-rulebase"
             )
-
-            # Save to files
-            prefix = f"{device_group.lower().replace(' ', '_')}_".strip()
-            save_json(address_objects, f"{prefix}address_objects.json")
-            save_json(address_groups, f"{prefix}address_groups.json")
-            save_json(pre_security_rules, f"{prefix}pre_security_rules.json")
             save_json(post_security_rules, f"{prefix}post_security_rules.json")
 
         logger.info("✓ All data successfully pulled and saved")
@@ -184,7 +179,7 @@ def main_run():
 )
 @exclude_check_option()
 def run_shadowing(
-    security_rules_path: Path, exclude_checks: tuple[str]
+        security_rules_path: Path, exclude_checks: tuple[str]
 ) -> None:
     process_scenario(
         Shadowing,
@@ -212,10 +207,10 @@ def run_shadowing(
 )
 @exclude_check_option()
 def run_shadowingvalue(
-    security_rules_path: Path,
-    address_objects_path: Path,
-    address_groups_path: Path,
-    exclude_checks: tuple[str],
+        security_rules_path: Path,
+        address_objects_path: Path,
+        address_groups_path: Path,
+        exclude_checks: tuple[str],
 ) -> None:
     process_scenario(
         ShadowingByValue,
@@ -275,10 +270,10 @@ def run_example(ctx, example: Example, exclude_checks: tuple[str]) -> None:
 
 
 def process_scenario(
-    scenario: type[ConcreteScenario],
-    exclude_checks: tuple[str],
-    *cls_path: tuple[type[MainModel], Path],
-    **kwargs,
+        scenario: type[ConcreteScenario],
+        exclude_checks: tuple[str],
+        *cls_path: tuple[type[MainModel], Path],
+        **kwargs,
 ):
     try:
         models_data = []

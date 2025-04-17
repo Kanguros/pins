@@ -52,7 +52,7 @@ class PanoramaConnector:
 
     def _authenticate(self, username: str, password: str) -> None:
         """Authenticate to Panorama REST API and get token."""
-        logger.info(f"↺ Authenticating to Panorama REST API at {self.hostname}")
+        logger.info(f"↺ Authenticating to Panorama")
         try:
             response = self.session.post(
                 f"https://{self.hostname}:{self.port}/api/?type=keygen",
@@ -67,14 +67,13 @@ class PanoramaConnector:
             token = data.split("<key>")[1].split("</key>")[0]
             self.token = token
             self.headers["X-PAN-KEY"] = token
-            logger.info("✓ Successfully authenticated to Panorama REST API")
-
+            logger.info("✓ Successfully authenticated to Panorama")
 
         except RequestException as ex:
-            logger.error(f"☠ Failed to connect to Panorama: {str(ex)}")
+            error_msg = f"Failed to connect to Panorama. \n{str(ex)}"
             if hasattr(ex, "response") and ex.response:
-                logger.error(f"☠ Response: {ex.response.text}")
-            raise
+                error_msg = f"{error_msg}\n{ex.response.text}"
+            raise ValueError(error_msg)
 
     def _api_request(
         self,
@@ -98,10 +97,11 @@ class PanoramaConnector:
             return response.json()
 
         except RequestException as ex:
-            logger.error(f"☠ API request failed: {str(ex)}")
+            error_msg = f"Panorama API request failed \n{str(ex)}"
             if hasattr(ex, "response") and ex.response:
-                logger.error(f"☠ Response: {ex.response.text}")
-            raise
+                error_msg = f"{error_msg}\n{ex.response.text}"
+            raise ValueError(error_msg)
+
 
     def _paginated_api_request(
         self,
@@ -168,29 +168,26 @@ class PanoramaConnector:
         """Retrieve address objects from Panorama using REST API.
 
         Args:
-            device_group: Name of the Device Group of shared if ``None``.
+            device_group: Name of the Device Group or shared if ``None``.
 
         Returns:
-            List of ``AddressObject`` instances
+            List of Address Objects as dict.
         """
-        logger.info("↺ Retrieving Address Objects from Panorama")
 
         if device_group:
+            logger.info(f"↺ Retrieving Device Group {device_group} Address Objects")
             endpoint = f"Objects/Addresses?location=device-group&device-group={device_group}"
         else:
+            logger.info("↺ Retrieving shared Address Objects")
             endpoint = "Objects/Addresses?location=shared"
 
-        try:
-            entries = self._paginated_api_request(endpoint)
-            if not entries:
-                logger.info("No address objects found")
-                return []
-            logger.info(f"✓ Retrieved {len(entries)} address objects")
-            return entries
+        entries = self._paginated_api_request(endpoint)
+        if not entries:
+            logger.warning("No Address Objects found")
+            return []
+        logger.info(f"✓ Retrieved {len(entries)} Address Objects")
+        return entries
 
-        except Exception as e:
-            logger.error(f"☠ Failed to retrieve address objects: {str(e)}")
-            raise
 
     def get_address_groups(
         self, device_group: Optional[str] = None
@@ -203,24 +200,20 @@ class PanoramaConnector:
         Returns:
             List of ``AddressGroup`` instances
         """
-        logger.info("↺ Retrieving Address Groups from Panorama")
-
-        if not device_group:
-            endpoint = "Objects/AddressGroups?location=shared"
-        else:
+        if device_group:
+            logger.info(f"↺ Retrieving Device Group's {device_group} Address Groups")
             endpoint = f"Objects/AddressGroups?location=device-group&device-group={device_group}"
+        else:
+            logger.info(f"↺ Retrieving shared Address Groups")
+            endpoint = "Objects/AddressGroups?location=shared"
 
-        try:
-            entries = self._paginated_api_request(endpoint)
-            if not entries:
-                logger.info("No address groups found")
-                return []
-            logger.info(f"✓ Retrieved {len(entries)} address groups")
-            return entries
+        entries = self._paginated_api_request(endpoint)
+        if not entries:
+            logger.warning("No Address Groups found")
+            return []
+        logger.info(f"✓ Retrieved {len(entries)} Address Groups")
+        return entries
 
-        except Exception as e:
-            logger.error(f"☠ Failed to retrieve Address Groups: {str(e)}")
-            raise
 
     def get_security_rules(
         self,
@@ -236,27 +229,22 @@ class PanoramaConnector:
         Returns:
             List of `SecurityRule` instances.
         """
-        logger.info("↺ Retrieving security rules from Panorama")
-
-        logger.info("↺ Retrieving security rules")
         if device_group:
+            logger.info(f"↺ Retrieving Device Group's {device_group} Security Rules")
             endpoint = (
                 f"Policies/SecurityRules?location=device-group&device-group={device_group}"
                 f"&rulebase={rulebase}"
             )
         else:
+            logger.info("↺ Retrieving shared Security Rules")
             endpoint = (
                 f"Policies/SecurityRules?location=shared&rulebase={rulebase}"
             )
 
-        try:
-            entries = self._paginated_api_request(endpoint)
-            if not entries:
-                logger.info(f"No rules found in {rulebase}")
-                return []
-            logger.info(f"✓ Retrieved {len(entries)} security rules")
-            return entries
+        entries = self._paginated_api_request(endpoint)
+        if not entries:
+            logger.warning(f"No Security Rules found")
+            return []
+        logger.info(f"✓ Retrieved {len(entries)} security rules")
+        return entries
 
-        except Exception as e:
-            logger.error(f"☠ Failed to retrieve rules: {str(e)}")
-            raise

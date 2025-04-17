@@ -52,6 +52,8 @@ def load_model(
     Args:
         model_cls: The model class to instantiate for each example entry.
         file_path: The path to the JSON or CSV file containing the example.
+        loader_func: Optional function to load ``file_path`` file.
+        parser_func: Optional function to parse items from file to ``model_cls``.
 
     Returns:
         A list of instances of the specified model class.
