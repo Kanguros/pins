@@ -314,7 +314,7 @@ def process_scenario(
         logger.info("▶ Results")
         logger.info("―――――――――")
         results = scenario.analyze(output)
-        display_analysis(results)
+        display_analysis(results, logger)
     except Exception as ex:  # noqa: BLE001
         raise ClickException(f"{str(ex)}\n{ex.args}\n{ex.__cause__}")  # noqa: B904
 

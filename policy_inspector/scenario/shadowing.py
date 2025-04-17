@@ -201,11 +201,11 @@ class Shadowing(Scenario):
         return output
 
 
-def display_analysis(output: dict[str, list[str]]):
+def display_analysis(output: dict[str, list[str]], logger_):
     for rule_name, shadowing_rules in output.items():
         if shadowing_rules:
-            logger.info(f"✖ '{rule_name}' shadowed by:")
+            logger_.info(f"✖ '{rule_name}' shadowed by:")
             for rule in shadowing_rules:
-                logger.info(f"   • '{rule}'")
+                logger_.info(f"   • '{rule}'")
         else:
-            logger.debug(f"✔ '{rule_name}' not shadowed")
+            logger_.debug(f"✔ '{rule_name}' not shadowed")
