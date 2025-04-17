@@ -102,66 +102,13 @@ class PanoramaConnector:
                 error_msg = f"{error_msg}\n{ex.response.text}"
             raise ValueError(error_msg) from ex
 
-    def _paginated_api_request(
+    def _get_api_request(
         self,
         endpoint: str,
         items_key: str = "entry",
-        limit: int = 500,
-        offset: int = 0,
-        max_items: Optional[int] = None,
     ) -> list[dict]:
-        """Make paginated API requests to handle large result sets.
-
-        Args:
-            endpoint: API endpoint
-            items_key: Key in the response that contains the items
-            limit: Items per page
-            offset: Starting offset
-            max_items: Maximum total items to retrieve (None for all)
-
-        Returns:
-            List of all items from paginated responses
-        """
-        all_items = []
-        current_offset = offset
-        more_pages = True
-
-        while more_pages:
-            if "?" in endpoint:
-                paginated_endpoint = (
-                    f"{endpoint}&limit={limit}&offset={current_offset}"
-                )
-            else:
-                paginated_endpoint = (
-                    f"{endpoint}?limit={limit}&offset={current_offset}"
-                )
-
-            response_data = self._api_request(paginated_endpoint, "GET")
-            items = response_data.get("result", {}).get(items_key, [])
-            if isinstance(response_data.get("result", {}), list):
-                items = response_data.get("result", [])
-
-            all_items.extend(items)
-
-            total_count = int(
-                response_data.get("result", {}).get("@total-count", 0)
-            )
-            if total_count and current_offset + len(items) >= total_count:
-                more_pages = False
-            elif len(items) < limit:
-                more_pages = False
-            else:
-                current_offset += limit
-
-            if max_items and len(all_items) >= max_items:
-                all_items = all_items[:max_items]
-                more_pages = False
-
-            logger.debug(
-                f"Retrieved {len(items)} items, total so far: {len(all_items)}"
-            )
-
-        return all_items
+        response_data = self._api_request(endpoint, "GET")
+        return response_data.get("result", {}).get(items_key, [])
 
     def get_address_objects(
         self, device_group: Optional[str] = None
@@ -180,7 +127,7 @@ class PanoramaConnector:
         else:
             endpoint = "Objects/Addresses?location=shared"
 
-        entries = self._paginated_api_request(endpoint)
+        entries = self._get_api_request(endpoint)
         if not entries:
             logger.warning("No Address Objects found")
             return []
@@ -204,7 +151,7 @@ class PanoramaConnector:
         else:
             endpoint = "Objects/AddressGroups?location=shared"
 
-        entries = self._paginated_api_request(endpoint)
+        entries = self._get_api_request(endpoint)
         if not entries:
             logger.warning("No Address Groups found")
             return []
@@ -238,7 +185,7 @@ class PanoramaConnector:
         else:
             endpoint = f"{resource}?location=shared&rulebase={rulebase}"
 
-        entries = self._paginated_api_request(endpoint)
+        entries = self._get_api_request(endpoint)
         if not entries:
             logger.warning("No Security Rules found")
             return []
