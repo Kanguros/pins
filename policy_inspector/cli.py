@@ -307,7 +307,10 @@ def process_scenario(
         scenario.exclude_checks(exclude_checks)
         logger.info(f"→ Executing scenario with {len(scenario.checks)} checks")
         for check in scenario.checks:
-            logger.debug(f"◉ '{check.__name__}'")
+            logger.info(f"◉ '{check.__name__}'")
+            check_docs = check.__doc__.replace('\n', ' ')
+            logger.debug(f"\t{check_docs}")
+
         output = scenario.execute()
         results = scenario.analyze(output)
         scenario.show(results, "text", "table")

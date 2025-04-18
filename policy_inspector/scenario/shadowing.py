@@ -233,8 +233,11 @@ class Shadowing(Scenario):
                 continue
             format_func(analysis_results)
 
-    def show_as_text(self, analysis_results: AnalysisResults):
+    @staticmethod
+    def show_as_text(analysis_results: AnalysisResults):
         root_logger = logging.getLogger()
+        root_logger.info(f"Analysis results")
+        root_logger.info(f"----------------")
         for rule, shadowing_rules in analysis_results:
             if shadowing_rules:
                 root_logger.info(f"✖ '{rule.name}' shadowed by:")
@@ -242,15 +245,22 @@ class Shadowing(Scenario):
                     root_logger.info(f"   • '{preceding_rule.name}'")
             else:
                 root_logger.debug(f"✔ '{rule.name}' not shadowed")
+        root_logger.info(f"----------------")
 
-    def show_as_table(self, analysis_results: AnalysisResults):
-        for i, rule, shadowing_rules in enumerate(analysis_results):
+    @staticmethod
+    def show_as_table(analysis_results: AnalysisResults):
+        from policy_inspector.model.security_rule import SecurityRule
+        from rich.console import Console
+        console = Console()
+
+        for i, result in enumerate(analysis_results):
+            rule, shadowing_rules = result
             if not shadowing_rules:
                 continue
 
-            table = Table(title=f"Finding {i}")
+            table = Table(title=f"Finding {i+1}")
 
-            main_headers = ["Attribute", "Security Rule"]
+            main_headers = ["Attribute", "Shadowed Rule"]
             next_headers = [
                 f"Preceding Rule {i}"
                 for i in range(1, len(shadowing_rules) + 1)
@@ -259,8 +269,9 @@ class Shadowing(Scenario):
                 table.add_column(header)
 
             rules = [rule] + shadowing_rules
+
             for attribute in SecurityRule.__pydantic_fields__:
-                rules_attribute = [getattr(rule, attribute) for rule in rules]
+                rules_attribute = [str(getattr(rule, attribute)) for rule in rules]
                 table.add_row(attribute, *rules_attribute)
 
-            print(table)
+            console.print(table)
