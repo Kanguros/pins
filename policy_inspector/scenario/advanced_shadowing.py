@@ -153,7 +153,6 @@ class ShadowingByValue(Shadowing):
         self.resolve_rules()
         self.rules_by_name = {rule.name: rule for rule in self.security_rules}
 
-
     def resolve_rules(self):
         resolved = []
         logger.info("↺ Resolving Address Groups and Address Objects")
