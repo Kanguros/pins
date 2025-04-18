@@ -1,5 +1,4 @@
 import logging
-import re
 from ipaddress import IPv4Address, IPv4Network
 from typing import ClassVar, Union
 
