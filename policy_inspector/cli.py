@@ -12,9 +12,7 @@ from policy_inspector.model.address_group import AddressGroup
 from policy_inspector.model.address_object import AddressObject
 from policy_inspector.model.base import MainModel
 from policy_inspector.model.security_rule import SecurityRule
-from policy_inspector.scenario import Scenario
-from policy_inspector.scenario.advanced_shadowing import ShadowingByValue
-from policy_inspector.scenario.shadowing import Shadowing, display_analysis
+from policy_inspector.scenario import Scenario, Shadowing, ShadowingByValue
 from policy_inspector.utils import (
     Example,
     ExampleChoice,
@@ -311,10 +309,8 @@ def process_scenario(
         for check in scenario.checks:
             logger.debug(f"◉ '{check.__name__}'")
         output = scenario.execute()
-        logger.info("▶ Results")
-        logger.info("―――――――――")
         results = scenario.analyze(output)
-        display_analysis(results, logger)
+        scenario.show(results, "text", "table")
     except Exception as ex:  # noqa: BLE001
         raise ClickException(f"{str(ex)}\n{ex.args}\n{ex.__cause__}")  # noqa: B904
 

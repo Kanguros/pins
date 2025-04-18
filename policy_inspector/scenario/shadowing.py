@@ -1,5 +1,7 @@
 import logging
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Literal
+
+from rich.table import Table
 
 from policy_inspector.model.base import AnyObj
 from policy_inspector.scenario.base import CheckResult, Scenario
@@ -10,12 +12,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 ShadowingCheckFunction = Callable[["SecurityRule", "SecurityRule"], CheckResult]
-
-ChecksOutputs = dict[str, CheckResult]
-"""Dict with check's name as keys and its output as value."""
-
-PrecedingRulesOutputs = dict[str, ChecksOutputs]
-"""Dict with Preceding Rule's name as keys and ChecksOutputs as its value."""
 
 
 def check_action(
@@ -148,6 +144,19 @@ def check_services(
     return False, "Preceding rule does not contain all rule's applications"
 
 
+ChecksOutputs = dict[str, CheckResult]
+"""Dict with check's name as keys and its output as value."""
+
+PrecedingRulesOutputs = dict[str, ChecksOutputs]
+"""Dict with Preceding Rule's name as keys and ChecksOutputs as its value."""
+
+ExecuteResults = dict[str, PrecedingRulesOutputs]
+"""Dict with Rule's name as keys and ``PrecedingRulesOutputs`` as value."""
+
+AnalysisResults = list[tuple["SecurityRule", list["SecurityRule"]]]
+"""List of two-element tuples where first element is a ``SecurityRule`` and second element is list of shadowing rules"""
+
+
 class Shadowing(Scenario):
     """
     This scenario identifies when a rule is completely shadowed by a
@@ -169,8 +178,9 @@ class Shadowing(Scenario):
 
     def __init__(self, security_rules: list["SecurityRule"]):
         self.security_rules = security_rules
+        self.rules_by_name = {rule.name: rule for rule in self.security_rules}
 
-    def execute(self) -> dict[str, PrecedingRulesOutputs]:
+    def execute(self) -> ExecuteResults:
         rules = self.security_rules
         results = {}
         for i, rule in enumerate(rules):
@@ -186,26 +196,71 @@ class Shadowing(Scenario):
 
     def analyze(
         self,
-        results: dict[str, PrecedingRulesOutputs],
-    ) -> dict[str, list[str]]:
-        output = {}
+        results: ExecuteResults,
+    ) -> AnalysisResults:
+        analysis_results = []
         for rule_name, rule_results in results.items():
             shadowing_rules = []
             for preceding_rule_name, checks_results in rule_results.items():
                 if all(
                     check_result[0] for check_result in checks_results.values()
                 ):
-                    shadowing_rules.append(preceding_rule_name)
+                    shadowing_rules.append(
+                        self.rules_by_name[preceding_rule_name]
+                    )
+            if shadowing_rules:
+                analysis_results.append(
+                    (self.rules_by_name[rule_name], shadowing_rules)
+                )
+        return analysis_results
 
-            output[rule_name] = shadowing_rules
-        return output
+    def show(
+        self,
+        analysis_results: AnalysisResults,
+        *formats: Literal["text", "table"],
+    ):
+        if not formats:
+            logger.debug("No show format was provided.")
+            return
+        formats_map = {
+            "text": self.show_as_text,
+            "table": self.show_as_table,
+        }
+        for format_ in formats:
+            format_func = formats_map.get(format_)
+            if not format_func:
+                logger.error(f"Show format '{format_}' unknown!")
+                continue
+            format_func(analysis_results)
 
+    def show_as_text(self, analysis_results: AnalysisResults):
+        root_logger = logging.getLogger()
+        for rule, shadowing_rules in analysis_results:
+            if shadowing_rules:
+                root_logger.info(f"✖ '{rule.name}' shadowed by:")
+                for preceding_rule in shadowing_rules:
+                    root_logger.info(f"   • '{preceding_rule.name}'")
+            else:
+                root_logger.debug(f"✔ '{rule.name}' not shadowed")
 
-def display_analysis(output: dict[str, list[str]], logger_):
-    for rule_name, shadowing_rules in output.items():
-        if shadowing_rules:
-            logger_.info(f"✖ '{rule_name}' shadowed by:")
-            for rule in shadowing_rules:
-                logger_.info(f"   • '{rule}'")
-        else:
-            logger_.debug(f"✔ '{rule_name}' not shadowed")
+    def show_as_table(self, analysis_results: AnalysisResults):
+        for i, rule, shadowing_rules in enumerate(analysis_results):
+            if not shadowing_rules:
+                continue
+
+            table = Table(title=f"Finding {i}")
+
+            main_headers = ["Attribute", "Security Rule"]
+            next_headers = [
+                f"Preceding Rule {i}"
+                for i in range(1, len(shadowing_rules) + 1)
+            ]
+            for header in main_headers + next_headers:
+                table.add_column(header)
+
+            rules = [rule] + shadowing_rules
+            for attribute in SecurityRule.__pydantic_fields__:
+                rules_attribute = [getattr(rule, attribute) for rule in rules]
+                table.add_row(attribute, *rules_attribute)
+
+            print(table)
