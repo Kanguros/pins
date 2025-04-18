@@ -24,7 +24,7 @@ class AddressGroup(MainModel):
         for key, value in data.items():
             mapped_key = mapping.get(key, key)
             key_value = value
-            if key_value and mapped_key in list_fields:
+            if mapped_key in list_fields:
                 members = key_value.get("member", [])
                 key_value = set(members) if members else set()
             parsed[mapped_key] = key_value
