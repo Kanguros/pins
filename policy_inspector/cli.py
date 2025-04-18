@@ -308,7 +308,7 @@ def process_scenario(
         logger.info(f"→ Executing scenario with {len(scenario.checks)} checks")
         for check in scenario.checks:
             logger.info(f"◉ '{check.__name__}'")
-            check_docs = check.__doc__.replace('\n', ' ')
+            check_docs = check.__doc__.replace("\n", " ")
             logger.debug(f"\t{check_docs}")
 
         output = scenario.execute()
