@@ -151,6 +151,8 @@ class ShadowingByValue(Shadowing):
         self.address_groups = address_groups
         self.resolver = self.resolver_cls(address_objects, address_groups)
         self.resolve_rules()
+        self.rules_by_name = {rule.name: rule for rule in self.security_rules}
+
 
     def resolve_rules(self):
         resolved = []

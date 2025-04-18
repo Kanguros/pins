@@ -251,8 +251,6 @@ class Shadowing(Scenario):
     def show_as_table(analysis_results: AnalysisResults):
         from rich.console import Console
 
-        from policy_inspector.model.security_rule import SecurityRule
-
         console = Console()
 
         for i, result in enumerate(analysis_results):
@@ -272,7 +270,7 @@ class Shadowing(Scenario):
 
             rules = [rule] + shadowing_rules
 
-            for attribute in SecurityRule.__pydantic_fields__:
+            for attribute in rule.__pydantic_fields__:
                 rules_attribute = [
                     str(getattr(rule, attribute)) for rule in rules
                 ]

@@ -19,6 +19,12 @@ class AddressObject(MainModel):
     description: str = Field(default="", description="Object description")
     tags: set[str] = Field(default_factory=set, description="Tags")
 
+    def __str__(self):
+        return f"{self.name}[{str(getattr(self, 'value', ''))}]"
+
+    def __repr__(self):
+        return self.__str__()
+
     def is_covered_by(self, other: "AddressObject") -> bool:
         raise NotImplementedError("To be implement in child class")
 
