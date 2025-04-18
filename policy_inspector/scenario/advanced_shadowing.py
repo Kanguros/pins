@@ -54,7 +54,7 @@ def check_source_addresses_by_ip(
     fqdn_count = 0
     for addr_obj in rule.resolved_source_addresses:
         if isinstance(addr_obj, AddressObjectFQDN):
-            logger.info(
+            logger.debug(
                 f"Skipping FQDN comparison for {addr_obj.name}={addr_obj.value}"
             )
             fqdn_count += 1
@@ -71,9 +71,7 @@ def check_source_addresses_by_ip(
             )
 
     if fqdn_count == len(rule.resolved_source_addresses):
-        logger.warning(
-            "All destination addresses are FQDNs - comparison skipped"
-        )
+        logger.debug("All destination addresses are FQDNs - comparison skipped")
         return True, "FQDN destinations excluded from coverage check"
 
     return (
@@ -102,7 +100,7 @@ def check_destination_addresses_by_ip(
     fqdn_count = 0
     for addr_obj in rule.resolved_destination_addresses:
         if isinstance(addr_obj, AddressObjectFQDN):
-            logger.info(
+            logger.debug(
                 f"Skipping FQDN comparison for {addr_obj.name}={addr_obj.value}"
             )
             fqdn_count += 1
@@ -120,7 +118,7 @@ def check_destination_addresses_by_ip(
 
     # Handle case where all addresses were FQDNs
     if fqdn_count == len(rule.resolved_destination_addresses):
-        logger.info("All destination addresses are FQDNs - comparison skipped")
+        logger.debug("All destination addresses are FQDNs - comparison skipped")
         return True, "FQDN destinations excluded from coverage check"
 
     return (
