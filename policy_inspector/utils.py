@@ -70,6 +70,21 @@ def exclude_check_option(arg_name: str = "exclude_checks") -> Callable:
     )
 
 
+def output_format_option(arg_name: str = "output_formats") -> Callable:
+    formats = ["text", "table"]
+    return click.option(
+        "-o",
+        "--output",
+        arg_name,
+        multiple=True,
+        type=click.Choice(formats, case_sensitive=False),
+        default=("text",),
+        show_default=True,
+        nargs=1,
+        help="Format of the output.",
+    )
+
+
 def config_logger(
     logger: logging.Logger,
     level: str = "INFO",
@@ -81,6 +96,9 @@ def config_logger(
 
     Args:
         logger: Instance of a ``logging.Logger``
+        level: Default level of a ``logger``.
+        log_format: Logs format.
+        date_format: Date format in logs.
     """
     logger.setLevel(level)
     package_logger = logging.getLogger("policy_inspector")

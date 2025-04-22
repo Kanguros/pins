@@ -9,24 +9,6 @@ def runner():
     return CliRunner()
 
 
-# @click.command()
-# @verbose_option(logging.getLogger())
-# def fake_cmd_verbose():
-#     logging.info("Test info message")
-#     logging.debug("Test debug message")
-#
-#
-# def test_no_verbose_option(runner):
-#     result = runner.invoke(fake_cmd_verbose)
-#     assert "Test info message" in result.stdout
-#     assert "Test debug message" not in result.stdout
-#
-# def test_with_verbose_option(runner):
-#     result = runner.invoke(fake_cmd_verbose, ["-v"])
-#     assert "Test info message" in result.stdout
-#     assert "Test debug message" in result.stdout
-
-
 @pytest.mark.parametrize("args", [None, ["--help"]])
 def test_main_command_help(runner, args):
     result = runner.invoke(cli.main, args, catch_exceptions=False)
@@ -38,38 +20,45 @@ def test_main_command_help(runner, args):
 
 
 @pytest.mark.parametrize("arg", [None, "--help"])
-def test_run_command(arg):
+def test_run_command(runner, arg):
     args = ["run"]
     if arg:
         args.append(arg)
-    result = CliRunner().invoke(cli.main, args)
-
+    result = runner.invoke(cli.main, args)
     assert result.exit_code == 0
+    phrases = ["Scenarios", "Execute a Scenario.", "example"]
+    for phrase in phrases:
+        assert phrase in result.output
 
 
 def test_list_command(runner):
+    cli.Scenario.get_available()
     result = runner.invoke(cli.main_list)
     assert result.exit_code == 0
     for phrase in [
-        "Available Scenarios:",
+        "check_",
     ]:
         assert phrase in result.output
 
 
 def test_list_command_verbose(runner):
+    cli.Scenario.get_available()
     result = runner.invoke(cli.main_list, ["-vvv"])
     assert result.exit_code == 0
     for phrase in [
-        "Available Scenarios:",
         "check_",
     ]:
         assert phrase in result.output
 
 
 @pytest.mark.parametrize("name", [example.name for example in cli.examples])
-def test_run_example(name):
-    result = CliRunner().invoke(
-        cli.run_example, [name], color=False, catch_exceptions=False
-    )
-    print(result.stdout)
+def test_run_example(runner, name):
+    result = runner.invoke(cli.run_example, [name])
+    phrases = [
+        f"Selected example: '{name}'",
+        "Executing scenario with",
+        "results",
+    ]
     assert result.exit_code == 0
+    for phrase in phrases:
+        assert phrase in result.output

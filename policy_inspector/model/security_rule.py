@@ -20,8 +20,8 @@ class SecurityRule(MainModel):
     singular: ClassVar[str] = "Security Rule"
     plural: ClassVar[str] = "Security Rules"
 
-    id: PositiveInt = Field(
-        default=1, description="Policy ID in a list of Policies."
+    index: PositiveInt = Field(
+        default=1, description="Policy index in a list of Policies."
     )
     name: str = Field(
         ...,
@@ -89,10 +89,11 @@ class SecurityRule(MainModel):
             return value
 
         security_rules = []
-        for data in elements:
+        for index, data in enumerate(elements, start=1):
             parsed = {
                 mapping.get(k, k): extract_value(v) for k, v in data.items()
             }
+            parsed["index"] = index
             security_rules.append(cls(**parsed))
         return security_rules
 
@@ -121,7 +122,7 @@ class SecurityRule(MainModel):
 
         security_rules = []
         for index, data in enumerate(elements, start=1):
-            parsed_data = {"id": index}
+            parsed_data = {"index": index}
             for key, value in data.items():
                 mapped_key = mapping.get(key, key)
                 key_value = value

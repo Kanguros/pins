@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from textwrap import dedent
 from typing import TypeVar
 
 import rich_click as click
@@ -19,6 +20,7 @@ from policy_inspector.utils import (
     FilePath,
     config_logger,
     exclude_check_option,
+    output_format_option,
     verbose_option,
 )
 
@@ -44,12 +46,22 @@ def main():
 @verbose_option(logger)
 def main_list() -> None:
     """List available Scenarios."""
-    logger.info("↺ Available Scenarios:")
+    logger.info("")
+    logger.info("-----------------------")
+    logger.info("")
     for scenario in Scenario.get_available().values():
         logger.info(f"→ '{scenario.name}'")
-        logger.debug(f"\t{scenario.__doc__}")
+        scenario_doc = scenario.__doc__
+        if scenario_doc:
+            doc = dedent(scenario_doc)
+            logger.info(f"{doc}")
         for check in scenario.checks:
-            logger.debug(f"  - {check.__name__}")
+            logger.info(f"\t▶ '{check.__name__}'")
+            doc = check.__doc__.replace("\n", "")
+            logger.info(f"\t  {doc}")
+        logger.info("")
+        logger.info("-----------------------")
+        logger.info("")
 
 
 @main.command("pull")
@@ -193,13 +205,17 @@ def main_run():
     type=FilePath(),
 )
 @exclude_check_option()
+@output_format_option()
 def run_shadowing(
-    security_rules_path: Path, exclude_checks: tuple[str]
+    security_rules_path: Path,
+    exclude_checks: tuple[str],
+    output_formats: tuple[str],
 ) -> None:
     process_scenario(
         Shadowing,
-        exclude_checks,
         (SecurityRule, security_rules_path),
+        exclude_checks=exclude_checks,
+        output_formats=output_formats,
     )
 
 
@@ -221,18 +237,21 @@ def run_shadowing(
     type=FilePath(),
 )
 @exclude_check_option()
+@output_format_option()
 def run_shadowingvalue(
     security_rules_path: Path,
     address_objects_path: Path,
     address_groups_path: Path,
     exclude_checks: tuple[str],
+    output_formats: tuple[str],
 ) -> None:
     process_scenario(
         ShadowingByValue,
-        exclude_checks,
         (SecurityRule, security_rules_path),
         (AddressObject, address_objects_path),
         (AddressGroup, address_groups_path),
+        exclude_checks=exclude_checks,
+        output_formats=output_formats,
     )
 
 
@@ -269,25 +288,35 @@ examples = [
 
 
 @main_run.command("example", no_args_is_help=True)
-@verbose_option(logger)
-@exclude_check_option()
 @click.argument(
     "example",
     type=ExampleChoice(examples),
 )
+@verbose_option(logger)
+@exclude_check_option()
+@output_format_option()
 @click.pass_context
-def run_example(ctx, example: Example, exclude_checks: tuple[str]) -> None:
+def run_example(
+    ctx,
+    example: Example,
+    exclude_checks: tuple[str],
+    output_formats: tuple[str],
+) -> None:
     """Run one of the examples."""
     logger.info(f"▶ Selected example: '{example.name}'")
     ctx.invoke(
-        example.cmd.callback, *example.args, exclude_checks=exclude_checks
+        example.cmd.callback,
+        *example.args,
+        exclude_checks=exclude_checks,
+        output_formats=output_formats,
     )
 
 
 def process_scenario(
     scenario: type[ConcreteScenario],
-    exclude_checks: tuple[str],
     *cls_path: tuple[type[MainModel], Path],
+    exclude_checks: tuple[str] = (),
+    output_formats: tuple[str] = (),
     **kwargs,
 ):
     try:
@@ -305,6 +334,7 @@ def process_scenario(
         logger.info(f"↺ Preparing '{scenario.name}' scenario")
         scenario = scenario(*models_data, **kwargs)
         scenario.exclude_checks(exclude_checks)
+
         logger.info(f"→ Executing scenario with {len(scenario.checks)} checks")
         for check in scenario.checks:
             logger.info(f"◉ '{check.__name__}'")
@@ -313,7 +343,7 @@ def process_scenario(
 
         output = scenario.execute()
         results = scenario.analyze(output)
-        scenario.show(results, "text", "table")
+        scenario.show(results, *output_formats)
     except Exception as ex:  # noqa: BLE001
         raise ClickException(f"{str(ex)}\n{ex.args}\n{ex.__cause__}")  # noqa: B904
 

@@ -159,10 +159,10 @@ AnalysisResults = list[tuple["SecurityRule", list["SecurityRule"]]]
 
 class Shadowing(Scenario):
     """
-    This scenario identifies when a rule is completely shadowed by a
-    preceding rule. Shadowing occurs when a rule will never be matched
-    because a rule earlier in the processing order would always match
-    first.
+    This scenario identifies when a rule is completely shadowed by a preceding rule.
+
+    Shadowing occurs when a rule will never be matched
+    because a rule earlier in the processing order would always match first.
     """
 
     name: str = "Shadowing"
@@ -270,10 +270,15 @@ class Shadowing(Scenario):
 
             rules = [rule] + shadowing_rules
 
-            for attribute in rule.__pydantic_fields__:
-                rules_attribute = [
-                    str(getattr(rule, attribute)) for rule in rules
-                ]
-                table.add_row(attribute, *rules_attribute)
+            for attribute_name in rule.__pydantic_fields__:
+                attribute_values = []
+                for rule in rules:
+                    rule_attribute = getattr(rule, attribute_name)
+                    if isinstance(rule_attribute, (set, list)):
+                        value = "\n".join(f"- {str(v)}" for v in rule_attribute)
+                    else:
+                        value = str(rule_attribute)
+                    attribute_values.append(value)
+                table.add_row(attribute_name, *attribute_values)
 
             console.print(table)
