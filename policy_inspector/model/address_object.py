@@ -29,51 +29,60 @@ class AddressObject(MainModel):
         raise NotImplementedError("To be implement in child class")
 
     @classmethod
-    def parse_json(cls, data: dict) -> "AddressObject":
+    def parse_json(cls, elements: list[dict]) -> list["AddressObject"]:
         """Parse JSON data from PAN-OS API response"""
         type_map = {
             "ip-netmask": AddressObjectIPNetwork,
             "ip-range": AddressObjectIPRange,
             "fqdn": AddressObjectFQDN,
         }
-        key_name = next(k for k in type_map if k in data)
-        subclass = type_map[key_name]
 
-        data_tag: Union[dict, None] = data.get("tag", None)
-        if not data_tag:
-            tags = set()
-        else:
-            tags = set(data_tag.get("member", []))
+        address_objects = []
+        for data in elements:
+            key_name = next(k for k in type_map if k in data)
+            subclass = type_map[key_name]
 
-        return subclass(
-            name=data.get("@name"),
-            value=data[key_name],
-            description=data.get("description", ""),
-            tags=tags,
-        )
+            data_tag: Union[dict, None] = data.get("tag", None)
+            if not data_tag:
+                tags = set()
+            else:
+                tags = set(data_tag.get("member", []))
+
+            model = subclass(
+                name=data.get("@name"),
+                value=data[key_name],
+                description=data.get("description", ""),
+                tags=tags,
+            )
+            address_objects.append(model)
+        return address_objects
 
     @classmethod
-    def parse_csv(cls, data: dict) -> "AddressObject":
+    def parse_csv(cls, elements: list[dict]) -> list["AddressObject"]:
         """Parse CSV row from spreadsheet import"""
-        type_map = {
-            "IP Address": AddressObjectIPNetwork,
-            "IP Range": AddressObjectIPRange,
-            "FQDN": AddressObjectFQDN,
-        }
-        addr_type = data.get("Type", "")
-        try:
-            subclass = type_map[addr_type]
-        except KeyError as ex:
-            raise ValueError(f"Unknown 'Type'='{addr_type}'") from ex
+        address_objects = []
+        for data in elements:
+            type_map = {
+                "IP Address": AddressObjectIPNetwork,
+                "IP Range": AddressObjectIPRange,
+                "FQDN": AddressObjectFQDN,
+            }
+            addr_type = data.get("Type", "")
+            try:
+                subclass = type_map[addr_type]
+            except KeyError as ex:
+                raise ValueError(f"Unknown 'Type'='{addr_type}'") from ex
 
-        tags = data.get("Tag", "")
-        tags = tags.split(";") if tags else set()
-        return subclass(
-            name=data["Name"],
-            value=data["Address"],
-            description=data.get("Description", ""),
-            tags=tags,
-        )
+            tags = data.get("Tag", "")
+            tags = tags.split(";") if tags else set()
+            model = subclass(
+                name=data["Name"],
+                value=data["Address"],
+                description=data.get("Description", ""),
+                tags=tags,
+            )
+            address_objects.append(model)
+        return address_objects
 
 
 class AddressObjectIPNetwork(AddressObject):

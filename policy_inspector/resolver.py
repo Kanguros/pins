@@ -53,16 +53,18 @@ class Resolver:
         if name in self.cache:
             return self.cache[name]
 
-        if name in self.address_groups:
-            logger.debug(f"Resolving group: {name}")
+        try:
+            logger.debug(f"Resolving Address Group by name: {name}")
             resolved = []
             for member in self.address_groups[name]:
                 resolved.extend(self._resolve_name(member))
             self.cache[name] = resolved
             return resolved
+        except KeyError:
+            pass
 
         try:
-            logger.debug(f"Resolving object: {name}")
+            logger.debug(f"Resolving Address Object by name: {name}")
             resolved = [self.address_objects[name]]
             self.cache[name] = resolved
             return resolved
@@ -70,6 +72,9 @@ class Resolver:
             pass
 
         try:
+            logger.debug(
+                f"Creating {AddressObjectIPNetwork} from value: {name}"
+            )
             resolved = [AddressObjectIPNetwork(name=name, value=name)]
             self.cache[name] = resolved
             return resolved
@@ -77,6 +82,7 @@ class Resolver:
             pass
 
         try:
+            logger.debug(f"Creating {AddressObjectIPRange} from value: {name}")
             resolved = [AddressObjectIPRange(name=name, value=name)]
             self.cache[name] = resolved
             return resolved

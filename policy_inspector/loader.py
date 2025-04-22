@@ -12,14 +12,17 @@ logger = logging.getLogger(__name__)
 ModelClass = TypeVar("ModelClass", bound="MainModel")
 """Type variable for model classes derived from MainModel."""
 
-LoaderFunc = Callable[[Path], list[dict]]
-ParserFunc = Callable[[dict], ModelClass]
+Elements = list[dict]
+LoaderFunc = Callable[[Path], Elements]
+ParserFunc = Callable[[Elements], list[ModelClass]]
+
+parser_suffix: str = "parse_"
 
 
 def load_json(
     file_path: Path,
     encoding: str = "utf-8",
-) -> list[dict]:
+) -> Elements:
     """Loads JSON file from given file_path and return it's content."""
     return json.loads(file_path.read_text(encoding=encoding))
 
@@ -27,7 +30,7 @@ def load_json(
 def load_csv(
     file_path: Path,
     encoding: str = "utf-8",
-) -> list[dict]:
+) -> Elements:
     """Loads CSV file from given file_path and return it's content."""
     # csv.field_size_limit(sys.maxsize)
     return list(
@@ -37,8 +40,6 @@ def load_csv(
 
 loaders: dict[str, LoaderFunc] = {"json": load_json, "csv": load_csv}
 """Mapping of file extensions to example loading functions."""
-
-parser_suffix: str = "parse_"
 
 
 def load_model(
@@ -73,10 +74,7 @@ def load_model(
         if parser_func is None:
             raise ValueError(f"{model_cls.__name__} lacks {parser_name} method")
 
-    instances = []
-    for item in items:
-        instances.append(parser_func(item))
-    return instances
+    return parser_func(items)
 
 
 def save_json(items: list, filename: str) -> None:

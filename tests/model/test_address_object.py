@@ -97,13 +97,15 @@ class TestParsing:
 
     def test_parse_json_ip_netmask(self, json_data):
         json_data["ip-netmask"] = "10.0.0.0/8"
-        obj = AddressObject.parse_json(json_data)
+        objs = AddressObject.parse_json([json_data])
+        obj = objs[0]
         assert isinstance(obj, AddressObjectIPNetwork)
         assert obj.value == IPv4Network("10.0.0.0/8")
 
     def test_parse_json_ip_range(self, json_data):
         json_data["ip-range"] = "192.168.1.1-192.168.1.254"
-        obj = AddressObject.parse_json(json_data)
+        objs = AddressObject.parse_json([json_data])
+        obj = objs[0]
         assert isinstance(obj, AddressObjectIPRange)
         assert obj.value == (
             IPv4Address("192.168.1.1"),
@@ -112,7 +114,8 @@ class TestParsing:
 
     def test_parse_json_fqdn(self, json_data):
         json_data["fqdn"] = "test.example.com"
-        obj = AddressObject.parse_json(json_data)
+        objs = AddressObject.parse_json([json_data])
+        obj = objs[0]
         assert isinstance(obj, AddressObjectFQDN)
         assert obj.value == "test.example.com"
 
@@ -123,14 +126,15 @@ class TestParsing:
             "Address": "172.16.0.0/16",
             "Tag": "network;test",
         }
-        obj = AddressObject.parse_csv(csv_data)
+        objs = AddressObject.parse_csv([csv_data])
+        obj = objs[0]
         assert isinstance(obj, AddressObjectIPNetwork)
         assert obj.tags == {"network", "test"}
 
     def test_parse_csv_invalid_type(self):
         csv_data = {"Name": "invalid", "Type": "Invalid", "Address": "dummy"}
         with pytest.raises(ValueError):
-            AddressObject.parse_csv(csv_data)
+            AddressObject.parse_csv([csv_data])
 
 
 def test_ip_network_with_host():
@@ -141,4 +145,4 @@ def test_ip_network_with_host():
 def test_missing_address_in_csv():
     csv_data = {"Name": "missing-addr", "Type": "IP Address"}
     with pytest.raises(KeyError):
-        AddressObject.parse_csv(csv_data)
+        AddressObject.parse_csv([csv_data])

@@ -1,6 +1,6 @@
 from typing import ClassVar, Optional, Union
 
-from pydantic import Field
+from pydantic import Field, PositiveInt
 
 from policy_inspector.model.address_object import (
     AddressObjectFQDN,
@@ -20,6 +20,9 @@ class SecurityRule(MainModel):
     singular: ClassVar[str] = "Security Rule"
     plural: ClassVar[str] = "Security Rules"
 
+    id: PositiveInt = Field(
+        default=1, description="Policy ID in a list of Policies."
+    )
     name: str = Field(
         ...,
         description="Name of a rule.",
@@ -67,7 +70,7 @@ class SecurityRule(MainModel):
     )
 
     @classmethod
-    def parse_json(cls, data: dict) -> "SecurityRule":
+    def parse_json(cls, elements: list[dict]) -> list["SecurityRule"]:
         """Map a JSON object to a SecurityRule."""
         mapping = {
             "@name": "name",
@@ -85,11 +88,16 @@ class SecurityRule(MainModel):
                 return set(value["member"])
             return value
 
-        parsed = {mapping.get(k, k): extract_value(v) for k, v in data.items()}
-        return cls(**parsed)
+        security_rules = []
+        for data in elements:
+            parsed = {
+                mapping.get(k, k): extract_value(v) for k, v in data.items()
+            }
+            security_rules.append(cls(**parsed))
+        return security_rules
 
     @classmethod
-    def parse_csv(cls, data: dict) -> "SecurityRule":
+    def parse_csv(cls, elements: list[dict]) -> list["SecurityRule"]:
         """Map a CSV row to a SecurityRule."""
         mapping = {
             "Name": "name",
@@ -110,16 +118,18 @@ class SecurityRule(MainModel):
             "services",
             "category",
         }
-        parsed_data = {}
 
-        for key, value in data.items():
-            mapped_key = mapping.get(key, key)
-            key_value = value
-            if mapped_key in list_fields:
-                key_value = set(value.split(";")) if value else set()
-            parsed_data[mapped_key] = key_value
-
-        return cls(**parsed_data)
+        security_rules = []
+        for index, data in enumerate(elements, start=1):
+            parsed_data = {"id": index}
+            for key, value in data.items():
+                mapped_key = mapping.get(key, key)
+                key_value = value
+                if mapped_key in list_fields:
+                    key_value = set(value.split(";")) if value else set()
+                parsed_data[mapped_key] = key_value
+            security_rules.append(cls(**parsed_data))
+        return security_rules
 
 
 AddressObjectTypes = Union[
