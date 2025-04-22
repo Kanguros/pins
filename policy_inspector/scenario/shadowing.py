@@ -258,7 +258,7 @@ class Shadowing(Scenario):
             if not shadowing_rules:
                 continue
 
-            table = Table(title=f"Finding {i + 1}")
+            table = Table(title=f"Finding {i + 1}", show_lines=True)
 
             main_headers = ["Attribute", "Shadowed Rule"]
             next_headers = [
