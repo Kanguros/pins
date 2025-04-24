@@ -13,6 +13,7 @@ from policy_inspector.model.address_group import AddressGroup
 from policy_inspector.model.address_object import AddressObject
 from policy_inspector.model.base import MainModel
 from policy_inspector.model.security_rule import SecurityRule
+from policy_inspector.output.html_report import save_as_html
 from policy_inspector.scenario import Scenario, Shadowing, ShadowingByValue
 from policy_inspector.utils import (
     Example,
@@ -344,6 +345,8 @@ def process_scenario(
         output = scenario.execute()
         results = scenario.analyze(output)
         scenario.show(results, *output_formats)
+        save_as_html(results, output, scenario ,"report.html")
+        
     except Exception as ex:  # noqa: BLE001
         raise ClickException(f"{str(ex)}\n{ex.args}\n{ex.__cause__}")  # noqa: B904
 
