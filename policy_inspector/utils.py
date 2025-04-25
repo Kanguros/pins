@@ -70,7 +70,7 @@ def exclude_check_option(arg_name: str = "exclude_checks") -> Callable:
     )
 
 
-def output_format_option(arg_name: str = "output_formats") -> Callable:
+def output_format_option(arg_name: str = "display_formats") -> Callable:
     formats = ["text", "table"]
     return click.option(
         "-o",
@@ -82,6 +82,16 @@ def output_format_option(arg_name: str = "output_formats") -> Callable:
         show_default=True,
         nargs=1,
         help="Format of the output.",
+    )
+
+
+def html_report(arg_name: str = "html_report") -> Callable:
+    return click.option(
+        "-hr",
+        "--html-report",
+        arg_name,
+        is_flag=True,
+        help="Save results as HTML report",
     )
 
 

@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Callable, Literal
+from typing import TYPE_CHECKING, Callable, Literal, Optional
 
 from rich.table import Table
 
@@ -18,7 +18,10 @@ def check_action(
     rule: "SecurityRule",
     preceding_rule: "SecurityRule",
 ) -> CheckResult:
-    """Check if the action is the same in both rules."""
+    """
+    Checks if both rules have the same action (like 'allow' or 'deny').
+    If the actions are different, the first rule does not fully hide the second one.
+    """
     result = rule.action == preceding_rule.action
     message = "Actions match" if result else "Actions differ"
     return result, message
@@ -28,7 +31,10 @@ def check_source_zone(
     rule: "SecurityRule",
     preceding_rule: "SecurityRule",
 ) -> CheckResult:
-    """Checks the source zones of the preceding rule."""
+    """
+    Checks if the first rule covers all the same source zones as the second rule.
+    If the first rule uses 'any' or all the same zones, it can hide the second rule.
+    """
     if rule.source_zones == preceding_rule.source_zones:
         return True, "Source zones are the same"
 
@@ -45,7 +51,10 @@ def check_destination_zone(
     rule: "SecurityRule",
     preceding_rule: "SecurityRule",
 ) -> CheckResult:
-    """Checks the destination zones of the preceding rule."""
+    """
+    Checks if the first rule covers all the same destination zones as the second rule.
+    If the first rule uses 'any' or all the same zones, it can hide the second rule.
+    """
     if rule.destination_zones == preceding_rule.destination_zones:
         return True, "Destination zones are the same"
 
@@ -65,7 +74,10 @@ def check_source_address(
     rule: "SecurityRule",
     preceding_rule: "SecurityRule",
 ) -> CheckResult:
-    """Checks the source addresses of the preceding rule's addresses."""
+    """
+    Checks if the first rule covers all the same source addresses (like IPs or groups).
+    If the first rule uses 'any' or all the same addresses, it can hide the second rule.
+    """
     if rule.source_addresses == preceding_rule.source_addresses:
         return True, "Source addresses are the same"
 
@@ -88,8 +100,9 @@ def check_destination_address(
     rule: "SecurityRule",
     preceding_rule: "SecurityRule",
 ) -> CheckResult:
-    """Checks if the destination addresses are
-    identical, allow any, or are subsets of the preceding rule's addresses.
+    """
+    Checks if the first rule covers all the same destination addresses.
+    If the first rule uses 'any' or all the same addresses, it can hide the second rule.
     """
     if AnyObj in preceding_rule.destination_addresses:
         return True, "Preceding rule allows any destination address"
@@ -112,7 +125,10 @@ def check_application(
     rule: "SecurityRule",
     preceding_rule: "SecurityRule",
 ) -> CheckResult:
-    """Checks the applications of the preceding rule."""
+    """
+    Checks if the first rule allows all the same applications as the second rule.
+    If the first rule uses 'any' or all the same apps, it can hide the second rule.
+    """
     rule_apps = rule.applications
     preceding_apps = preceding_rule.applications
 
@@ -132,8 +148,9 @@ def check_services(
     rule: "SecurityRule",
     preceding_rule: "SecurityRule",
 ) -> CheckResult:
-    """Checks if the rule's ports are the same
-    or a subset of the preceding rule's ports.
+    """
+    Checks if the first rule allows all the same network services or ports.
+    If the first rule covers all the same services, it can hide the second rule.
     """
     if rule.services == preceding_rule.services:
         return True, "Preceding rule and rule's services are the same"
@@ -179,6 +196,8 @@ class Shadowing(Scenario):
     def __init__(self, security_rules: list["SecurityRule"]):
         self.security_rules = security_rules
         self.rules_by_name = {rule.name: rule for rule in self.security_rules}
+        self.execution_results: Optional[ExecuteResults] = None
+        self.analysis_results: Optional[AnalysisResults] = None
 
     def execute(self) -> ExecuteResults:
         rules = self.security_rules
@@ -192,6 +211,7 @@ class Shadowing(Scenario):
                     preceding_rule,
                 )
             results[rule.name] = output
+        self.execution_results = results
         return results
 
     def analyze(
@@ -212,6 +232,7 @@ class Shadowing(Scenario):
                 analysis_results.append(
                     (self.rules_by_name[rule_name], shadowing_rules)
                 )
+        self.analysis_results = analysis_results
         return analysis_results
 
     def show(

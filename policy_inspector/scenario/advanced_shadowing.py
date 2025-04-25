@@ -146,7 +146,7 @@ class ShadowingByValue(Shadowing):
         address_objects: list["AddressObject"],
         address_groups: list["AddressGroup"],
     ):
-        self.security_rules = security_rules
+        super().__init__(security_rules=security_rules)
         self.address_objects = address_objects
         self.address_groups = address_groups
         self.resolver = self.resolver_cls(address_objects, address_groups)

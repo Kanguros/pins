@@ -1,6 +1,6 @@
+
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -218,12 +218,13 @@
         }
     </style>
 </head>
-
 <body>
+
+
     <div class="container">
         <div class="report-header">
             <h1>Firewall Policy Analysis Report</h1>
-            <p>Generated: April 25, 2025 00:31:58</p>
+            <p>Generated: April 25, 2025 08:31:01</p>
         </div>
         
         <div class="content">
@@ -265,14 +266,14 @@
 <tr><td>enabled</td><td>True</td><td>True</td></tr>
 <tr><td>action</td><td>allow</td><td>allow</td></tr>
 <tr><td>source_zones</td><td>trusted-zone</td><td>trusted-zone</td></tr>
-<tr><td>destination_zones</td><td>server-zone<br>dmz</td><td>server-zone<br>dmz</td></tr>
+<tr><td>destination_zones</td><td>dmz<br>server-zone</td><td>dmz<br>server-zone</td></tr>
 <tr><td>source_addresses</td><td>admin-workstations</td><td>admin-workstations</td></tr>
-<tr><td>destination_addresses</td><td>windows-servers</td><td>windows-servers<br>linux-servers<br>network-devices</td></tr>
-<tr><td>applications</td><td>ms-rdp</td><td>ssh<br>ms-rdp</td></tr>
+<tr><td>destination_addresses</td><td>windows-servers</td><td>linux-servers<br>network-devices<br>windows-servers</td></tr>
+<tr><td>applications</td><td>ms-rdp</td><td>ms-rdp<br>ssh</td></tr>
 <tr><td>services</td><td>application-default</td><td>application-default</td></tr>
 <tr><td>category</td><td>any</td><td>any</td></tr>
 <tr><td>resolved_source_addresses</td><td>admin-subnet[10.1.0.0/24]</td><td>admin-subnet[10.1.0.0/24]</td></tr>
-<tr><td>resolved_destination_addresses</td><td>windows-server-2[192.168.150.11/32]<br>windows-server-1[192.168.150.10/32]</td><td>windows-server-2[192.168.150.11/32]<br>windows-server-1[192.168.150.10/32]<br>linux-server-1[192.168.200.10/32]<br>linux-server-2[192.168.200.11/32]<br>network-devices[192.168.120.0/24]</td></tr>
+<tr><td>resolved_destination_addresses</td><td>windows-server-2[192.168.150.11/32]<br>windows-server-1[192.168.150.10/32]</td><td>linux-server-2[192.168.200.11/32]<br>linux-server-1[192.168.200.10/32]<br>network-devices[192.168.120.0/24]<br>windows-server-2[192.168.150.11/32]<br>windows-server-1[192.168.150.10/32]</td></tr>
 </table>
 <h2 class="finding-header" id="finding-2">Finding 2</h2>
 <table class="finding-table">
@@ -285,7 +286,7 @@
 <tr><td>destination_zones</td><td>internet</td><td>internet</td></tr>
 <tr><td>source_addresses</td><td>corporate-workstations</td><td>smart-devices<br>corporate-workstations</td></tr>
 <tr><td>destination_addresses</td><td>any</td><td>any</td></tr>
-<tr><td>applications</td><td>zoom<br>google-meet<br>webex<br>ms-teams</td><td>google-meet<br>webex<br>ms-teams<br>zoom<br>https</td></tr>
+<tr><td>applications</td><td>google-meet<br>ms-teams<br>zoom<br>webex</td><td>ms-teams<br>https<br>google-meet<br>zoom<br>webex</td></tr>
 <tr><td>services</td><td>application-default</td><td>application-default</td></tr>
 <tr><td>category</td><td>collaboration</td><td>collaboration</td></tr>
 <tr><td>resolved_source_addresses</td><td>corp-subnet-2[10.3.1.0/24]<br>corp-subnet-1[10.3.0.0/24]</td><td>iot-subnet[10.2.0.0/24]<br>corp-subnet-2[10.3.1.0/24]<br>corp-subnet-1[10.3.0.0/24]</td></tr>
@@ -296,32 +297,36 @@
 
         <div class="check-item">
             <div class="check-name">check_action</div>
-            <p class="check-doc">Check if the action is the same in both rules.</p>
+            <p class="check-doc">Checks if both rules have the same action (like &#x27;allow&#x27; or &#x27;deny&#x27;).
+If the actions are different, the first rule does not fully hide the second one.</p>
         </div>
         
 
         <div class="check-item">
             <div class="check-name">check_application</div>
-            <p class="check-doc">Checks the applications of the preceding rule.</p>
+            <p class="check-doc">Checks if the first rule allows all the same applications as the second rule.
+If the first rule uses &#x27;any&#x27; or all the same apps, it can hide the second rule.</p>
         </div>
         
 
         <div class="check-item">
             <div class="check-name">check_services</div>
-            <p class="check-doc">Checks if the rule&#x27;s ports are the same
-or a subset of the preceding rule&#x27;s ports.</p>
+            <p class="check-doc">Checks if the first rule allows all the same network services or ports.
+If the first rule covers all the same services, it can hide the second rule.</p>
         </div>
         
 
         <div class="check-item">
             <div class="check-name">check_source_zone</div>
-            <p class="check-doc">Checks the source zones of the preceding rule.</p>
+            <p class="check-doc">Checks if the first rule covers all the same source zones as the second rule.
+If the first rule uses &#x27;any&#x27; or all the same zones, it can hide the second rule.</p>
         </div>
         
 
         <div class="check-item">
             <div class="check-name">check_destination_zone</div>
-            <p class="check-doc">Checks the destination zones of the preceding rule.</p>
+            <p class="check-doc">Checks if the first rule covers all the same destination zones as the second rule.
+If the first rule uses &#x27;any&#x27; or all the same zones, it can hide the second rule.</p>
         </div>
         
 
@@ -341,4 +346,7 @@ Excludes FQDN address objects from comparison and logs warnings when encountered
         </div>
         
 </div>
-</div></div></body></html>
+</div></div>
+
+</body>
+</html>

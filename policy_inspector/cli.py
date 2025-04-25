@@ -13,7 +13,7 @@ from policy_inspector.model.address_group import AddressGroup
 from policy_inspector.model.address_object import AddressObject
 from policy_inspector.model.base import MainModel
 from policy_inspector.model.security_rule import SecurityRule
-from policy_inspector.output.html_report import save_as_html
+from policy_inspector.output.html_report import export_as_html
 from policy_inspector.scenario import Scenario, Shadowing, ShadowingByValue
 from policy_inspector.utils import (
     Example,
@@ -21,6 +21,7 @@ from policy_inspector.utils import (
     FilePath,
     config_logger,
     exclude_check_option,
+    html_report,
     output_format_option,
     verbose_option,
 )
@@ -207,16 +208,19 @@ def main_run():
 )
 @exclude_check_option()
 @output_format_option()
+@html_report()
 def run_shadowing(
     security_rules_path: Path,
     exclude_checks: tuple[str],
-    output_formats: tuple[str],
+    display_formats: tuple[str],
+    html_report: bool,
 ) -> None:
     process_scenario(
         Shadowing,
         (SecurityRule, security_rules_path),
         exclude_checks=exclude_checks,
-        output_formats=output_formats,
+        display_formats=display_formats,
+        html_report=html_report,
     )
 
 
@@ -239,12 +243,14 @@ def run_shadowing(
 )
 @exclude_check_option()
 @output_format_option()
+@html_report()
 def run_shadowingvalue(
     security_rules_path: Path,
     address_objects_path: Path,
     address_groups_path: Path,
     exclude_checks: tuple[str],
-    output_formats: tuple[str],
+    display_formats: tuple[str],
+    html_report: bool,
 ) -> None:
     process_scenario(
         ShadowingByValue,
@@ -252,7 +258,8 @@ def run_shadowingvalue(
         (AddressObject, address_objects_path),
         (AddressGroup, address_groups_path),
         exclude_checks=exclude_checks,
-        output_formats=output_formats,
+        display_formats=display_formats,
+        html_report=html_report,
     )
 
 
@@ -296,12 +303,14 @@ examples = [
 @verbose_option(logger)
 @exclude_check_option()
 @output_format_option()
+@html_report()
 @click.pass_context
 def run_example(
     ctx,
     example: Example,
     exclude_checks: tuple[str],
-    output_formats: tuple[str],
+    display_formats: tuple[str],
+    html_report: bool,
 ) -> None:
     """Run one of the examples."""
     logger.info(f"▶ Selected example: '{example.name}'")
@@ -309,7 +318,8 @@ def run_example(
         example.cmd.callback,
         *example.args,
         exclude_checks=exclude_checks,
-        output_formats=output_formats,
+        display_formats=display_formats,
+        html_report=html_report,
     )
 
 
@@ -317,7 +327,8 @@ def process_scenario(
     scenario: type[ConcreteScenario],
     *cls_path: tuple[type[MainModel], Path],
     exclude_checks: tuple[str] = (),
-    output_formats: tuple[str] = (),
+    display_formats: tuple[str] = (),
+    html_report: bool = False,
     **kwargs,
 ):
     try:
@@ -344,9 +355,18 @@ def process_scenario(
 
         output = scenario.execute()
         results = scenario.analyze(output)
-        scenario.show(results, *output_formats)
-        save_as_html(results, output, scenario ,"report.html")
-        
+        scenario.show(results, *display_formats)
+        if html_report:
+            logger.info("Saving analysis results as HTML report")
+            html_code = export_as_html(
+                scenario.analysis_results,
+                scenario.execution_results,
+                scenario.checks,
+            )
+            file_path = Path("report.html")
+            file_path.write_text(html_code)
+            logger.info(f"Report saved in {file_path.absolute()}")
+
     except Exception as ex:  # noqa: BLE001
         raise ClickException(f"{str(ex)}\n{ex.args}\n{ex.__cause__}")  # noqa: B904
 

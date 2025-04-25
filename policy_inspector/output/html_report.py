@@ -1,13 +1,19 @@
-from html import escape
-from pathlib import Path
-from typing import TYPE_CHECKING
-from datetime import datetime
 import inspect
+from datetime import datetime
+from html import escape
+from typing import TYPE_CHECKING
+
+from policy_inspector.scenario.shadowing import ShadowingCheckFunction
 
 if TYPE_CHECKING:
-    from policy_inspector.scenario.shadowing import AnalysisResults, ExecuteResults, Scenario
+    from policy_inspector.scenario.shadowing import (
+        AnalysisResults,
+        ExecuteResults,
+    )
 
-_HEAD = """
+_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -225,14 +231,21 @@ _HEAD = """
         }
     </style>
 </head>
+<body>
+"""
+_FOOTER = """
+</body>
+</html>
 """
 
-def export_as_html(analysis_results: 'AnalysisResults', scenario_results: 'ExecuteResults', scenario) -> str:
+
+def export_as_html(
+    analysis_results: "AnalysisResults",
+    scenario_results: "ExecuteResults",
+    checks: list[ShadowingCheckFunction],
+) -> str:
     html = []
-    html.append(f'''<!DOCTYPE html>
-<html lang="en">
-{_HEAD}
-<body>
+    html.append(f"""
     <div class="container">
         <div class="report-header">
             <h1>Firewall Policy Analysis Report</h1>
@@ -244,8 +257,12 @@ def export_as_html(analysis_results: 'AnalysisResults', scenario_results: 'Execu
                 <div class="toc">
                     <h2>Table of Contents</h2>
                     <ul class="toc-list">
-                        {"".join(f'<li><a href="#finding-{i+1}"><span class="title">Finding {i+1}</span><span class="page">{i+1}</span></a></li>' 
-                               for i in range(len(analysis_results)))}
+                        {
+        "".join(
+            f'<li><a href="#finding-{i + 1}"><span class="title">Finding {i + 1}</span><span class="page">{i + 1}</span></a></li>'
+            for i in range(len(analysis_results))
+        )
+    }
                         <li><a href="#checks"><span class="title">Checks</span><span class="page">C</span></a></li>
                     </ul>
                 </div>
@@ -262,7 +279,9 @@ def export_as_html(analysis_results: 'AnalysisResults', scenario_results: 'Execu
                         </div>
                         <div class="summary-card">
                             <h3>Affected Rules</h3>
-                            <p>{sum(len(shadowing)+1 for _, shadowing in analysis_results)}</p>
+                            <p>{
+        sum(len(shadowing) + 1 for _, shadowing in analysis_results)
+    }</p>
                         </div>
                         <div class="summary-card">
                             <h3>Analysis Date</h3>
@@ -270,53 +289,51 @@ def export_as_html(analysis_results: 'AnalysisResults', scenario_results: 'Execu
                         </div>
                     </div>
                 </div>
-            </div>''')
+            </div>""")
 
     # Findings
     for i, (rule, shadowing_rules) in enumerate(analysis_results):
-        html.append(f'<h2 class="finding-header" id="finding-{i+1}">Finding {i+1}</h2>')
+        html.append(
+            f'<h2 class="finding-header" id="finding-{i + 1}">Finding {i + 1}</h2>'
+        )
         html.append('<table class="finding-table">')
-        
+
         # Table headers
-        headers = ['Attribute', 'Shadowed Rule'] + \
-                 [f'Preceding Rule {j}' for j in range(1, len(shadowing_rules)+1)]
-        html.append('<tr>' + ''.join(f'<th>{escape(h)}</th>' for h in headers) + '</tr>')
-        
+        headers = ["Attribute", "Shadowed Rule"] + [
+            f"Preceding Rule {j}" for j in range(1, len(shadowing_rules) + 1)
+        ]
+        html.append(
+            "<tr>" + "".join(f"<th>{escape(h)}</th>" for h in headers) + "</tr>"
+        )
+
         # Table rows
         for attr in rule.__pydantic_fields__:
             values = [getattr(r, attr) for r in [rule] + shadowing_rules]
             formatted = []
             for v in values:
                 if isinstance(v, (list, set)):
-                    formatted_val = '<br>'.join(escape(str(x)) for x in v)
+                    formatted_val = "<br>".join(escape(str(x)) for x in v)
                 else:
                     formatted_val = escape(str(v))
-                formatted.append(f'<td>{formatted_val}</td>')
-            
-            html.append(f'<tr><td>{escape(attr)}</td>{"".join(formatted)}</tr>')
-        
-        html.append('</table>')
-    
+                formatted.append(f"<td>{formatted_val}</td>")
+
+            html.append(f"<tr><td>{escape(attr)}</td>{''.join(formatted)}</tr>")
+
+        html.append("</table>")
+
     # Checks section
     html.append('<h2 class="checks-header" id="checks">Checks</h2>')
     html.append('<div class="checks-list">')
-    
-    for check in scenario.checks:
+    for check in checks:
         check_name = check.__name__
         doc = inspect.getdoc(check) or "No description available"
-        html.append(f'''
+        html.append(f"""
         <div class="check-item">
             <div class="check-name">{escape(check_name)}</div>
             <p class="check-doc">{escape(doc)}</p>
         </div>
-        ''')
-    
-    html.append('</div>')
-    
-    html.append('</div></div></body></html>')
-    return '\n'.join(html)
+        """)
+    html.append("</div>")
 
-def save_as_html(analysis_results: 'AnalysisResults', scenario_results: 'ExecuteResults', scenario: 'Scenario', /, file_path: str):
-    html_code = export_as_html(analysis_results, scenario_results, scenario)
-    file_path = Path(file_path)
-    file_path.write_text(html_code)
+    html.append("</div></div>")
+    return "\n".join((_TEMPLATE, *html, _FOOTER))
