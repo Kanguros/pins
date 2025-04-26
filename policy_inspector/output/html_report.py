@@ -3,15 +3,16 @@ from datetime import datetime
 from html import escape
 from typing import TYPE_CHECKING
 
-from policy_inspector.scenario.shadowing import ShadowingCheckFunction
+from policy_inspector.shadowing.base import ShadowingCheckFunction
 
 if TYPE_CHECKING:
-    from policy_inspector.scenario.shadowing import (
+    from policy_inspector.shadowing.base import (
         AnalysisResults,
         ExecuteResults,
     )
 
-_TEMPLATE = """
+# noqa: W293
+_HEADER = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -65,7 +66,7 @@ _TEMPLATE = """
         .content {
             padding: 0 1.5rem 1.5rem;
         }
-        
+
         /* Two-column layout */
         .top-section {
             display: grid;
@@ -203,13 +204,13 @@ _TEMPLATE = """
             border-bottom: 1px solid var(--secondary-color);
             font-size: 1.2rem;
         }
-        
+
         .checks-list {
             list-style-type: none;
             padding: 0;
             margin: 0;
         }
-        
+
         .check-item {
             margin-bottom: 1rem;
             padding: 0.8rem;
@@ -217,13 +218,13 @@ _TEMPLATE = """
             border-radius: 4px;
             border-left: 3px solid var(--secondary-color);
         }
-        
+
         .check-name {
             font-weight: 600;
             color: var(--primary-color);
             margin-bottom: 0.5rem;
         }
-        
+
         .check-doc {
             margin: 0;
             font-size: 0.9rem;
@@ -245,25 +246,29 @@ def export_as_html(
     checks: list[ShadowingCheckFunction],
 ) -> str:
     html = []
+    toc_elements = "".join(
+        f'<li><a href="#finding-{i + 1}"><span class="title">Finding {i + 1} - {rule_results[0].name}</span></a></li>'
+        for i, rule_results in enumerate(analysis_results)
+    )
+
+    current_date = datetime.now(tz=datetime.timezone.utc)
+    affected_rules = sum(
+        len(shadowing) + 1 for _, shadowing in analysis_results
+    )
     html.append(f"""
     <div class="container">
         <div class="report-header">
             <h1>Firewall Policy Analysis Report</h1>
-            <p>Generated: {datetime.now().strftime("%B %d, %Y %H:%M:%S")}</p>
+            <p>Generated: {current_date.strftime("%B %d, %Y %H:%M:%S")}</p>
         </div>
-        
+
         <div class="content">
             <div class="top-section">
                 <div class="toc">
                     <h2>Table of Contents</h2>
                     <ul class="toc-list">
-                        {
-        "".join(
-            f'<li><a href="#finding-{i + 1}"><span class="title">Finding {i + 1}</span><span class="page">{i + 1}</span></a></li>'
-            for i in range(len(analysis_results))
-        )
-    }
-                        <li><a href="#checks"><span class="title">Checks</span><span class="page">C</span></a></li>
+                        {toc_elements}
+                        <li><a href="#checks"><span class="title">Checks</span></a></li>
                     </ul>
                 </div>
 
@@ -279,13 +284,11 @@ def export_as_html(
                         </div>
                         <div class="summary-card">
                             <h3>Affected Rules</h3>
-                            <p>{
-        sum(len(shadowing) + 1 for _, shadowing in analysis_results)
-    }</p>
+                            <p>{affected_rules}</p>
                         </div>
                         <div class="summary-card">
                             <h3>Analysis Date</h3>
-                            <p>{datetime.now().strftime("%Y-%m-%d")}</p>
+                            <p>{current_date.strftime("%Y-%m-%d")}</p>
                         </div>
                     </div>
                 </div>
@@ -336,4 +339,4 @@ def export_as_html(
     html.append("</div>")
 
     html.append("</div></div>")
-    return "\n".join((_TEMPLATE, *html, _FOOTER))
+    return "\n".join((_HEADER, *html, _FOOTER))

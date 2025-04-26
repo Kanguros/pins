@@ -14,7 +14,7 @@ from policy_inspector.model.address_object import AddressObject
 from policy_inspector.model.base import MainModel
 from policy_inspector.model.security_rule import SecurityRule
 from policy_inspector.output.html_report import export_as_html
-from policy_inspector.scenario import Scenario, Shadowing, ShadowingByValue
+from policy_inspector.shadowing import Scenario, Shadowing, ShadowingByValue
 from policy_inspector.utils import (
     Example,
     ExampleChoice,

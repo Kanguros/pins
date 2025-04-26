@@ -7,7 +7,7 @@ from policy_inspector.model.address_object import (
     AddressObjectIPNetwork,
 )
 from policy_inspector.model.security_rule import SecurityRule
-from policy_inspector.scenario.advanced_shadowing import ShadowingByValue
+from policy_inspector.shadowing.advanced import ShadowingByValue
 
 
 @pytest.fixture

@@ -5,7 +5,7 @@ from _pytest.mark import ParameterSet
 
 from policy_inspector.model.base import AnyObj
 from policy_inspector.model.security_rule import SecurityRule
-from policy_inspector.scenario.shadowing import (
+from policy_inspector.shadowing.checks import (
     check_action,
     check_application,
     check_destination_address,

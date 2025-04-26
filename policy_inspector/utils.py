@@ -38,10 +38,10 @@ def verbose_option(logger) -> Callable:
             package_logger.setLevel(logging.INFO)
         if count > 1:
             logger.setLevel(logging.DEBUG)
-            handler: RichHandler = logger.handlers[0]
-            handler._log_render.show_level = True
         if count > 2:
             package_logger.setLevel(logging.DEBUG)
+            handler: RichHandler = logger.handlers[0]
+            handler._log_render.show_level = True
         if count > 3:
             handler: RichHandler = logger.handlers[0]
             handler._log_render.show_path = True
@@ -73,8 +73,8 @@ def exclude_check_option(arg_name: str = "exclude_checks") -> Callable:
 def output_format_option(arg_name: str = "display_formats") -> Callable:
     formats = ["text", "table"]
     return click.option(
-        "-o",
-        "--output",
+        "-d",
+        "--display",
         arg_name,
         multiple=True,
         type=click.Choice(formats, case_sensitive=False),

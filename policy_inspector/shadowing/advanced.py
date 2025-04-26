@@ -8,7 +8,7 @@ from policy_inspector.model.security_rule import (
     SecurityRule,
 )
 from policy_inspector.resolver import Resolver
-from policy_inspector.scenario.shadowing import (
+from policy_inspector.shadowing.base import (
     CheckResult,
     Shadowing,
     ShadowingCheckFunction,

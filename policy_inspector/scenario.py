@@ -26,6 +26,7 @@ class Scenario:
     Base class for defining security scenarios and checks.
 
     Attributes:
+        name: Scenario display name.
         _scenarios: A set of all registered subclasses of Scenario.
         checks: A list of callable check functions to be executed on security rules.
     """
@@ -69,6 +70,31 @@ class Scenario:
                 checks.pop(i)
         self.checks = checks
 
+    def run_checks(self, *rules: "SecurityRule") -> dict[str, CheckResult]:
+        """
+        Run all defined ``checks`` against the provided security rule or rules.
+
+        Args:
+            *rules: Security rules to evaluate.
+
+        Notes:
+            Logs exceptions if any check raises an error during execution.
+
+        Returns:
+            A dictionary mapping check function names to their results (status and message).
+        """
+        results = {}
+        for check in self.checks:
+            try:
+                results[check.__name__] = check(*rules)
+            except Exception as ex:  # noqa: BLE001
+                logger.warning(f"☠ Error: {ex}")
+                logger.warning(f"☠ Check function: '{check.__name__}'")
+                for i, rule in enumerate(rules, start=1):
+                    logger.warning(f"☠ Rule {i}: {rule.name}")
+                    logger.debug(f"☠ Rule {i}: {rule.model_dump()}")
+        return results
+
     def execute(self) -> ScenarioResults:
         """
         Execute the scenario logic.
@@ -95,27 +121,3 @@ class Scenario:
             The analysis outcome.
         """
         raise NotImplementedError
-
-    def run_checks(self, *rules: "SecurityRule") -> dict[str, CheckResult]:
-        """
-        Run all defined ``checks`` against the provided security rule or rules.
-
-        Args:
-            *rules: Security rules to evaluate.
-
-        Returns:
-            A dictionary mapping check function names to their results (status and message).
-
-        Logs exceptions if any check raises an error during execution.
-        """
-        results = {}
-        for check in self.checks:
-            try:
-                results[check.__name__] = check(*rules)
-            except Exception as ex:  # noqa: BLE001
-                logger.warning(f"☠ Error: {ex}")
-                logger.warning(f"☠ Check function: '{check.__name__}'")
-                for i, rule in enumerate(rules, start=1):
-                    logger.warning(f"☠ Rule {i}: {rule.name}")
-                    logger.debug(f"☠ Rule {i}: {rule.model_dump()}")
-        return results
