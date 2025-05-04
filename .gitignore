@@ -143,3 +143,6 @@ cache/
 
 # Any .csv
 /*.csv
+.notes
+/*.json
+*.html
