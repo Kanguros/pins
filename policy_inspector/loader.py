@@ -77,15 +77,14 @@ def load_model(
     return parser_func(items)
 
 
-def save_json(items: list, filename: str) -> None:
+def save_json(items: list, filename: str) -> Path:
     """Save list of objects to a JSON file."""
-    if not items:
-        logger.warning(f"No items to save to '{filename}'")
-        return
+    filename = Path(filename)
     try:
         with open(filename, "w") as f:
             json.dump(items, f, indent=2)
         logger.info(f"✓ Saved {len(items)} items to '{filename}'")
+        return filename
     except Exception as ex:
         logger.error(f"☠ Failed to save to {filename}: {str(ex)}")
         raise

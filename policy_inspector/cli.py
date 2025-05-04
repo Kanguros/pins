@@ -28,6 +28,7 @@ from policy_inspector.utils import (
 
 logger = logging.getLogger()
 config_logger(logger)
+
 click.rich_click.SHOW_ARGUMENTS = True
 click.rich_click.TEXT_MARKUP = "markdown"
 click.rich_click.USE_MARKDOWN = True
@@ -83,7 +84,7 @@ def main_list() -> None:
     "panos_version",
     nargs=1,
     type=click.STRING,
-    help="PAN-OS version. ",
+    help="PAN-OS version",
     default="v11.1",
     show_default=True,
 )
@@ -125,55 +126,25 @@ def main_pull(
     panos_version: str,
     username: str,
     password: str,
-    device_groups: str,
+    device_groups: tuple[str],
     verify_ssl,
 ) -> None:
     """Pull Security Rules, Address Objects and Address Groups from Panorama for given Device Group."""
-    try:
-        logger.info(f"↺ Connecting to Panorama at {hostname}")
-        connector = PanoramaConnector(
-            hostname=hostname,
-            username=username,
-            password=password,
-            api_version=panos_version,
-            verify_ssl=verify_ssl,
-        )
+    get_data_from_panorama(
+        hostname=hostname,
+        username=username,
+        password=password,
+        device_groups=device_groups,
+        api_version=panos_version,
+        verify_ssl=verify_ssl,
+    )
 
-        logger.info("▶ Retrieving shared items")
 
-        shared_address_objects = connector.get_address_objects()
-        shared_address_groups = connector.get_address_groups()
-
-        for device_group in device_groups:
-            logger.info(f"▶ Processing Device Group '{device_group}'")
-
-            prefix = f"{device_group.lower().replace(' ', '_')}_".strip()
-
-            address_objects = connector.get_address_objects(
-                device_group=device_group
-            )
-            save_json(
-                address_objects + shared_address_objects,
-                f"{prefix}address_objects.json",
-            )
-
-            address_groups = connector.get_address_groups(
-                device_group=device_group
-            )
-            save_json(
-                address_groups + shared_address_groups,
-                f"{prefix}address_groups.json",
-            )
-
-            security_rules = connector.get_security_rules(
-                device_group=device_group
-            )
-            save_json(security_rules, f"{prefix}security_rules.json")
-
-        logger.info("✓ All data successfully pulled and saved")
-
-    except Exception as ex:
-        raise ClickException(str(ex)) from None
+@main.group("run-config", no_args_is_help=True)
+@click.argument("config_file_path", type=FilePath())
+@verbose_option(logger)
+def main_run_config(config_file_path):
+    pass
 
 
 @main.group("run", no_args_is_help=True)
@@ -321,6 +292,72 @@ def run_example(
         display_formats=display_formats,
         html_report=html_report,
     )
+
+
+def get_data_from_panorama(
+    hostname: str,
+    username: str,
+    password: str,
+    api_version: str,
+    device_groups: list[str],
+    verify_ssl,
+    continue_on_error: bool = True,
+) -> dict[str, dict[str, Path]]:
+    try:
+        logger.info(f"↺ Connecting to Panorama at {hostname}")
+        panorama = PanoramaConnector(
+            hostname=hostname,
+            username=username,
+            password=password,
+            api_version=api_version,
+            verify_ssl=verify_ssl,
+        )
+        logger.info("✓ Successfully authenticated to Panorama")
+    except Exception as ex:
+        raise ClickException(str(ex)) from None
+
+    logger.info("▶ Retrieving shared items")
+    shared_address_objects = panorama.get_address_objects()
+    shared_address_groups = panorama.get_address_groups()
+
+    data = {}
+    for device_group in device_groups:
+        dg_files = {}
+        try:
+            logger.info(f"▶ Processing Device Group: '{device_group}'")
+
+            prefix = f"{device_group.lower().replace(' ', '_')}_".strip()
+
+            security_rules = panorama.get_security_rules(
+                device_group=device_group
+            )
+            dg_files["security_rules"] = save_json(
+                security_rules, f"{prefix}security_rules.json"
+            )
+
+            address_objects = panorama.get_address_objects(
+                device_group=device_group
+            )
+            dg_files["address_objects"] = save_json(
+                address_objects + shared_address_objects,
+                f"{prefix}address_objects.json",
+            )
+
+            address_groups = panorama.get_address_groups(
+                device_group=device_group
+            )
+            dg_files["address_groups"] = save_json(
+                address_groups + shared_address_groups,
+                f"{prefix}address_groups.json",
+            )
+            data[device_group] = dg_files
+        except Exception as ex:
+            if continue_on_error:
+                logger.error(f"Error occur '{device_group}' {ex}.")
+                continue
+            raise ClickException(str(ex)) from None
+    logger.info("✓ All data successfully pulled and saved")
+    return data
 
 
 def process_scenario(

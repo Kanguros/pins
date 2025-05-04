@@ -128,7 +128,7 @@ def check_destination_addresses_by_ip(
 
 
 class ShadowingByValue(Shadowing):
-    name = "Advanced Shadowing"
+    name = "Shadowing Advanced"
     checks: list[ShadowingCheckFunction] = [
         check_action,
         check_application,

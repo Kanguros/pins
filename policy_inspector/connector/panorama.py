@@ -66,7 +66,6 @@ class PanoramaConnector:
             token = data.split("<key>")[1].split("</key>")[0]
             self.token = token
             self.headers["X-PAN-KEY"] = token
-            logger.info("✓ Successfully authenticated to Panorama")
 
         except RequestException as ex:
             error_msg = f"Failed to connect to Panorama. \n{str(ex)}"

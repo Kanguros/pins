@@ -1,15 +1,10 @@
 import inspect
-from datetime import datetime
+from datetime import datetime, timezone
 from html import escape
 from typing import TYPE_CHECKING
 
-from policy_inspector.shadowing.base import ShadowingCheckFunction
-
 if TYPE_CHECKING:
-    from policy_inspector.shadowing.base import (
-        AnalysisResults,
-        ExecuteResults,
-    )
+    from policy_inspector.scenario import Scenario
 
 # noqa: W293
 _HEADER = """
@@ -241,102 +236,168 @@ _FOOTER = """
 
 
 def export_as_html(
-    analysis_results: "AnalysisResults",
-    scenario_results: "ExecuteResults",
-    checks: list[ShadowingCheckFunction],
+    scenarios: list["Scenario"],
+    device_group: str,
+    address_groups_count: int,
+    address_objects_count: int,
+    total_policies: int,
 ) -> str:
     html = []
-    toc_elements = "".join(
-        f'<li><a href="#finding-{i + 1}"><span class="title">Finding {i + 1} - {rule_results[0].name}</span></a></li>'
-        for i, rule_results in enumerate(analysis_results)
-    )
+    current_date = datetime.now(tz=timezone.utc)
 
-    current_date = datetime.now(tz=datetime.timezone.utc)
-    affected_rules = sum(
-        len(shadowing) + 1 for _, shadowing in analysis_results
-    )
+    # Build Table of Contents
+    toc_items = [
+        '<li><a href="#introduction"><span class="title">Introduction</span></a></li>'
+    ]
+    for scenario in scenarios:
+        scenario_id = f"scenario-{scenario.name.lower().replace(' ', '-')}"
+        scenario_toc = f"""
+        <li>
+            <a href="#{scenario_id}"><span class="title">Scenario {escape(scenario.name)}</span></a>
+            <ul class="nested-toc">
+        """
+
+        # Add findings for this scenario
+        analysis_results = getattr(scenario, "analysis_results", [])
+        for idx, (rule, _) in enumerate(analysis_results):
+            finding_id = f"{scenario_id}-finding-{idx + 1}"
+            scenario_toc += f"""
+                <li>
+                    <a href="#{finding_id}">
+                        <span class="title">Finding {idx + 1} - {escape(rule.name)}</span>
+                    </a>
+                </li>
+            """
+
+        # Add checks link
+        scenario_toc += f"""
+                <li>
+                    <a href="#{scenario_id}-checks"><span class="title">Checks</span></a>
+                </li>
+            </ul>
+        </li>
+        """
+        toc_items.append(scenario_toc)
+
+    # Build main HTML structure
     html.append(f"""
     <div class="container">
         <div class="report-header">
             <h1>Firewall Policy Analysis Report</h1>
             <p>Generated: {current_date.strftime("%B %d, %Y %H:%M:%S")}</p>
         </div>
-
         <div class="content">
             <div class="top-section">
                 <div class="toc">
                     <h2>Table of Contents</h2>
                     <ul class="toc-list">
-                        {toc_elements}
-                        <li><a href="#checks"><span class="title">Checks</span></a></li>
+                        {"".join(toc_items)}
                     </ul>
                 </div>
-
                 <div>
                     <div class="summary-grid">
                         <div class="summary-card">
-                            <h3>Total Policies Analyzed</h3>
-                            <p>{len(scenario_results)}</p>
+                            <h3>Device Group</h3>
+                            <p>{escape(device_group)}</p>
                         </div>
                         <div class="summary-card">
-                            <h3>Shadowing Findings</h3>
-                            <p>{len(analysis_results)}</p>
+                            <h3>Address Groups</h3>
+                            <p>{address_groups_count}</p>
                         </div>
                         <div class="summary-card">
-                            <h3>Affected Rules</h3>
-                            <p>{affected_rules}</p>
+                            <h3>Address Objects</h3>
+                            <p>{address_objects_count}</p>
                         </div>
                         <div class="summary-card">
-                            <h3>Analysis Date</h3>
-                            <p>{current_date.strftime("%Y-%m-%d")}</p>
+                            <h3>Total Policies</h3>
+                            <p>{total_policies}</p>
                         </div>
                     </div>
                 </div>
-            </div>""")
+            </div>
+            <h2 id="introduction">Introduction</h2>
+            <p>Comprehensive policy analysis covering {len(scenarios)} scenarios.</p>
+    """)
 
-    # Findings
-    for i, (rule, shadowing_rules) in enumerate(analysis_results):
+    # Process each scenario
+    for scenario in scenarios:
+        scenario_id = f"scenario-{scenario.name.lower().replace(' ', '-')}"
+        analysis_results = getattr(scenario, "analysis_results", [])
+        checks = getattr(scenario, "checks", [])
+
+        # Scenario header and docstring
         html.append(
-            f'<h2 class="finding-header" id="finding-{i + 1}">Finding {i + 1}</h2>'
+            f'<h2 id="{scenario_id}">Scenario {escape(scenario.name)}</h2>'
         )
-        html.append('<table class="finding-table">')
+        docstring = inspect.getdoc(scenario) or "No description available."
+        html.append(f'<div class="scenario-doc">{escape(docstring)}</div>')
 
-        # Table headers
-        headers = ["Attribute", "Shadowed Rule"] + [
-            f"Preceding Rule {j}" for j in range(1, len(shadowing_rules) + 1)
-        ]
+        # Scenario-specific summary
         html.append(
-            "<tr>" + "".join(f"<th>{escape(h)}</th>" for h in headers) + "</tr>"
-        )
-
-        # Table rows
-        for attr in rule.__pydantic_fields__:
-            values = [getattr(r, attr) for r in [rule] + shadowing_rules]
-            formatted = []
-            for v in values:
-                if isinstance(v, (list, set)):
-                    formatted_val = "<br>".join(escape(str(x)) for x in v)
-                else:
-                    formatted_val = escape(str(v))
-                formatted.append(f"<td>{formatted_val}</td>")
-
-            html.append(f"<tr><td>{escape(attr)}</td>{''.join(formatted)}</tr>")
-
-        html.append("</table>")
-
-    # Checks section
-    html.append('<h2 class="checks-header" id="checks">Checks</h2>')
-    html.append('<div class="checks-list">')
-    for check in checks:
-        check_name = check.__name__
-        doc = inspect.getdoc(check) or "No description available"
-        html.append(f"""
-        <div class="check-item">
-            <div class="check-name">{escape(check_name)}</div>
-            <p class="check-doc">{escape(doc)}</p>
+            """
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h3>Total Rules Analyzed</h3>
+                <p>{}</p>
+            </div>
+            <div class="summary-card">
+                <h3>Shadowing Findings</h3>
+                <p>{}</p>
+            </div>
         </div>
-        """)
-    html.append("</div>")
+        """.format(
+                len(getattr(scenario, "security_rules", [])),
+                len(analysis_results),
+            )
+        )
+
+        # Findings
+        for idx, (rule, shadowing_rules) in enumerate(analysis_results):
+            finding_id = f"{scenario_id}-finding-{idx + 1}"
+            html.append(
+                f'<h2 class="finding-header" id="{finding_id}">Finding {idx + 1} - {escape(rule.name)}</h2>'
+            )
+            html.append('<table class="finding-table">')
+            headers = ["Attribute", "Shadowed Rule"] + [
+                f"Preceding Rule {j}"
+                for j in range(1, len(shadowing_rules) + 1)
+            ]
+            html.append(
+                "<tr>"
+                + "".join(f"<th>{escape(h)}</th>" for h in headers)
+                + "</tr>"
+            )
+
+            for attr in rule.__pydantic_fields__:
+                values = [getattr(r, attr) for r in [rule] + shadowing_rules]
+                formatted = []
+                for v in values:
+                    if isinstance(v, (list, set)):
+                        formatted_val = "<br>".join(escape(str(x)) for x in v)
+                    else:
+                        formatted_val = escape(str(v))
+                    formatted.append(f"<td>{formatted_val}</td>")
+                html.append(
+                    f"<tr><td>{escape(attr)}</td>{''.join(formatted)}</tr>"
+                )
+
+            html.append("</table>")
+
+        # Checks section
+        html.append(
+            f'<h2 class="checks-header" id="{scenario_id}-checks">Checks</h2>'
+        )
+        html.append('<div class="checks-list">')
+        for check in checks:
+            check_name = check.__name__
+            doc = inspect.getdoc(check) or "No description available"
+            html.append(f"""
+            <div class="check-item">
+                <div class="check-name">{escape(check_name)}</div>
+                <p class="check-doc">{escape(doc)}</p>
+            </div>
+            """)
+        html.append("</div>")
 
     html.append("</div></div>")
     return "\n".join((_HEADER, *html, _FOOTER))
