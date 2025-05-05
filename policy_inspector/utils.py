@@ -26,24 +26,22 @@ class Example(BaseModel):
         self.args = [get_example_file_path(arg) for arg in self.args]
 
 
-def verbose_option(logger) -> Callable:
+def verbose_option() -> Callable:
     """Wrapper around Click ``option``. Sets logger and its handlers to the ``DEBUG`` level."""
 
     def callback(ctx: click.Context, param, value) -> None:
         if not value:
             return
-        package_logger = logging.getLogger("policy_inspector")
+        _logger = logging.getLogger(__name__).parent
+        print(_logger)
         count = len(value)
         if count > 0:
-            package_logger.setLevel(logging.INFO)
+            _logger.setLevel(logging.DEBUG)
         if count > 1:
-            logger.setLevel(logging.DEBUG)
-        if count > 2:
-            package_logger.setLevel(logging.DEBUG)
-            handler: RichHandler = logger.handlers[0]
+            handler = _logger.handlers[0]
             handler._log_render.show_level = True
-        if count > 3:
-            handler: RichHandler = logger.handlers[0]
+        if count > 2:
+            handler = _logger.handlers[0]
             handler._log_render.show_path = True
             handler._log_render.show_time = True
 
@@ -96,8 +94,8 @@ def html_report(arg_name: str = "html_report") -> Callable:
 
 
 def config_logger(
-    logger: logging.Logger,
-    level: str = "INFO",
+    logger_name: str = "policy_inspector",
+    default_level: str = "INFO",
     log_format: str = "%(message)s",
     date_format: str = "[%X]",
 ) -> None:
@@ -110,10 +108,6 @@ def config_logger(
         log_format: Logs format.
         date_format: Date format in logs.
     """
-    logger.setLevel(level)
-    package_logger = logging.getLogger("policy_inspector")
-    package_logger.setLevel(logging.WARNING)
-    package_logger.propagate = True
     rich_handler = RichHandler(
         rich_tracebacks=True,
         show_path=False,
@@ -124,7 +118,10 @@ def config_logger(
     rich_handler.enable_link_path = True
     formatter = logging.Formatter(log_format, date_format, "%")
     rich_handler.setFormatter(formatter)
-    logger.handlers = [rich_handler]
+
+    main_logger = logging.getLogger(logger_name)
+    main_logger.handlers = [rich_handler]
+    main_logger.setLevel(logging.INFO)
 
 
 class FilePath(ClickPath):

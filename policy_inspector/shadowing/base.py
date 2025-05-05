@@ -1,7 +1,6 @@
 import logging
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, Callable, Literal, Optional
-
-from rich.table import Table
 
 from policy_inspector.scenario import CheckResult, Scenario
 from policy_inspector.shadowing.checks import (
@@ -13,6 +12,7 @@ from policy_inspector.shadowing.checks import (
     check_source_address,
     check_source_zone,
 )
+from policy_inspector.shadowing.show import show_as_table, show_as_text
 
 if TYPE_CHECKING:
     from policy_inspector.model.security_rule import SecurityRule
@@ -54,6 +54,11 @@ class Shadowing(Scenario):
         check_source_address,
         check_destination_address,
     ]
+
+    show_map: dict[str, Callable] = {
+        "text": show_as_text,
+        "table": show_as_table,
+    }
 
     def __init__(self, security_rules: list["SecurityRule"]):
         self.security_rules = security_rules
@@ -100,68 +105,17 @@ class Shadowing(Scenario):
     def show(
         self,
         analysis_results: AnalysisResults,
-        *formats: Literal["text", "table"],
+        formats: Iterable[Literal["text", "table"]],
     ):
         if not formats:
             logger.debug("No show format was provided.")
             return
-        formats_map = {
-            "text": self.show_as_text,
-            "table": self.show_as_table,
-        }
         for format_ in formats:
-            format_func = formats_map.get(format_)
-            if not format_func:
-                logger.error(f"Show format '{format_}' unknown!")
+            show_func = self.show_map.get(format_)
+            if not show_func:
+                logger.warning(f"Show format '{format_}' unknown!")
                 continue
-            format_func(analysis_results)
-
-    @staticmethod
-    def show_as_text(analysis_results: AnalysisResults):
-        root_logger = logging.getLogger()
-        root_logger.info("Analysis results")
-        root_logger.info("----------------")
-        for rule, shadowing_rules in analysis_results:
-            if shadowing_rules:
-                root_logger.info(f"✖ '{rule.name}' shadowed by:")
-                for preceding_rule in shadowing_rules:
-                    root_logger.info(f"   • '{preceding_rule.name}'")
-            else:
-                root_logger.debug(f"✔ '{rule.name}' not shadowed")
-        root_logger.info("----------------")
-
-    @staticmethod
-    def show_as_table(analysis_results: AnalysisResults):
-        from rich.console import Console
-
-        console = Console()
-
-        for i, result in enumerate(analysis_results):
-            rule, shadowing_rules = result
-            if not shadowing_rules:
-                continue
-
-            table = Table(title=f"Finding {i + 1}", show_lines=True)
-
-            main_headers = ["Attribute", "Shadowed Rule"]
-            next_headers = [
-                f"Preceding Rule {i}"
-                for i in range(1, len(shadowing_rules) + 1)
-            ]
-            for header in main_headers + next_headers:
-                table.add_column(header)
-
-            rules = [rule] + shadowing_rules
-
-            for attribute_name in rule.__pydantic_fields__:
-                attribute_values = []
-                for rule in rules:
-                    rule_attribute = getattr(rule, attribute_name)
-                    if isinstance(rule_attribute, (set, list)):
-                        value = "\n".join(f"- {str(v)}" for v in rule_attribute)
-                    else:
-                        value = str(rule_attribute)
-                    attribute_values.append(value)
-                table.add_row(attribute_name, *attribute_values)
-
-            console.print(table)
+            try:
+                show_func(analysis_results)
+            except Exception as ex:
+                logger.error(f"Failed to show {format_}. {ex}")

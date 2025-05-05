@@ -26,19 +26,20 @@ from policy_inspector.utils import (
     verbose_option,
 )
 
-logger = logging.getLogger()
-config_logger(logger)
+config_logger()
 
 click.rich_click.SHOW_ARGUMENTS = True
 click.rich_click.TEXT_MARKUP = "markdown"
 click.rich_click.USE_MARKDOWN = True
 click.rich_click.SHOW_METAVARS_COLUMN = True
 
+logger = logging.getLogger(__name__)
+
 ConcreteScenario = TypeVar("ConcreteScenario", bound="Scenario")
 
 
 @click.group(no_args_is_help=True, add_help_option=True)
-@verbose_option(logger)
+@verbose_option()
 def main():
     """*PINS*
     as Policy Inspector
@@ -46,7 +47,7 @@ def main():
 
 
 @main.command("list")
-@verbose_option(logger)
+@verbose_option()
 def main_list() -> None:
     """List available Scenarios."""
     logger.info("")
@@ -68,7 +69,7 @@ def main_list() -> None:
 
 
 @main.command("pull")
-@verbose_option(logger)
+@verbose_option()
 @click.option(
     "-h",
     "--host",
@@ -140,15 +141,8 @@ def main_pull(
     )
 
 
-@main.group("run-config", no_args_is_help=True)
-@click.argument("config_file_path", type=FilePath())
-@verbose_option(logger)
-def main_run_config(config_file_path):
-    pass
-
-
 @main.group("run", no_args_is_help=True)
-@verbose_option(logger)
+@verbose_option()
 @rich_config(
     help_config={
         "style_argument": "bold yellow",
@@ -170,8 +164,15 @@ def main_run():
     """
 
 
+@main_run.command("config", no_args_is_help=True)
+@click.argument("config_file_path", type=FilePath())
+@verbose_option()
+def run_config(config_file_path):
+    pass
+
+
 @main_run.command("shadowing", no_args_is_help=True)
-@verbose_option(logger)
+@verbose_option()
 @click.argument(
     "security_rules_path",
     required=True,
@@ -196,7 +197,7 @@ def run_shadowing(
 
 
 @main_run.command("shadowingvalue", no_args_is_help=True)
-@verbose_option(logger)
+@verbose_option()
 @click.argument(
     "security_rules_path",
     required=True,
@@ -271,7 +272,7 @@ examples = [
     "example",
     type=ExampleChoice(examples),
 )
-@verbose_option(logger)
+@verbose_option()
 @exclude_check_option()
 @output_format_option()
 @html_report()
@@ -392,7 +393,7 @@ def process_scenario(
 
         output = scenario.execute()
         results = scenario.analyze(output)
-        scenario.show(results, *display_formats)
+        scenario.show(results, display_formats)
         if html_report:
             logger.info("Saving analysis results as HTML report")
             html_code = export_as_html(
