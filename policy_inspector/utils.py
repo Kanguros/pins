@@ -1,4 +1,3 @@
-# ruff: noqa: RET503
 import logging
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -6,8 +5,60 @@ from typing import Any, Callable, Optional
 import rich_click as click
 from click.types import Choice as clickChoice
 from click.types import Path as ClickPath
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pydantic import BaseModel
 from rich.logging import RichHandler
+
+_EXPORT_REGISTRY: dict[tuple[type, str], Callable] = {}
+_SHOW_REGISTRY: dict[tuple[type, str], Callable] = {}
+
+
+def register_export(scenario_cls: type, fmt: str):
+    """Decorator to register an export function for a scenario and format."""
+
+    def decorator(func: Callable):
+        _EXPORT_REGISTRY[(scenario_cls, fmt)] = func
+        return func
+
+    return decorator
+
+
+def get_export_func(scenario, fmt: str):
+    """Get export function for scenario instance and format."""
+    return _EXPORT_REGISTRY.get((type(scenario), fmt))
+
+
+def register_show(scenario_cls: type, fmt: str):
+    """Decorator to register a show function for a scenario and format."""
+
+    def decorator(func: Callable):
+        _SHOW_REGISTRY[(scenario_cls, fmt)] = func
+        return func
+
+    return decorator
+
+
+def get_show_func(scenario, fmt: str):
+    """Get show function for scenario instance and format."""
+    return _SHOW_REGISTRY.get((type(scenario), fmt))
+
+
+
+
+def load_jinja_template(template_dir: Path, template_name: str):
+    """
+    Load a Jinja2 template from the current directory.
+    """
+    env = Environment(
+        loader=FileSystemLoader(str(template_dir)),
+        autoescape=select_autoescape(["html", "xml"]),
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+    return env.get_template(template_name)
+
+# ruff: noqa: RET503
+
 
 EXAMPLES_DIR = Path(__file__).parent / "example"
 
@@ -68,11 +119,11 @@ def exclude_check_option(arg_name: str = "exclude_checks") -> Callable:
     )
 
 
-def output_format_option(arg_name: str = "display_formats") -> Callable:
+def show_option(arg_name: str = "show_formats") -> Callable:
     formats = ["text", "table"]
     return click.option(
-        "-d",
-        "--display",
+        "-s",
+        "--show",
         arg_name,
         multiple=True,
         type=click.Choice(formats, case_sensitive=False),
@@ -83,13 +134,18 @@ def output_format_option(arg_name: str = "display_formats") -> Callable:
     )
 
 
-def html_report(arg_name: str = "html_report") -> Callable:
+def export_formats(arg_name: str = "export_formats") -> Callable:
+    formats = ["html", "json"]
     return click.option(
-        "-hr",
-        "--html-report",
+        "-e",
+        "--export",
         arg_name,
-        is_flag=True,
-        help="Save results as HTML report",
+        multiple=True,
+        type=click.Choice(formats, case_sensitive=False),
+        default=(),
+        show_default=True,
+        nargs=1,
+        help="Save results as format",
     )
 
 

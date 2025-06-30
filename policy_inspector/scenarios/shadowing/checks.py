@@ -2,7 +2,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from policy_inspector.model.base import AnyObj
-from policy_inspector.shadowing.base import CheckResult
+from policy_inspector.scenarios.shadowing.base import CheckResult
 
 if TYPE_CHECKING:
     from policy_inspector.model.security_rule import SecurityRule

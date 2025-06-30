@@ -8,7 +8,7 @@ from policy_inspector.model.security_rule import (
     SecurityRule,
 )
 from policy_inspector.resolver import Resolver
-from policy_inspector.shadowing.base import (
+from policy_inspector.scenarios.shadowing.base import (
     CheckResult,
     Shadowing,
     ShadowingCheckFunction,
@@ -22,6 +22,7 @@ from policy_inspector.shadowing.base import (
 if TYPE_CHECKING:
     from policy_inspector.model.address_group import AddressGroup
     from policy_inspector.model.address_object import AddressObject
+    from policy_inspector.panorama import PanoramaConnector
 
 
 logger = logging.getLogger(__name__)
@@ -127,8 +128,8 @@ def check_destination_addresses_by_ip(
     )
 
 
-class ShadowingByValue(Shadowing):
-    name = "Shadowing Advanced"
+class AdvancedShadowing(Shadowing):
+    name = "Advanced Shadowing"
     checks: list[ShadowingCheckFunction] = [
         check_action,
         check_application,
@@ -142,35 +143,49 @@ class ShadowingByValue(Shadowing):
 
     def __init__(
         self,
-        security_rules: list["SecurityRule"],
-        address_objects: list["AddressObject"],
-        address_groups: list["AddressGroup"],
+        panorama: "PanoramaConnector",
+        device_groups: list[str],
+        **kwargs
     ):
-        super().__init__(security_rules=security_rules)
-        self.address_objects = address_objects
-        self.address_groups = address_groups
-        self.resolver = self.resolver_cls(address_objects, address_groups)
-        self.resolve_rules()
-        self.rules_by_name = {rule.name: rule for rule in self.security_rules}
+        super().__init__(panorama=panorama, device_groups=device_groups, **kwargs)
+        # For each device group, load address objects/groups and resolve rules
+        self.address_objects_by_dg = self._load_address_objects_per_dg()
+        self.address_groups_by_dg = self._load_address_groups_per_dg()
+        self.resolvers_by_dg = {
+            dg: self.resolver_cls(self.address_objects_by_dg[dg], self.address_groups_by_dg[dg])
+            for dg in self.device_groups
+        }
+        self._resolve_rules_per_dg()
+        self.rules_by_name_by_dg = {
+            dg: {rule.name: rule for rule in rules}
+            for dg, rules in self.security_rules_by_dg.items()
+        }
 
-    def resolve_rules(self):
-        resolved = []
-        logger.info("↺ Resolving Address Groups and Address Objects")
-        for security_rule in self.security_rules:
-            resolved.append(self.resolve_rule(security_rule))
-        self.security_rules = resolved
+    def _load_address_objects_per_dg(self) -> dict[str, list["AddressObject"]]:
+        objs_by_dg = {}
+        for device_group in self.device_groups:
+            objs_by_dg[device_group] = self.panorama.get_address_objects(device_group=device_group)
+        return objs_by_dg
 
-    def resolve_rule(self, rule: "SecurityRule") -> AdvancedSecurityRule:
+    def _load_address_groups_per_dg(self) -> dict[str, list["AddressGroup"]]:
+        grps_by_dg = {}
+        for device_group in self.device_groups:
+            grps_by_dg[device_group] = self.panorama.get_address_groups(device_group=device_group)
+        return grps_by_dg
+
+    def _resolve_rules_per_dg(self):
+        logger.info("↺ Resolving Address Groups and Address Objects per device group")
+        for dg, rules in self.security_rules_by_dg.items():
+            resolver = self.resolvers_by_dg[dg]
+            resolved = [self._resolve_rule(rule, resolver) for rule in rules]
+            self.security_rules_by_dg[dg] = resolved
+
+    def _resolve_rule(self, rule: "SecurityRule", resolver) -> AdvancedSecurityRule:
         params = {}
         src_addrs = rule.source_addresses
         if src_addrs and AnyObj not in src_addrs:
-            params["resolved_source_addresses"] = self.resolver.resolve(
-                src_addrs
-            )
-
+            params["resolved_source_addresses"] = resolver.resolve(src_addrs)
         dst_addrs = rule.destination_addresses
         if dst_addrs and AnyObj not in dst_addrs:
-            params["resolved_destination_addresses"] = self.resolver.resolve(
-                dst_addrs
-            )
+            params["resolved_destination_addresses"] = resolver.resolve(dst_addrs)
         return AdvancedSecurityRule.from_security_rule(rule, **params)

@@ -1,0 +1,146 @@
+import logging
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Callable, Literal
+
+from policy_inspector.scenario import CheckResult, Scenario
+from policy_inspector.scenarios.shadowing.checks import (
+    check_action,
+    check_application,
+    check_destination_address,
+    check_destination_zone,
+    check_services,
+    check_source_address,
+    check_source_zone,
+)
+from policy_inspector.scenarios.shadowing.show import show_as_table, show_as_text
+
+if TYPE_CHECKING:
+    from policy_inspector.model.security_rule import SecurityRule
+    from policy_inspector.panorama import PanoramaConnector
+
+logger = logging.getLogger(__name__)
+
+
+ShadowingCheckFunction = Callable[["SecurityRule", "SecurityRule"], CheckResult]
+
+
+ChecksOutputs = dict[str, CheckResult]
+"""Dict with check's name as keys and its output as value."""
+
+PrecedingRulesOutputs = dict[str, ChecksOutputs]
+"""Dict with Preceding Rule's name as keys and ChecksOutputs as its value."""
+
+ExecuteResults = dict[str, PrecedingRulesOutputs]
+"""Dict with Rule's name as keys and ``PrecedingRulesOutputs`` as value."""
+
+AnalysisResult = list[tuple["SecurityRule", list["SecurityRule"]]]
+"""List of two-element tuples where first element is a ``SecurityRule`` and second element is list of shadowing rules"""
+
+AnalysisResults = dict[str, AnalysisResult]
+
+
+def exclude_checks(checks: list[ShadowingCheckFunction], keywords: Iterable[str]) -> list:
+    if not keywords:
+        return []
+    checks = checks.copy()
+    logger.info(f"Excluding checks by keywords: {', '.join(keywords)}")
+    for i, check in enumerate(checks):
+        check_name = check.__name__
+        if any(keyword in check_name for keyword in keywords):
+            logger.info(f"✖ Check '{check_name}' excluded")
+            checks.pop(i)
+    return checks
+
+class Shadowing(Scenario):
+    """
+    This scenario identifies when a rule is completely shadowed by a preceding rule.
+
+    Shadowing occurs when a rule will never be matched
+    because a rule earlier in the processing order would always match first.
+    """
+
+    name: str = "Shadowing"
+    checks: list[ShadowingCheckFunction] = [
+        check_action,
+        check_application,
+        check_services,
+        check_source_zone,
+        check_destination_zone,
+        check_source_address,
+        check_destination_address,
+    ]
+
+    def __init__(self,
+                 panorama: "PanoramaConnector",
+                 device_groups: list[str],
+                 **kwargs):
+        super().__init__(panorama, **kwargs)
+
+        self.device_groups = device_groups
+        # Store rules per device group
+        self.security_rules_by_dg = self._load_security_rules_per_dg()
+        self.rules_by_name_by_dg = {
+            dg: {rule.name: rule for rule in rules}
+            for dg, rules in self.security_rules_by_dg.items()
+        }
+        self.execution_results_by_dg: dict[str, ExecuteResults] = {}
+        self.analysis_results_by_dg: dict[str, AnalysisResult] = {}
+
+    def _load_security_rules_per_dg(self) -> dict[str, list["SecurityRule"]]:
+        """Load security rules from Panorama for each device group separately."""
+        rules_by_dg = {}
+        for device_group in self.device_groups:
+            rules_by_dg[device_group] = self._get_security_rules(device_group)
+        return rules_by_dg
+
+    def _get_security_rules(self, device_group: str) -> list["SecurityRule"]:
+        pre_rules = self.panorama.get_security_rules(
+            device_group=device_group,
+            rulebase="pre"
+        )
+        post_rules = self.panorama.get_security_rules(
+            device_group=device_group,
+            rulebase="post"
+        )
+        return pre_rules + post_rules
+
+    def execute(self) -> dict[str, ExecuteResults]:
+        """Execute shadowing analysis for each device group separately."""
+        results_by_dg = {}
+        for dg, rules in self.security_rules_by_dg.items():
+            results = {}
+            for i, rule in enumerate(rules):
+                output = {}
+                for j in range(i):
+                    preceding_rule = rules[j]
+                    output[preceding_rule.name] = self.run_checks(
+                        rule,
+                        preceding_rule,
+                    )
+                results[rule.name] = output
+            results_by_dg[dg] = results
+        self.execution_results_by_dg = results_by_dg
+        return results_by_dg
+
+    def analyze(self, results_by_dg: dict[str, ExecuteResults]) -> AnalysisResults:
+        """Analyze shadowing results for each device group separately."""
+        analysis_by_dg = {}
+        for dg, results in results_by_dg.items():
+            rules_by_name = self.rules_by_name_by_dg[dg]
+            analysis_results = []
+            for rule_name, rule_results in results.items():
+                shadowing_rules = []
+                for preceding_rule_name, checks_results in rule_results.items():
+                    if all(
+                        check_result[0] for check_result in checks_results.values()
+                    ):
+                        shadowing_rules.append(
+                            rules_by_name[preceding_rule_name]
+                        )
+                if shadowing_rules:
+                    analysis_results.append(
+                        (rules_by_name[rule_name], shadowing_rules)
+                    )
+            analysis_by_dg[dg] = analysis_results
+        self.analysis_results_by_dg = analysis_by_dg
+        return analysis_by_dg

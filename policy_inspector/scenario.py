@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar
 
 if TYPE_CHECKING:
     from policy_inspector.model.security_rule import SecurityRule
+    from policy_inspector.panorama import PanoramaConnector
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ A tuple representing the result of a check function.
 2. ``str``: A verbose message describing the result.
 """
 
-Check = Callable[[...], CheckResult]
+Check = Callable[..., CheckResult]
 """A callable type definition for a scenario check function."""
 
 
@@ -27,6 +28,7 @@ class Scenario:
 
     Attributes:
         name: Scenario display name.
+        panorama: PanoramaConnector instance for data retrieval.
         _scenarios: A set of all registered subclasses of Scenario.
         checks: A list of callable check functions to be executed on security rules.
     """
@@ -35,6 +37,19 @@ class Scenario:
     checks: list[Check] = []
 
     _scenarios: dict[str, type["Scenario"]] = {}
+
+    def __init__(self, panorama: "PanoramaConnector", **kwargs) -> None:
+        """
+        Initialize a Scenario instance.
+
+        Args:
+            panorama: PanoramaConnector instance for data retrieval.
+            **kwargs: Additional keyword arguments for subclass customization.
+        """
+        self.panorama = panorama
+        # Allow subclasses to handle additional kwargs
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     def __init_subclass__(cls, **kwargs) -> None:
         """Registers subclasses automatically in the `scenarios` set."""
@@ -55,20 +70,36 @@ class Scenario:
         return cls._scenarios
 
     @classmethod
-    def get_by_name(cls, name: str) -> type["Scenario"]:
+    def from_name(cls, name: str) -> type["Scenario"]:
         return cls._scenarios[name]
 
-    def exclude_checks(self, keywords: Iterable[str]) -> None:
-        if not keywords:
-            return
-        checks = self.checks.copy()
-        logger.info(f"Excluding checks by keywords: {', '.join(keywords)}")
-        for i, check in enumerate(self.checks):
-            check_name = check.__name__
-            if any(keyword in check_name for keyword in keywords):
-                logger.info(f"✖ Check '{check_name}' excluded")
-                checks.pop(i)
-        self.checks = checks
+    def show(self, formats, *args, **kwargs):
+        """
+        Show scenario results in the given formats using registered show functions.
+        """
+        for fmt in formats:
+            show_func = None
+            from policy_inspector.utils import get_show_func
+            show_func = get_show_func(self, fmt)
+            if show_func:
+                show_func(self, *args, **kwargs)
+            else:
+                logger.warning(f"No show function registered for {type(self).__name__} and format '{fmt}'")
+
+    def export(self, formats, *args, **kwargs):
+        """
+        Export scenario results in the given formats using registered export functions.
+        """
+        for fmt in formats:
+            export_func = None
+            from policy_inspector.utils import get_export_func
+            export_func = get_export_func(self, fmt)
+            if export_func:
+                export_func(self, *args, **kwargs)
+            else:
+                logger.warning(f"No export function registered for {type(self).__name__} and format '{fmt}'")
+
+
 
     def run_checks(self, *rules: "SecurityRule") -> dict[str, CheckResult]:
         """

@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Union
 
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import BaseModel, SecretStr
 from yaml import safe_load
 
 
@@ -18,17 +18,10 @@ class PanoramaConfig(BaseModel):
     """Default SSL verification setting"""
 
 
-ScenarioName = str
-"""Name of the Scenario"""
-
-
-class RunConfig(BaseModel):
+class Config(BaseModel):
     panorama: PanoramaConfig
-    device_groups: list[str] = Field(..., min_length=1)
-    scenarios: list[ScenarioName] = Field(..., min_length=1)
-    continue_on_error: bool = True
 
     @classmethod
-    def from_yaml_file(cls, file_path: Path) -> "RunConfig":
+    def from_yaml_file(cls, file_path: Path) -> "Config":
         data = safe_load(file_path.read_text())
         return cls(**data)
