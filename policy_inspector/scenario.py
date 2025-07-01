@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Callable, Optional, TypeVar
+from typing import TYPE_CHECKING, Optional, TypeVar
 
 if TYPE_CHECKING:
     from policy_inspector.model.security_rule import SecurityRule
@@ -92,30 +92,6 @@ class Scenario:
                     f"No export function registered for {type(self).__name__} and format '{fmt}'"
                 )
 
-    def run_checks(self, *rules: "SecurityRule") -> dict[str, CheckResult]:
-        """
-        Run all defined ``checks`` against the provided security rule or rules.
-
-        Args:
-            *rules: Security rules to evaluate.
-
-        Notes:
-            Logs exceptions if any check raises an error during execution.
-
-        Returns:
-            A dictionary mapping check function names to their results (status and message).
-        """
-        results = {}
-        for check in self.checks:
-            try:
-                results[check.__name__] = check(*rules)
-            except Exception as ex:  # noqa: BLE001
-                logger.warning(f"☠ Error: {ex}")
-                logger.warning(f"☠ Check function: '{check.__name__}'")
-                for i, rule in enumerate(rules, start=1):
-                    logger.warning(f"☠ Rule {i}: {rule.name}")
-                    logger.debug(f"☠ Rule {i}: {rule.model_dump()}")
-        return results
 
     def execute(self) -> ScenarioResults:
         """

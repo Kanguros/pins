@@ -51,6 +51,30 @@ def exclude_checks(
             checks.pop(i)
     return checks
 
+def run_checks(checks, *rules: "SecurityRule") -> dict[str, CheckResult]:
+    """
+    Run all defined ``checks`` against the provided security rule or rules.
+
+    Args:
+        *rules: Security rules to evaluate.
+
+    Notes:
+        Logs exceptions if any check raises an error during execution.
+
+    Returns:
+        A dictionary mapping check function names to their results (status and message).
+    """
+    results = {}
+    for check in checks:
+        try:
+            results[check.__name__] = check(*rules)
+        except Exception as ex:  # noqa: BLE001
+            logger.warning(f"☠ Error: {ex}")
+            logger.warning(f"☠ Check function: '{check.__name__}'")
+            for i, rule in enumerate(rules, start=1):
+                logger.warning(f"☠ Rule {i}: {rule.name}")
+                logger.debug(f"☠ Rule {i}: {rule.model_dump()}")
+    return results
 
 class Shadowing(Scenario):
     """Scenario for detecting shadowing rules in Palo Alto Panorama."""
@@ -114,7 +138,7 @@ class Shadowing(Scenario):
                 output = {}
                 for j in range(i):
                     preceding_rule = rules[j]
-                    output[preceding_rule.name] = self.run_checks(
+                    output[preceding_rule.name] = run_checks(
                         rule,
                         preceding_rule,
                     )

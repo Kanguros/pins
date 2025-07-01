@@ -86,49 +86,102 @@ def main_run():
     """
 
 
+
+# --- Begin: DRY helpers for scenario commands ---
+def panorama_options(func):
+    """Decorator to add common Panorama connection options to a Click command."""
+    func = click.option(
+        "--config", "config_file", type=FilePath(), help="Path to YAML config file."
+    )(func)
+    func = click.option(
+        "-h",
+        "--host",
+        "hostname",
+        type=click.STRING,
+        help="Panorama hostname",
+        envvar="PINS_HOST",
+    )(func)
+    func = click.option(
+        "-u",
+        "--username",
+        type=click.STRING,
+        help="Panorama username",
+        envvar="PINS_USERNAME",
+    )(func)
+    func = click.option(
+        "-p",
+        "--password",
+        type=click.STRING,
+        help="Panorama password",
+        envvar="PINS_PASSWORD",
+    )(func)
+    func = click.option(
+        "-d",
+        "--device-group",
+        "device_groups",
+        type=click.STRING,
+        help="Name of the Device Group",
+        multiple=True,
+        envvar="PINS_DEVICE_GROUPS",
+    )(func)
+    func = click.option(
+        "--ssl",
+        "verify_ssl",
+        is_flag=True,
+        help="Verify SSL certificates",
+        envvar="PINS_VERIFY_SSL",
+    )(func)
+    return func
+
+def run_scenario_with_panorama(
+    scenario_cls,
+    config_file,
+    hostname,
+    username,
+    password,
+    device_groups,
+    verify_ssl,
+    exclude_checks: tuple[str],
+    show_formats: tuple[str],
+    export_formats: bool,
+) -> None:
+    """Common scenario execution logic for Panorama-based scenarios."""
+    from policy_inspector.config import Config
+
+    config = None
+    panos_version = None
+    if config_file:
+        config = Config.from_yaml_file(config_file)
+        panorama_cfg = config.panorama
+        hostname = hostname or panorama_cfg.hostname
+        panos_version = panorama_cfg.api_version
+        username = username or panorama_cfg.username
+        password = password or panorama_cfg.password.get_secret_value()
+        verify_ssl = (
+            verify_ssl if verify_ssl is not None else panorama_cfg.verify_ssl
+        )
+    panorama_kwargs = {
+        "hostname": hostname,
+        "username": username,
+        "password": password,
+        "verify_ssl": verify_ssl,
+    }
+    if panos_version is not None:
+        panorama_kwargs["api_version"] = panos_version
+    panorama = PanoramaConnector(**panorama_kwargs)
+    scenario = scenario_cls(panorama=panorama, device_groups=list(device_groups))
+    scenario.exclude_checks(exclude_checks)
+    scenario.execute_and_analyze()
+    if show_formats:
+        scenario.show(show_formats)
+    if export_formats:
+        scenario.export(export_formats)
+# --- End: DRY helpers for scenario commands ---
+
+
 @main_run.command("shadowing", no_args_is_help=True)
 @verbose_option()
-@click.option(
-    "--config", "config_file", type=FilePath(), help="Path to YAML config file."
-)
-@click.option(
-    "-h",
-    "--host",
-    "hostname",
-    type=click.STRING,
-    help="Panorama hostname",
-    envvar="PINS_HOST",
-)
-@click.option(
-    "-u",
-    "--username",
-    type=click.STRING,
-    help="Panorama username",
-    envvar="PINS_USERNAME",
-)
-@click.option(
-    "-p",
-    "--password",
-    type=click.STRING,
-    help="Panorama password",
-    envvar="PINS_PASSWORD",
-)
-@click.option(
-    "-d",
-    "--device-group",
-    "device_groups",
-    type=click.STRING,
-    help="Name of the Device Group",
-    multiple=True,
-    envvar="PINS_DEVICE_GROUPS",
-)
-@click.option(
-    "--ssl",
-    "verify_ssl",
-    is_flag=True,
-    help="Verify SSL certificates",
-    envvar="PINS_VERIFY_SSL",
-)
+@panorama_options
 @exclude_check_option()
 @show_option()
 @export_formats()
@@ -144,78 +197,23 @@ def run_shadowing(
     export_formats: bool,
 ) -> None:
     """Run shadowing analysis using Panorama data."""
-    from policy_inspector.config import Config
-
-    config = None
-    panos_version = None
-    if config_file:
-        config = Config.from_yaml_file(config_file)
-        panorama_cfg = config.panorama
-        hostname = hostname or panorama_cfg.hostname
-        panos_version = panorama_cfg.api_version
-        username = username or panorama_cfg.username
-        password = password or panorama_cfg.password.get_secret_value()
-        verify_ssl = (
-            verify_ssl if verify_ssl is not None else panorama_cfg.verify_ssl
-        )
-    panorama = PanoramaConnector(
-        hostname=hostname,
-        username=username,
-        password=password,
-        verify_ssl=verify_ssl,
+    run_scenario_with_panorama(
+        Shadowing,
+        config_file,
+        hostname,
+        username,
+        password,
+        device_groups,
+        verify_ssl,
+        exclude_checks,
+        show_formats,
+        export_formats,
     )
-    scenario = Shadowing(panorama=panorama, device_groups=list(device_groups))
-    scenario.exclude_checks(exclude_checks)
-    scenario.execute_and_analyze()
-    if show_formats:
-        scenario.show(show_formats)
-    if export_formats:
-        scenario.export(export_formats)
 
 
 @main_run.command("shadowingvalue", no_args_is_help=True)
 @verbose_option()
-@click.option(
-    "--config", "config_file", type=FilePath(), help="Path to YAML config file."
-)
-@click.option(
-    "-h",
-    "--host",
-    "hostname",
-    type=click.STRING,
-    help="Panorama hostname",
-    envvar="PINS_HOST",
-)
-@click.option(
-    "-u",
-    "--username",
-    type=click.STRING,
-    help="Panorama username",
-    envvar="PINS_USERNAME",
-)
-@click.option(
-    "-p",
-    "--password",
-    type=click.STRING,
-    help="Panorama password",
-    envvar="PINS_PASSWORD",
-)
-@click.option(
-    "-d",
-    "--device-group",
-    "device_groups",
-    type=click.STRING,
-    help="Name of the Device Group",
-    multiple=True,
-    envvar="PINS_DEVICE_GROUPS",
-)
-@click.option(
-    "--ssl",
-    "verify_ssl",
-    is_flag=True,
-    help="Verify SSL certificates",
-    envvar="PINS_VERIFY_SSL",
-)
+@panorama_options
 @exclude_check_option()
 @show_option()
 @export_formats()
@@ -231,36 +229,18 @@ def run_shadowingvalue(
     export_formats: bool,
 ) -> None:
     """Run advanced shadowing analysis using Panorama data."""
-    from policy_inspector.config import Config
-
-    config = None
-    panos_version = None
-    if config_file:
-        config = Config.from_yaml_file(config_file)
-        panorama_cfg = config.panorama
-        hostname = hostname or panorama_cfg.hostname
-        panos_version = panorama_cfg.api_version
-        username = username or panorama_cfg.username
-        password = password or panorama_cfg.password.get_secret_value()
-        verify_ssl = (
-            verify_ssl if verify_ssl is not None else panorama_cfg.verify_ssl
-        )
-    panorama = PanoramaConnector(
-        hostname=hostname,
-        username=username,
-        password=password,
-        verify_ssl=verify_ssl,
-        api_version=panos_version,
+    run_scenario_with_panorama(
+        AdvancedShadowing,
+        config_file,
+        hostname,
+        username,
+        password,
+        device_groups,
+        verify_ssl,
+        exclude_checks,
+        show_formats,
+        export_formats,
     )
-    scenario = AdvancedShadowing(
-        panorama=panorama, device_groups=list(device_groups)
-    )
-    scenario.exclude_checks(exclude_checks)
-    scenario.execute_and_analyze()
-    if show_formats:
-        scenario.show(show_formats)
-    if export_formats:
-        scenario.export(export_formats)
 
 
 examples = [

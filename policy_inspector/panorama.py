@@ -56,7 +56,7 @@ class PanoramaConnector:
 
     def _authenticate(self, username: str, password: str) -> None:
         """Authenticate to Panorama REST API and get token."""
-        logger.info(f"↺ Connecting to Panorama at {hostname}")
+        logger.info(f"↺ Connecting to Panorama at {self.hostname}")
         try:
             response = self.session.post(
                 f"https://{self.hostname}:{self.port}/api/?type=keygen",
