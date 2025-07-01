@@ -1,6 +1,5 @@
 import logging
-from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar
+from typing import TYPE_CHECKING, Callable, Optional, TypeVar
 
 if TYPE_CHECKING:
     from policy_inspector.model.security_rule import SecurityRule
@@ -9,17 +8,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 ScenarioResults = TypeVar("ScenarioResults")
-
-CheckResult = tuple[bool, str]
-"""
-A tuple representing the result of a check function.
-
-1. ``bool``: Indicates whether the check was fulfilled or not.
-2. ``str``: A verbose message describing the result.
-"""
-
-Check = Callable[..., CheckResult]
-"""A callable type definition for a scenario check function."""
+AnalysisResult = TypeVar("AnalysisResult")
 
 
 class Scenario:
@@ -34,7 +23,6 @@ class Scenario:
     """
 
     name: Optional[str] = None
-    checks: list[Check] = []
 
     _scenarios: dict[str, type["Scenario"]] = {}
 
@@ -47,7 +35,6 @@ class Scenario:
             **kwargs: Additional keyword arguments for subclass customization.
         """
         self.panorama = panorama
-        # Allow subclasses to handle additional kwargs
         for key, value in kwargs.items():
             setattr(self, key, value)
 
@@ -80,11 +67,14 @@ class Scenario:
         for fmt in formats:
             show_func = None
             from policy_inspector.utils import get_show_func
+
             show_func = get_show_func(self, fmt)
             if show_func:
                 show_func(self, *args, **kwargs)
             else:
-                logger.warning(f"No show function registered for {type(self).__name__} and format '{fmt}'")
+                logger.warning(
+                    f"No show function registered for {type(self).__name__} and format '{fmt}'"
+                )
 
     def export(self, formats, *args, **kwargs):
         """
@@ -93,13 +83,14 @@ class Scenario:
         for fmt in formats:
             export_func = None
             from policy_inspector.utils import get_export_func
+
             export_func = get_export_func(self, fmt)
             if export_func:
                 export_func(self, *args, **kwargs)
             else:
-                logger.warning(f"No export function registered for {type(self).__name__} and format '{fmt}'")
-
-
+                logger.warning(
+                    f"No export function registered for {type(self).__name__} and format '{fmt}'"
+                )
 
     def run_checks(self, *rules: "SecurityRule") -> dict[str, CheckResult]:
         """
@@ -138,7 +129,7 @@ class Scenario:
         """
         raise NotImplementedError
 
-    def analyze(self, results: ScenarioResults) -> Any:
+    def analyze(self, results: ScenarioResults) -> AnalysisResult:
         """
         Analyze the results obtained from executing a scenario.
 
@@ -152,3 +143,8 @@ class Scenario:
             The analysis outcome.
         """
         raise NotImplementedError
+
+    def execute_and_analyze(self) -> AnalysisResult:
+        """Execute the scenario and analyze the results."""
+        results = self.execute()
+        return self.analyze(results)

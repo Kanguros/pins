@@ -82,18 +82,30 @@ def mixed_rules(address_objects):
 
 def test_empty_rules(address_objects):
     """Test scenario with empty rule list"""
-    scenario = AdvancedShadowing([], address_objects, [])
+    scenario = AdvancedShadowing(
+        panorama=None,
+        device_groups=["test"],
+        security_rules_by_dg={"test": []},
+        address_objects_by_dg={"test": address_objects},
+        address_groups_by_dg={"test": []},
+    )
     results = scenario.execute()
-    assert results == {}
+    assert results == {"test": {}}
 
 
 def test_single_rule(address_objects):
     """Test scenario with single rule"""
     rule = SecurityRule(name="single", source_addresses={"wide-net"})
-    scenario = AdvancedShadowing([rule], address_objects, [])
+    scenario = AdvancedShadowing(
+        panorama=None,
+        device_groups=["test"],
+        security_rules_by_dg={"test": [rule]},
+        address_objects_by_dg={"test": address_objects},
+        address_groups_by_dg={"test": []},
+    )
     results = scenario.execute()
-    assert len(results) == 1
-    assert results["single"] == {}
+    assert len(results["test"]) == 1
+    assert results["test"]["single"] == {}
 
 
 @pytest.mark.parametrize(
@@ -108,33 +120,57 @@ def test_rule_preceding_counts(
     base_rules, address_objects, rule_index, expected_preceding
 ):
     """Verify correct number of preceding rules checked for each position"""
-    scenario = AdvancedShadowing(base_rules, address_objects, [])
+    scenario = AdvancedShadowing(
+        panorama=None,
+        device_groups=["test"],
+        security_rules_by_dg={"test": base_rules},
+        address_objects_by_dg={"test": address_objects},
+        address_groups_by_dg={"test": []},
+    )
     results = scenario.execute()
     rule_name = base_rules[rule_index].name
-    assert len(results[rule_name]) == expected_preceding
+    assert len(results["test"][rule_name]) == expected_preceding
 
 
 def test_shadowing_relationships(base_rules, address_objects):
-    scenario = AdvancedShadowing(base_rules, address_objects, [])
+    scenario = AdvancedShadowing(
+        panorama=None,
+        device_groups=["test"],
+        security_rules_by_dg={"test": base_rules},
+        address_objects_by_dg={"test": address_objects},
+        address_groups_by_dg={"test": []},
+    )
     results = scenario.execute()
     # assert "rule1" in results["rule2"]
-    assert results["rule2"]["rule1"]["check_source_addresses_by_ip"][0] is True
-    assert results["rule2"]["rule1"]["check_action"][0] is True
+    assert results["test"]["rule2"]["rule1"]["check_source_addresses_by_ip"][0] is True
+    assert results["test"]["rule3"]["rule1"]["check_source_addresses_by_ip"][0] is True
 
 
 def test_fqdn_rule_handling(fqdn_rules, address_objects):
-    scenario = AdvancedShadowing(fqdn_rules, address_objects, [])
+    scenario = AdvancedShadowing(
+        panorama=None,
+        device_groups=["test"],
+        security_rules_by_dg={"test": fqdn_rules},
+        address_objects_by_dg={"test": address_objects},
+        address_groups_by_dg={"test": []},
+    )
     results = scenario.execute()
-    assert len(results["fqdn-rule1"]) == 0
-    assert "fqdn-rule1" in results["fqdn-rule2"]
+    assert len(results["test"]["fqdn-rule1"]) == 0
+    assert "fqdn-rule1" in results["test"]["fqdn-rule2"]
 
 
 def test_mixed_address_types(mixed_rules, address_objects):
     """Test rules with combined IP and FQDN addresses"""
-    scenario = AdvancedShadowing(mixed_rules, address_objects, [])
+    scenario = AdvancedShadowing(
+        panorama=None,
+        device_groups=["test"],
+        security_rules_by_dg={"test": mixed_rules},
+        address_objects_by_dg={"test": address_objects},
+        address_groups_by_dg={"test": []},
+    )
     results = scenario.execute()
-    assert len(results["mixed1"]) == 0
-    assert len(results["mixed2"]) == 1
+    assert len(results["test"]["mixed1"]) == 0
+    assert len(results["test"]["mixed2"]) == 1
 
 
 def test_identical_rules(address_objects):
@@ -148,9 +184,15 @@ def test_identical_rules(address_objects):
         for i in range(3)
     ]
 
-    scenario = AdvancedShadowing(rules, address_objects, [])
+    scenario = AdvancedShadowing(
+        panorama=None,
+        device_groups=["test"],
+        security_rules_by_dg={"test": rules},
+        address_objects_by_dg={"test": address_objects},
+        address_groups_by_dg={"test": []},
+    )
     results = scenario.execute()
 
     # Each subsequent rule should check all preceding rules
     for i, rule_name in enumerate(["rule0", "rule1", "rule2"]):
-        assert len(results[rule_name]) == i
+        assert len(results["test"][rule_name]) == i

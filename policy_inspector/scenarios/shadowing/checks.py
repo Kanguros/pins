@@ -1,14 +1,25 @@
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from policy_inspector.model.base import AnyObj
-from policy_inspector.scenarios.shadowing.base import CheckResult
 
 if TYPE_CHECKING:
     from policy_inspector.model.security_rule import SecurityRule
 
 logger = logging.getLogger(__name__)
 
+
+
+CheckResult = tuple[bool, str]
+"""
+A tuple representing the result of a check function.
+
+1. ``bool``: Indicates whether the check was fulfilled or not.
+2. ``str``: A verbose message describing the result.
+"""
+
+CheckFunction = Callable[["SecurityRule", "SecurityRule"], CheckResult]
+"""A callable type definition for a scenario check function."""
 
 def check_action(
     rule: "SecurityRule",

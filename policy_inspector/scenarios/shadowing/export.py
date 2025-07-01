@@ -1,5 +1,3 @@
-
-
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -22,6 +20,11 @@ def export_as_html(scenario, *args, **kwargs) -> str:
         device_groups=getattr(scenario, "device_groups", []),
         address_groups_count=len(getattr(scenario, "address_groups", [])),
         address_objects_count=len(getattr(scenario, "address_objects", [])),
-        total_policies=sum(len(rules) for rules in getattr(scenario, "security_rules_by_dg", {{}}).values()),
+        total_policies=sum(
+            len(rules)
+            for rules in getattr(
+                scenario, "security_rules_by_dg", {{}}
+            ).values()
+        ),
         current_date=current_date,
     )

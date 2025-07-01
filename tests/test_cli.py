@@ -51,9 +51,23 @@ def test_list_command_verbose(runner):
         assert phrase in result.output
 
 
-@pytest.mark.parametrize("name", [example.name for example in cli.examples])
+@pytest.mark.parametrize(
+    "name",
+    [
+        pytest.param(
+            "shadowingvalue-basic",
+            marks=pytest.mark.skip(reason="requires panorama connection"),
+        ),
+        pytest.param(
+            "shadowingvalue-ssl",
+            marks=pytest.mark.skip(reason="requires panorama connection"),
+        ),
+        "shadowing-basic",
+        "shadowing-multiple-dg",
+    ],
+)
 def test_run_example(runner, name):
-    result = runner.invoke(cli.run_example, [name])
+    result = runner.invoke(cli.run_example, [name], catch_exceptions=True)
     phrases = [
         f"Selected example: '{name}'",
         "Executing scenario with",

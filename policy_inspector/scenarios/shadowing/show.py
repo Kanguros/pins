@@ -1,5 +1,3 @@
-
-
 import logging
 
 from policy_inspector.scenarios.shadowing.advanced import AdvancedShadowing
@@ -7,6 +5,7 @@ from policy_inspector.scenarios.shadowing.base import Shadowing
 from policy_inspector.utils import register_show
 
 logger = logging.getLogger(__name__)
+
 
 @register_show(scenario_cls=Shadowing, fmt="text")
 @register_show(scenario_cls=AdvancedShadowing, fmt="text")
@@ -29,7 +28,6 @@ def show_as_text(scenario, *args, **kwargs) -> None:
         logger.info("----------------")
 
 
-
 @register_show(scenario_cls=Shadowing, fmt="table")
 @register_show(scenario_cls=AdvancedShadowing, fmt="table")
 def show_as_table(scenario, *args, **kwargs) -> None:
@@ -50,7 +48,8 @@ def show_as_table(scenario, *args, **kwargs) -> None:
             table = Table(title=f"Finding {i + 1}", show_lines=True)
             main_headers = ["Attribute", "Shadowed Rule"]
             next_headers = [
-                f"Preceding Rule {i}" for i in range(1, len(shadowing_rules) + 1)
+                f"Preceding Rule {i}"
+                for i in range(1, len(shadowing_rules) + 1)
             ]
             for header in main_headers + next_headers:
                 table.add_column(header)

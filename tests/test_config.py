@@ -36,7 +36,6 @@ panorama:
     assert cfg.panorama.verify_ssl is False
 
 
-
 @pytest.mark.parametrize(
     "yaml_content, expected_error",
     [

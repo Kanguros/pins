@@ -24,4 +24,6 @@ class Config(BaseModel):
     @classmethod
     def from_yaml_file(cls, file_path: Path) -> "Config":
         data = safe_load(file_path.read_text())
+        if data is None:
+            data = {}
         return cls(**data)

@@ -43,8 +43,6 @@ def get_show_func(scenario, fmt: str):
     return _SHOW_REGISTRY.get((type(scenario), fmt))
 
 
-
-
 def load_jinja_template(template_dir: Path, template_name: str):
     """
     Load a Jinja2 template from the current directory.
@@ -57,24 +55,8 @@ def load_jinja_template(template_dir: Path, template_name: str):
     )
     return env.get_template(template_name)
 
+
 # ruff: noqa: RET503
-
-
-EXAMPLES_DIR = Path(__file__).parent / "example"
-
-
-def get_example_file_path(file_path: Path) -> Path:
-    return EXAMPLES_DIR / file_path
-
-
-# It's just make use of pydantic because it's available ;)
-class Example(BaseModel):
-    name: str
-    args: list
-    cmd: Callable
-
-    def model_post_init(self, data):
-        self.args = [get_example_file_path(arg) for arg in self.args]
 
 
 def verbose_option() -> Callable:
@@ -180,6 +162,17 @@ def config_logger(
     main_logger.setLevel(logging.INFO)
 
 
+class Example(BaseModel):
+    """Represents an example that can be run."""
+
+    name: str
+    cmd: Callable
+    args: dict[str, Any]
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
 class FilePath(ClickPath):
     def __init__(self, *args, **kwargs):
         super().__init__(
@@ -231,3 +224,8 @@ class ExampleChoice(clickChoice):
             choices_str = ", ".join(map(repr, matching_choices))
             message = f"{value!r} too many matches: {choices_str}."
         raise click.UsageError(message=message, ctx=ctx)
+
+
+def get_example_file_path(name: str) -> Path:
+    """Get the path to an example file."""
+    return Path(__file__).parent / "example" / name

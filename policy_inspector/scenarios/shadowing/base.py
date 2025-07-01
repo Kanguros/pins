@@ -1,8 +1,8 @@
 import logging
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Callable, Literal
+from typing import TYPE_CHECKING, Callable
 
-from policy_inspector.scenario import CheckResult, Scenario
+from policy_inspector.scenario import Scenario
 from policy_inspector.scenarios.shadowing.checks import (
     check_action,
     check_application,
@@ -11,17 +11,15 @@ from policy_inspector.scenarios.shadowing.checks import (
     check_services,
     check_source_address,
     check_source_zone,
+    CheckFunction,
+    CheckResult,
 )
-from policy_inspector.scenarios.shadowing.show import show_as_table, show_as_text
 
 if TYPE_CHECKING:
     from policy_inspector.model.security_rule import SecurityRule
     from policy_inspector.panorama import PanoramaConnector
 
 logger = logging.getLogger(__name__)
-
-
-ShadowingCheckFunction = Callable[["SecurityRule", "SecurityRule"], CheckResult]
 
 
 ChecksOutputs = dict[str, CheckResult]
@@ -39,7 +37,9 @@ AnalysisResult = list[tuple["SecurityRule", list["SecurityRule"]]]
 AnalysisResults = dict[str, AnalysisResult]
 
 
-def exclude_checks(checks: list[ShadowingCheckFunction], keywords: Iterable[str]) -> list:
+def exclude_checks(
+    checks: list[CheckFunction], keywords: Iterable[str]
+) -> list[CheckFunction]:
     if not keywords:
         return []
     checks = checks.copy()
@@ -51,16 +51,12 @@ def exclude_checks(checks: list[ShadowingCheckFunction], keywords: Iterable[str]
             checks.pop(i)
     return checks
 
-class Shadowing(Scenario):
-    """
-    This scenario identifies when a rule is completely shadowed by a preceding rule.
 
-    Shadowing occurs when a rule will never be matched
-    because a rule earlier in the processing order would always match first.
-    """
+class Shadowing(Scenario):
+    """Scenario for detecting shadowing rules in Palo Alto Panorama."""
 
     name: str = "Shadowing"
-    checks: list[ShadowingCheckFunction] = [
+    checks: list[CheckFunction] = [
         check_action,
         check_application,
         check_services,
@@ -70,15 +66,22 @@ class Shadowing(Scenario):
         check_destination_address,
     ]
 
-    def __init__(self,
-                 panorama: "PanoramaConnector",
-                 device_groups: list[str],
-                 **kwargs):
-        super().__init__(panorama, **kwargs)
-
+    def __init__(
+        self,
+        panorama: "PanoramaConnector",
+        device_groups: list[str],
+        **kwargs,
+    ):
+        """
+        Args:
+            panorama: An instance of PanoramaConnector for API interaction.
+            device_groups: A list of device groups to be analyzed.
+            security_rules_by_dg: A dictionary of security rules by device group.
+        """
+        self.panorama = panorama
         self.device_groups = device_groups
-        # Store rules per device group
         self.security_rules_by_dg = self._load_security_rules_per_dg()
+
         self.rules_by_name_by_dg = {
             dg: {rule.name: rule for rule in rules}
             for dg, rules in self.security_rules_by_dg.items()
@@ -95,12 +98,10 @@ class Shadowing(Scenario):
 
     def _get_security_rules(self, device_group: str) -> list["SecurityRule"]:
         pre_rules = self.panorama.get_security_rules(
-            device_group=device_group,
-            rulebase="pre"
+            device_group=device_group, rulebase="pre"
         )
         post_rules = self.panorama.get_security_rules(
-            device_group=device_group,
-            rulebase="post"
+            device_group=device_group, rulebase="post"
         )
         return pre_rules + post_rules
 
@@ -122,7 +123,9 @@ class Shadowing(Scenario):
         self.execution_results_by_dg = results_by_dg
         return results_by_dg
 
-    def analyze(self, results_by_dg: dict[str, ExecuteResults]) -> AnalysisResults:
+    def analyze(
+        self, results_by_dg: dict[str, ExecuteResults]
+    ) -> AnalysisResults:
         """Analyze shadowing results for each device group separately."""
         analysis_by_dg = {}
         for dg, results in results_by_dg.items():
@@ -132,7 +135,8 @@ class Shadowing(Scenario):
                 shadowing_rules = []
                 for preceding_rule_name, checks_results in rule_results.items():
                     if all(
-                        check_result[0] for check_result in checks_results.values()
+                        check_result[0]
+                        for check_result in checks_results.values()
                     ):
                         shadowing_rules.append(
                             rules_by_name[preceding_rule_name]
