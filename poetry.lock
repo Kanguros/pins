@@ -733,6 +733,21 @@ pyyaml = ">=5.1"
 virtualenv = ">=20.10.0"
 
 [[package]]
+name = "pydanclick"
+version = "0.5.1"
+description = "Use Pydantic models as Click options"
+optional = false
+python-versions = "<4.0,>=3.9"
+groups = ["main"]
+files = [
+    {file = "pydanclick-0.5.1-py3-none-any.whl", hash = "sha256:9ef7dd384f0e04c9db3908251db8f5fe7c05d52a8824c659778036cc671f416a"},
+    {file = "pydanclick-0.5.1.tar.gz", hash = "sha256:ddbf2ec8ce3086b0e011bd1b7cd13474de7210d27e031a37c9cec4a76971d518"},
+]
+
+[package.extras]
+griffe = ["griffe"]
+
+[[package]]
 name = "pydantic"
 version = "2.10.6"
 description = "Data validation using Python type hints"
@@ -1430,4 +1445,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9"
-content-hash = "41f488c20b186ebd15ab2a3e27a42b384034c0917f12c42fea25b77df666e7c7"
+content-hash = "9fcc77029cd05c262728e16417038c293c1346f2f4fcea03c5093611262648f8"

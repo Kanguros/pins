@@ -6,6 +6,7 @@ from typing import TypeVar
 import rich_click as click
 from rich_click import rich_config
 
+from policy_inspector.config import Config
 from policy_inspector.panorama import PanoramaConnector
 from policy_inspector.scenario import Scenario
 from policy_inspector.scenarios.shadowing.advanced import AdvancedShadowing
@@ -54,10 +55,12 @@ def main_list() -> None:
         if scenario_doc:
             doc = dedent(scenario_doc)
             logger.info(f"{doc}")
-        for check in scenario.checks:
-            logger.info(f"\t▶ '{check.__name__}'")
-            doc = check.__doc__.replace("\n", "")
-            logger.info(f"\t  {doc}")
+        checks = getattr(scenario, "checks", None)
+        if checks:
+            for check in scenario.checks:
+                logger.info(f"\t▶ '{check.__name__}'")
+                doc = check.__doc__.replace("\n", "")
+                logger.info(f"\t  {doc}")
         logger.info("")
         logger.info("-----------------------")
         logger.info("")
@@ -90,32 +93,30 @@ def main_run():
 # --- Begin: DRY helpers for scenario commands ---
 def panorama_options(func):
     """Decorator to add common Panorama connection options to a Click command."""
-    func = click.option(
+    options = [
+        click.option(
         "--config", "config_file", type=FilePath(), help="Path to YAML config file."
-    )(func)
-    func = click.option(
+    ),
+    click.option(
         "-h",
         "--host",
         "hostname",
         type=click.STRING,
         help="Panorama hostname",
         envvar="PINS_HOST",
-    )(func)
-    func = click.option(
+    ), click.option(
         "-u",
         "--username",
         type=click.STRING,
         help="Panorama username",
         envvar="PINS_USERNAME",
-    )(func)
-    func = click.option(
+    ), click.option(
         "-p",
         "--password",
         type=click.STRING,
         help="Panorama password",
         envvar="PINS_PASSWORD",
-    )(func)
-    func = click.option(
+    ), click.option(
         "-d",
         "--device-group",
         "device_groups",
@@ -123,91 +124,47 @@ def panorama_options(func):
         help="Name of the Device Group",
         multiple=True,
         envvar="PINS_DEVICE_GROUPS",
-    )(func)
-    func = click.option(
+    ), click.option(
         "--ssl",
         "verify_ssl",
         is_flag=True,
         help="Verify SSL certificates",
         envvar="PINS_VERIFY_SSL",
-    )(func)
+    )]
+    for opt in reversed(options):
+        func = opt(func)
     return func
 
 def run_scenario_with_panorama(
     scenario_cls,
-    config_file,
-    hostname,
-    username,
-    password,
+    config: Config,
     device_groups,
-    verify_ssl,
-    exclude_checks: tuple[str],
-    show_formats: tuple[str],
-    export_formats: bool,
 ) -> None:
     """Common scenario execution logic for Panorama-based scenarios."""
-    from policy_inspector.config import Config
-
-    config = None
-    panos_version = None
-    if config_file:
-        config = Config.from_yaml_file(config_file)
-        panorama_cfg = config.panorama
-        hostname = hostname or panorama_cfg.hostname
-        panos_version = panorama_cfg.api_version
-        username = username or panorama_cfg.username
-        password = password or panorama_cfg.password.get_secret_value()
-        verify_ssl = (
-            verify_ssl if verify_ssl is not None else panorama_cfg.verify_ssl
-        )
-    panorama_kwargs = {
-        "hostname": hostname,
-        "username": username,
-        "password": password,
-        "verify_ssl": verify_ssl,
-    }
-    if panos_version is not None:
-        panorama_kwargs["api_version"] = panos_version
-    panorama = PanoramaConnector(**panorama_kwargs)
+    panorama = PanoramaConnector(hostname=config.panorama.hostname,
+                                 username=config.panorama.username,
+                                 password=config.panorama.password.get_secret_value(),
+                                    verify_ssl=config.panorama.verify_ssl,
+                                    api_version=config.panorama.api_version)
     scenario = scenario_cls(panorama=panorama, device_groups=list(device_groups))
-    scenario.exclude_checks(exclude_checks)
     scenario.execute_and_analyze()
-    if show_formats:
-        scenario.show(show_formats)
-    if export_formats:
-        scenario.export(export_formats)
-# --- End: DRY helpers for scenario commands ---
+    if config.show:
+        scenario.show(config.show)
+    if config.export:
+        scenario.export(config.export)
 
 
 @main_run.command("shadowing", no_args_is_help=True)
 @verbose_option()
-@panorama_options
-@exclude_check_option()
-@show_option()
-@export_formats()
 def run_shadowing(
-    config_file,
-    hostname,
-    username,
-    password,
-    device_groups,
-    verify_ssl,
-    exclude_checks: tuple[str],
-    show_formats: tuple[str],
-    export_formats: bool,
+    config: Config,
+    device_groups
 ) -> None:
     """Run shadowing analysis using Panorama data."""
     run_scenario_with_panorama(
         Shadowing,
-        config_file,
-        hostname,
-        username,
-        password,
-        device_groups,
-        verify_ssl,
-        exclude_checks,
-        show_formats,
-        export_formats,
+        config,
+        device_groups=device_groups
     )
 
 
@@ -293,8 +250,13 @@ def run_example(
 ) -> None:
     """Run one of the examples."""
     logger.info(f"▶ Selected example: '{example.name}'")
+    logger.info("This is a demonstration run using example config/data. Results may not reflect your environment.")
     logger.info(f"Config file path: {example.args['config_file'].absolute()}")
-    ctx.invoke(example.cmd, **example.args)
+    try:
+        ctx.invoke(example.cmd, **example.args)
+    except Exception as ex:
+        logger.error("Example run failed. This is expected if required files or connectivity are missing.")
+        logger.error(f"Error: {ex}")
 
 
 if __name__ == "__main__":

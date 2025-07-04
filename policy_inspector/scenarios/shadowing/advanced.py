@@ -9,9 +9,9 @@ from policy_inspector.model.security_rule import (
 )
 from policy_inspector.resolver import Resolver
 from policy_inspector.scenarios.shadowing.base import (
+    CheckFunction,
     CheckResult,
     Shadowing,
-    ShadowingCheckFunction,
     check_action,
     check_application,
     check_destination_zone,
@@ -130,28 +130,15 @@ def check_destination_addresses_by_ip(
 class AdvancedShadowing(Shadowing):
     """Advanced scenario for detecting shadowing rules with IP address resolution."""
 
-    def __init__(
-        self,
-        *args,
-        security_rules_by_dg: dict[str, list["SecurityRule"]],
-        address_objects_by_dg: dict[str, list["AddressObject"]],
-        address_groups_by_dg: dict[str, list["AddressGroup"]],
-        **kwargs,
-    ):
-        super().__init__(
-            *args, security_rules_by_dg=security_rules_by_dg, **kwargs
-        )
-        self.address_objects_by_dg = address_objects_by_dg
-        self.address_groups_by_dg = address_groups_by_dg
-        self.checks: list[ShadowingCheckFunction] = [
-            check_source_zone,
-            check_destination_zone,
-            check_source_addresses_by_ip,
-            check_destination_addresses_by_ip,
-            check_services,
-            check_application,
-            check_action,
-        ]
+    checks: list[CheckFunction] = [
+                check_source_zone,
+                check_destination_zone,
+                check_source_addresses_by_ip,
+                check_destination_addresses_by_ip,
+                check_services,
+                check_application,
+                check_action,
+            ]
 
     def execute(self) -> dict[str, dict[str, dict[str, CheckResult]]]:
         logger.info("↺ Resolving Address Groups and Address Objects per device group")

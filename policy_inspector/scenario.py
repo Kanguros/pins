@@ -1,5 +1,8 @@
-import logging
+
+
 from typing import TYPE_CHECKING, Optional, TypeVar
+import logging
+
 
 if TYPE_CHECKING:
     from policy_inspector.model.security_rule import SecurityRule
@@ -19,7 +22,6 @@ class Scenario:
         name: Scenario display name.
         panorama: PanoramaConnector instance for data retrieval.
         _scenarios: A set of all registered subclasses of Scenario.
-        checks: A list of callable check functions to be executed on security rules.
     """
 
     name: Optional[str] = None
