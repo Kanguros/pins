@@ -9,7 +9,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-
 CheckResult = tuple[bool, str]
 """
 A tuple representing the result of a check function.
@@ -20,6 +19,7 @@ A tuple representing the result of a check function.
 
 CheckFunction = Callable[["SecurityRule", "SecurityRule"], CheckResult]
 """A callable type definition for a scenario check function."""
+
 
 def check_action(
     rule: "SecurityRule",

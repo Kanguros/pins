@@ -34,8 +34,12 @@ def test_run_command(runner, arg):
 def test_list_command(runner):
     cli.Scenario.get_available()
     result = runner.invoke(cli.main_list)
-    assert result.exit_code == 0, f"Non-zero exit code. Output:\n{result.output}"
-    assert "Shadowing" in result.output or "AdvancedShadowing" in result.output, f"No scenario name found in output:\n{result.output}"
+    assert result.exit_code == 0, (
+        f"Non-zero exit code. Output:\n{result.output}"
+    )
+    assert (
+        "Shadowing" in result.output or "AdvancedShadowing" in result.output
+    ), f"No scenario name found in output:\n{result.output}"
 
 
 def test_list_command_verbose(runner):

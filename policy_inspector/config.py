@@ -25,22 +25,51 @@ class Config(BaseModel):
     export: tuple[str, ...] = Field(default_factory=tuple)
     show: tuple[str, ...] = Field(tuple("text"))
 
-def yaml_pydantic(model_class, config_option_name='config_file', default_config='config.yaml'):
-    def decorator(f):
-        @click.option(f'--{config_option_name.replace("_", "-")}', type=click.Path(), default=default_config, show_default=True)
-        @from_pydantic(model_class)
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            config_file = kwargs.pop(config_option_name)
-            model_data = kwargs.pop(model_class.__name__.lower())
-            try:
-                with open(config_file) as f_yaml:
-                    yaml_data = yaml.safe_load(f_yaml) or {}
-            except FileNotFoundError:
-                yaml_data = {}
-            # Merge: CLI > YAML
-            merged = {**yaml_data, **model_data.model_dump(exclude_unset=True)}
-            merged_model = model_class(**merged)
-            return f(*args, config=merged_model, **kwargs)
-        return wrapper
-    return decorator
+    @classmethod
+    def from_yaml_file(cls, file_path: str) -> "Config":
+        """Load configuration from a YAML file."""
+        try:
+            with open(file_path) as f:
+                data = yaml.safe_load(f) or {}
+        except FileNotFoundError as ex:
+            raise FileNotFoundError(
+                f"Configuration file {file_path} not found."
+            ) from ex
+        except yaml.YAMLError as ex:
+            raise ValueError(
+                f"Error parsing YAML file {file_path}: {ex}"
+            ) from ex
+
+        return cls(**data)
+
+    @classmethod
+    def option(
+        cls, config_option_name="config_file", default_config="config.yaml"
+    ):
+        def decorator(f):
+            @click.option(
+                f"--{config_option_name.replace('_', '-')}",
+                type=click.Path(),
+                default=default_config,
+                show_default=True,
+            )
+            @from_pydantic(cls)
+            @wraps(f)
+            def wrapper(*args, **kwargs):
+                config_file = kwargs.pop(config_option_name)
+                model_data = kwargs.pop(cls.__name__.lower())
+                try:
+                    yaml_data = cls.from_yaml_file(config_file)
+                except FileNotFoundError:
+                    yaml_data = {}
+                merged = cls(
+                    **{
+                        **yaml_data,
+                        **model_data.model_dump(exclude_unset=True),
+                    }
+                )
+                return f(*args, config=merged, **kwargs)
+
+            return wrapper
+
+        return decorator

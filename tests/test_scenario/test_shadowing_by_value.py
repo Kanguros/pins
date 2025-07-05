@@ -142,8 +142,14 @@ def test_shadowing_relationships(base_rules, address_objects):
     )
     results = scenario.execute()
     # assert "rule1" in results["rule2"]
-    assert results["test"]["rule2"]["rule1"]["check_source_addresses_by_ip"][0] is True
-    assert results["test"]["rule3"]["rule1"]["check_source_addresses_by_ip"][0] is True
+    assert (
+        results["test"]["rule2"]["rule1"]["check_source_addresses_by_ip"][0]
+        is True
+    )
+    assert (
+        results["test"]["rule3"]["rule1"]["check_source_addresses_by_ip"][0]
+        is True
+    )
 
 
 def test_fqdn_rule_handling(fqdn_rules, address_objects):

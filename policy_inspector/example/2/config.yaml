@@ -1,5 +1,5 @@
 files:
-  - device_group: "Example 2"
-    security_rules: "policies.json"
-    address_objects: "address_objects.json"
-    address_groups: "address_groups.json"
+    - device_group: "Example 2"
+      security_rules: "policies.json"
+      address_objects: "address_objects.json"
+      address_groups: "address_groups.json"

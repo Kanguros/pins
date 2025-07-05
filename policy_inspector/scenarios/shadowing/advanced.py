@@ -20,9 +20,7 @@ from policy_inspector.scenarios.shadowing.base import (
 )
 
 if TYPE_CHECKING:
-    from policy_inspector.model.address_group import AddressGroup
-    from policy_inspector.model.address_object import AddressObject
-    from policy_inspector.panorama import PanoramaConnector
+    pass
 
 
 logger = logging.getLogger(__name__)
@@ -131,17 +129,19 @@ class AdvancedShadowing(Shadowing):
     """Advanced scenario for detecting shadowing rules with IP address resolution."""
 
     checks: list[CheckFunction] = [
-                check_source_zone,
-                check_destination_zone,
-                check_source_addresses_by_ip,
-                check_destination_addresses_by_ip,
-                check_services,
-                check_application,
-                check_action,
-            ]
+        check_source_zone,
+        check_destination_zone,
+        check_source_addresses_by_ip,
+        check_destination_addresses_by_ip,
+        check_services,
+        check_application,
+        check_action,
+    ]
 
     def execute(self) -> dict[str, dict[str, dict[str, CheckResult]]]:
-        logger.info("↺ Resolving Address Groups and Address Objects per device group")
+        logger.info(
+            "↺ Resolving Address Groups and Address Objects per device group"
+        )
         for dg in self.device_groups:
             resolver = Resolver(
                 address_objects=self.address_objects_by_dg.get(dg, []),

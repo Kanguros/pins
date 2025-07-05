@@ -1,9 +1,11 @@
 import logging
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from policy_inspector.scenario import Scenario
 from policy_inspector.scenarios.shadowing.checks import (
+    CheckFunction,
+    CheckResult,
     check_action,
     check_application,
     check_destination_address,
@@ -11,8 +13,6 @@ from policy_inspector.scenarios.shadowing.checks import (
     check_services,
     check_source_address,
     check_source_zone,
-    CheckFunction,
-    CheckResult,
 )
 
 if TYPE_CHECKING:
@@ -51,6 +51,7 @@ def exclude_checks(
             checks.pop(i)
     return checks
 
+
 def run_checks(checks, *rules: "SecurityRule") -> dict[str, CheckResult]:
     """
     Run all defined ``checks`` against the provided security rule or rules.
@@ -75,6 +76,7 @@ def run_checks(checks, *rules: "SecurityRule") -> dict[str, CheckResult]:
                 logger.warning(f"☠ Rule {i}: {rule.name}")
                 logger.debug(f"☠ Rule {i}: {rule.model_dump()}")
     return results
+
 
 class Shadowing(Scenario):
     """Scenario for detecting shadowing rules in Palo Alto Panorama."""

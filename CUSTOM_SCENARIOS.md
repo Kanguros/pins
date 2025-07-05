@@ -1,12 +1,9 @@
-
-I would like to allow users to define their own scenarios #file:scenario.py  including being able to execute them from CLI. In the same way as Shadowing and Advanced Shadowing are invoked #file:cli.py 
+I would like to allow users to define their own scenarios #file:scenario.py including being able to execute them from CLI. In the same way as Shadowing and Advanced Shadowing are invoked #file:cli.py
 pins run shadowing ...
-Figure out how to do it. Do not modify code just yet, provide me your idea. Make sure it is simple and straightforward. 
-#codebase #search 
+Figure out how to do it. Do not modify code just yet, provide me your idea. Make sure it is simple and straightforward.
+#codebase #search
 
 Analyze it once again but this time take into considiration that other arguments than `panorama` could be required. As Shadowing scenario require a `device_groups`. They might require different arguments. Also, how to define those scenarios so that click would nicely print help doc and required and optional params.
-
-
 
 ```
 import click
@@ -27,7 +24,6 @@ class MyCustomScenario(Scenario):
         self.mode = mode
     # ... rest of scenario ...
 ```
-
 
 ```
 def add_scenario_commands(main_run_group):

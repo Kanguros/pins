@@ -1,11 +1,7 @@
-
-
-from typing import TYPE_CHECKING, Optional, TypeVar
 import logging
-
+from typing import TYPE_CHECKING, Optional, TypeVar
 
 if TYPE_CHECKING:
-    from policy_inspector.model.security_rule import SecurityRule
     from policy_inspector.panorama import PanoramaConnector
 
 logger = logging.getLogger(__name__)
@@ -93,7 +89,6 @@ class Scenario:
                 logger.warning(
                     f"No export function registered for {type(self).__name__} and format '{fmt}'"
                 )
-
 
     def execute(self) -> ScenarioResults:
         """

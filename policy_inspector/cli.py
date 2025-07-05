@@ -14,11 +14,7 @@ from policy_inspector.scenarios.shadowing.base import Shadowing
 from policy_inspector.utils import (
     Example,
     ExampleChoice,
-    FilePath,
     config_logger,
-    exclude_check_option,
-    export_formats,
-    show_option,
     verbose_option,
 )
 
@@ -89,64 +85,22 @@ def main_run():
     """
 
 
-
-# --- Begin: DRY helpers for scenario commands ---
-def panorama_options(func):
-    """Decorator to add common Panorama connection options to a Click command."""
-    options = [
-        click.option(
-        "--config", "config_file", type=FilePath(), help="Path to YAML config file."
-    ),
-    click.option(
-        "-h",
-        "--host",
-        "hostname",
-        type=click.STRING,
-        help="Panorama hostname",
-        envvar="PINS_HOST",
-    ), click.option(
-        "-u",
-        "--username",
-        type=click.STRING,
-        help="Panorama username",
-        envvar="PINS_USERNAME",
-    ), click.option(
-        "-p",
-        "--password",
-        type=click.STRING,
-        help="Panorama password",
-        envvar="PINS_PASSWORD",
-    ), click.option(
-        "-d",
-        "--device-group",
-        "device_groups",
-        type=click.STRING,
-        help="Name of the Device Group",
-        multiple=True,
-        envvar="PINS_DEVICE_GROUPS",
-    ), click.option(
-        "--ssl",
-        "verify_ssl",
-        is_flag=True,
-        help="Verify SSL certificates",
-        envvar="PINS_VERIFY_SSL",
-    )]
-    for opt in reversed(options):
-        func = opt(func)
-    return func
-
 def run_scenario_with_panorama(
     scenario_cls,
     config: Config,
     device_groups,
 ) -> None:
     """Common scenario execution logic for Panorama-based scenarios."""
-    panorama = PanoramaConnector(hostname=config.panorama.hostname,
-                                 username=config.panorama.username,
-                                 password=config.panorama.password.get_secret_value(),
-                                    verify_ssl=config.panorama.verify_ssl,
-                                    api_version=config.panorama.api_version)
-    scenario = scenario_cls(panorama=panorama, device_groups=list(device_groups))
+    panorama = PanoramaConnector(
+        hostname=config.panorama.hostname,
+        username=config.panorama.username,
+        password=config.panorama.password.get_secret_value(),
+        verify_ssl=config.panorama.verify_ssl,
+        api_version=config.panorama.api_version,
+    )
+    scenario = scenario_cls(
+        panorama=panorama, device_groups=list(device_groups)
+    )
     scenario.execute_and_analyze()
     if config.show:
         scenario.show(config.show)
@@ -156,47 +110,19 @@ def run_scenario_with_panorama(
 
 @main_run.command("shadowing", no_args_is_help=True)
 @verbose_option()
-def run_shadowing(
-    config: Config,
-    device_groups
-) -> None:
+@Config.option()
+def run_shadowing(config: Config, device_groups) -> None:
     """Run shadowing analysis using Panorama data."""
-    run_scenario_with_panorama(
-        Shadowing,
-        config,
-        device_groups=device_groups
-    )
+    run_scenario_with_panorama(Shadowing, config, device_groups=device_groups)
 
 
 @main_run.command("shadowingvalue", no_args_is_help=True)
 @verbose_option()
-@panorama_options
-@exclude_check_option()
-@show_option()
-@export_formats()
-def run_shadowingvalue(
-    config_file,
-    hostname,
-    username,
-    password,
-    device_groups,
-    verify_ssl,
-    exclude_checks: tuple[str],
-    show_formats: tuple[str],
-    export_formats: bool,
-) -> None:
+@Config.option()
+def run_shadowingvalue(config: Config, device_groups: tuple[str]) -> None:
     """Run advanced shadowing analysis using Panorama data."""
     run_scenario_with_panorama(
-        AdvancedShadowing,
-        config_file,
-        hostname,
-        username,
-        password,
-        device_groups,
-        verify_ssl,
-        exclude_checks,
-        show_formats,
-        export_formats,
+        AdvancedShadowing, config, device_groups=device_groups
     )
 
 
@@ -236,26 +162,23 @@ examples = [
     "example",
     type=ExampleChoice(examples),
 )
-@verbose_option()
-@exclude_check_option()
-@show_option()
-@export_formats()
 @click.pass_context
 def run_example(
     ctx,
     example: Example,
-    exclude_checks: tuple[str],
-    show_formats: tuple[str],
-    export_formats: bool,
 ) -> None:
     """Run one of the examples."""
     logger.info(f"▶ Selected example: '{example.name}'")
-    logger.info("This is a demonstration run using example config/data. Results may not reflect your environment.")
+    logger.info(
+        "This is a demonstration run using example config/data. Results may not reflect your environment."
+    )
     logger.info(f"Config file path: {example.args['config_file'].absolute()}")
     try:
         ctx.invoke(example.cmd, **example.args)
     except Exception as ex:
-        logger.error("Example run failed. This is expected if required files or connectivity are missing.")
+        logger.error(
+            "Example run failed. This is expected if required files or connectivity are missing."
+        )
         logger.error(f"Error: {ex}")
 
 
