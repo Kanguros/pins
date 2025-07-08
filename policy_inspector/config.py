@@ -35,10 +35,8 @@ class Config(BaseModel):
             raise FileNotFoundError(
                 f"Configuration file {file_path} not found."
             ) from ex
-        except yaml.YAMLError as ex:
-            raise ValueError(
-                f"Error parsing YAML file {file_path}: {ex}"
-            ) from ex
+        except yaml.YAMLError:
+            raise
 
         return cls(**data)
 

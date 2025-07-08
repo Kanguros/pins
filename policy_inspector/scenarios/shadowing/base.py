@@ -94,8 +94,9 @@ class Shadowing(Scenario):
 
     def __init__(
         self,
-        panorama: "PanoramaConnector",
-        device_groups: list[str],
+        panorama: "PanoramaConnector" = None,
+        device_groups: list[str] = None,
+        security_rules_by_dg: dict[str, list["SecurityRule"]] = None,
         **kwargs,
     ):
         """
@@ -105,8 +106,11 @@ class Shadowing(Scenario):
             security_rules_by_dg: A dictionary of security rules by device group.
         """
         self.panorama = panorama
-        self.device_groups = device_groups
-        self.security_rules_by_dg = self._load_security_rules_per_dg()
+        self.device_groups = device_groups or []
+        if security_rules_by_dg is not None:
+            self.security_rules_by_dg = security_rules_by_dg
+        else:
+            self.security_rules_by_dg = self._load_security_rules_per_dg()
 
         self.rules_by_name_by_dg = {
             dg: {rule.name: rule for rule in rules}
@@ -117,6 +121,8 @@ class Shadowing(Scenario):
 
     def _load_security_rules_per_dg(self) -> dict[str, list["SecurityRule"]]:
         """Load security rules from Panorama for each device group separately."""
+        if not self.panorama:
+            return {dg: [] for dg in self.device_groups}
         rules_by_dg = {}
         for device_group in self.device_groups:
             rules_by_dg[device_group] = self._get_security_rules(device_group)

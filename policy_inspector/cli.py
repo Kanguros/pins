@@ -173,6 +173,7 @@ def run_example(
         "This is a demonstration run using example config/data. Results may not reflect your environment."
     )
     logger.info(f"Config file path: {example.args['config_file'].absolute()}")
+    logger.info("Executing scenario with provided example configuration...")
     try:
         ctx.invoke(example.cmd, **example.args)
     except Exception as ex:
@@ -180,6 +181,8 @@ def run_example(
             "Example run failed. This is expected if required files or connectivity are missing."
         )
         logger.error(f"Error: {ex}")
+    finally:
+        logger.info("results")
 
 
 if __name__ == "__main__":
