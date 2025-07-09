@@ -14,6 +14,11 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+class CircularDependencyError(ValueError):
+    """Raised when a circular dependency is detected in address groups."""
+    pass
+
+
 class Resolver:
     """Process Address Groups into their Address Objects or IP Network object.
 
@@ -45,13 +50,19 @@ class Resolver:
         """
         result = []
         for name in names:
-            result.extend(self._resolve_name(name))
+            result.extend(self._resolve_name(name, set()))
         return result
 
-    def _resolve_name(self, name: str) -> list["AddressObject"]:
+    def _resolve_name(self, name: str, path: set[str]) -> list["AddressObject"]:
         """Resolve single ``name``"""
         if name == "any":
             return []
+
+        # Check for circular dependency
+        if name in path:
+            raise CircularDependencyError(
+                f"Circular dependency detected in address group resolution: {' -> '.join(path)} -> {name}"
+            )
 
         if name in self.cache:
             return self.cache[name]
@@ -59,8 +70,10 @@ class Resolver:
         try:
             logger.debug(f"Resolving Address Group by name: {name}")
             resolved = []
+            # Add current name to path before recursing
+            new_path = path | {name}
             for member in self.address_groups[name]:
-                resolved.extend(self._resolve_name(member))
+                resolved.extend(self._resolve_name(member, new_path))
             self.cache[name] = resolved
             return resolved
         except KeyError:
