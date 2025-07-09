@@ -7,7 +7,7 @@ from policy_inspector.model.address_object import (
     AddressObjectIPNetwork,
     AddressObjectIPRange,
 )
-from policy_inspector.resolver import Resolver
+from policy_inspector.resolver import CircularDependencyError, Resolver
 
 
 @pytest.fixture
@@ -126,9 +126,43 @@ def test_circular_dependency():
     ]
     resolver = Resolver([], groups)
 
-    with pytest.raises(RecursionError) as excinfo:
+    with pytest.raises(CircularDependencyError) as excinfo:
         resolver.resolve({"groupA"})
-    assert "maximum recursion depth" in str(excinfo.value)
+    error_msg = str(excinfo.value)
+    assert "Circular dependency detected" in error_msg
+    # Should contain both groups in the error message
+    assert "groupA" in error_msg and "groupB" in error_msg
+
+
+def test_three_way_circular_dependency():
+    """Test detection of more complex circular dependencies."""
+    groups = [
+        AddressGroup(name="groupA", static={"groupB"}),
+        AddressGroup(name="groupB", static={"groupC"}),
+        AddressGroup(name="groupC", static={"groupA"}),
+    ]
+    resolver = Resolver([], groups)
+
+    with pytest.raises(CircularDependencyError) as excinfo:
+        resolver.resolve({"groupA"})
+    error_msg = str(excinfo.value)
+    assert "Circular dependency detected" in error_msg
+    # Should show the path that led to the cycle
+    assert "groupA" in error_msg and "groupB" in error_msg and "groupC" in error_msg
+
+
+def test_self_referencing_circular_dependency():
+    """Test detection of self-referencing groups."""
+    groups = [
+        AddressGroup(name="groupA", static={"groupA"}),
+    ]
+    resolver = Resolver([], groups)
+
+    with pytest.raises(CircularDependencyError) as excinfo:
+        resolver.resolve({"groupA"})
+    error_msg = str(excinfo.value)
+    assert "Circular dependency detected" in error_msg
+    assert "groupA -> groupA" in error_msg
 
 
 def test_cache_usage(objects_and_groups):
