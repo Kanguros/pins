@@ -143,8 +143,19 @@ class Example(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     name: str
-    cmd: Callable
-    args: dict[str, Any]
+    scenario: type
+    data_dir: str
+    device_group: str
+    show: tuple[str, ...] = ("text",)
+    export: tuple[str, ...] = ()
+    args: dict[str, Any] = {}
+
+    def get_data_dir(self) -> Path:
+        """Get the absolute path to the data directory."""
+        # Get the directory where cli.py is located (policy_inspector package)
+        cli_dir = Path(__file__).parent
+        # Construct the path to the example data directory
+        return cli_dir / "example" / self.data_dir
 
 
 class FilePath(ClickPath):

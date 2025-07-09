@@ -4,7 +4,7 @@ from textwrap import dedent
 
 import rich_click as click
 
-from policy_inspector.config import AppConfig, ExampleConfig
+from policy_inspector.config import AppConfig
 from policy_inspector.mock_panorama import MockPanoramaConnector
 from policy_inspector.panorama import PanoramaConnector
 from policy_inspector.scenario import Scenario
@@ -97,42 +97,32 @@ def run_scenario_with_panorama(
 
 def run_scenario_with_mock_data(
     scenario_cls: type[Scenario],
-    config_file: Path,
+    data_dir: Path,
+    device_group: str,
     device_groups: tuple[str] = (),
+    show: tuple[str, ...] = (),
+    export: tuple[str, ...] = (),
     **kwargs,
 ) -> None:
-    """Run scenario using mock data from JSON files for examples."""
-    # Load example configuration
-    example_config = ExampleConfig.from_yaml_file(str(config_file))
-
-    # Get the data directory from the config file location
-    data_dir = config_file.parent
-
-    # Use the first file configuration (examples typically have one)
-    file_config = example_config.files[0]
-
+    """Run scenario using mock data from JSON files."""
     # Create mock panorama connector
     panorama = MockPanoramaConnector(
         data_dir=data_dir,
-        device_group=file_config.device_group,
+        device_group=device_group,
     )
 
-    # Convert tuple to list for device_groups
-    device_groups_list = (
-        list(device_groups) if device_groups else [file_config.device_group]
-    )
+    # Use provided device_groups or default to the main device_group
+    device_groups_list = list(device_groups) if device_groups else [device_group]
 
     # Create and run scenario
     scenario = scenario_cls(
         panorama=panorama, device_groups=device_groups_list, **kwargs
     )
     scenario.execute_and_analyze()
-
-    # Show and export results if configured
-    if example_config.show:
-        scenario.show(example_config.show)
-    if example_config.export:
-        scenario.export(example_config.export)
+    if show:
+        scenario.show(show)
+    if export:
+        scenario.export(export)
 
 
 @main_run.command("shadowing", no_args_is_help=True)
@@ -161,81 +151,81 @@ def run_shadowingvalue(config: AppConfig, device_groups: tuple[str]) -> None:
     )
 
 
-def run_shadowing_example(config_file: Path, **kwargs) -> None:
-    """Run shadowing example with mock data."""
-    run_scenario_with_mock_data(Shadowing, config_file, **kwargs)
-
-
-def run_shadowingvalue_example(config_file: Path, **kwargs) -> None:
-    """Run advanced shadowing example with mock data."""
-    run_scenario_with_mock_data(AdvancedShadowing, config_file, **kwargs)
-
 
 examples = [
     Example(
         name="shadowing-basic",
-        cmd=run_shadowing_example,
-        args={"config_file": Path(__file__).parent / "example/1/config.yaml"},
+        scenario=Shadowing,
+        data_dir="1",
+        device_group="Example 1",
     ),
     Example(
         name="shadowing-multiple-dg",
-        cmd=run_shadowing_example,
-        args={"config_file": Path(__file__).parent / "example/2/config.yaml"},
+        scenario=Shadowing,
+        data_dir="2",
+        device_group="Example 2",
     ),
     Example(
         name="shadowingvalue-basic",
-        cmd=run_shadowingvalue_example,
-        args={
-            "config_file": Path(__file__).parent.parent
-            / "tests/data/test_shadowing_by_value/config.yaml"
-        },
+        scenario=AdvancedShadowing,
+        data_dir="3",
+        device_group="Example 3 - Advanced",
+        show=("table",),
     ),
     Example(
-        name="shadowingvalue-ssl",
-        cmd=run_shadowingvalue_example,
-        args={
-            "config_file": Path(__file__).parent.parent
-            / "tests/data/test_shadowing_by_value/config.yaml",
-            "verify_ssl": True,
-        },
+        name="shadowingvalue-with-export",
+        scenario=AdvancedShadowing,
+        data_dir="3",
+        device_group="Example 3 - Advanced",
+        show=("text",),
+        export=("json",),
+        args={"verify_ssl": True},
     ),
 ]
 
 
 @main_run.command("example", no_args_is_help=True)
+@AppConfig.option()
 @click.argument(
     "example",
     type=ExampleChoice(examples),
 )
-@click.pass_context
+@click.option(
+    "--device-groups",
+    multiple=True,
+    help="Device groups to analyze (can be specified multiple times)",
+)
 def run_example(
-    ctx,
+    config: AppConfig,
     example: Example,
+    device_groups: tuple[str],
 ) -> None:
     """Run one of the examples."""
     logger.info(f"▶ Selected example: '{example.name}'")
     logger.info(
         "This is a demonstration run using example config/data. Results may not reflect your environment."
     )
-    logger.info(f"Config file path: {example.args['config_file'].absolute()}")
-    logger.info("Executing scenario with provided example configuration...")
+    
+    # Get the data directory from the example
+    data_dir = example.get_data_dir()
+    logger.info(f"Data directory: {data_dir.absolute()}")
+    logger.info("Executing scenario with provided example data...")
 
     try:
-        # Extract device groups from the file config if available
-        config_file = example.args["config_file"]
-        try:
-            example_config = ExampleConfig.from_yaml_file(str(config_file))
-            device_groups = tuple(
-                file_config.device_group for file_config in example_config.files
-            )
-            # Add device_groups to the args
-            example_args = {**example.args, "device_groups": device_groups}
-        except Exception:
-            # Fallback for non-example configs
-            example_args = example.args
-
-        # Run the example command
-        example.cmd(**example_args)
+        # Determine show and export options - CLI options override example defaults
+        final_show = config.show if config.show else example.show
+        final_export = config.export if config.export else example.export
+        
+        # Call run_scenario_with_mock_data directly
+        run_scenario_with_mock_data(
+            scenario_cls=example.scenario,
+            data_dir=data_dir,
+            device_group=example.device_group,
+            device_groups=device_groups,
+            show=final_show,
+            export=final_export,
+            **example.args,
+        )
 
     except Exception as ex:
         logger.error(
