@@ -147,3 +147,4 @@ cache/
 /*.json
 /*.html
 repomix-output.md
+poetry.lock
