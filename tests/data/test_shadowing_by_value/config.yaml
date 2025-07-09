@@ -1,8 +1,5 @@
-panorama:
-    hostname: "localhost"
-    api_version: "10.0"
-    username: "test"
-    password: "test"
-file_paths:
-    security_rules: security_rules.json
-    address_objects: address_objects.json
+files:
+    - device_group: "TestGroup"
+      security_rules: "security_rules.json"
+      address_objects: "address_objects.json"
+      address_groups: "address_groups.json"

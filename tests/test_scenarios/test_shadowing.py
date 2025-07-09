@@ -6,7 +6,7 @@ pytest.skip(
 )
 
 from policy_inspector.model.security_rule import SecurityRule
-from policy_inspector.scenarios.shadowing.base import Shadowing
+from policy_inspector.scenarios.shadowing.simple import Shadowing
 
 
 @pytest.fixture

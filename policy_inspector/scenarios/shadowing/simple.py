@@ -145,6 +145,7 @@ class Shadowing(Scenario):
                 for j in range(i):
                     preceding_rule = rules[j]
                     output[preceding_rule.name] = run_checks(
+                        self.checks,
                         rule,
                         preceding_rule,
                     )

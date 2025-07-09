@@ -55,14 +55,8 @@ def test_list_command_verbose(runner):
 @pytest.mark.parametrize(
     "name",
     [
-        pytest.param(
-            "shadowingvalue-basic",
-            marks=pytest.mark.skip(reason="requires panorama connection"),
-        ),
-        pytest.param(
-            "shadowingvalue-ssl",
-            marks=pytest.mark.skip(reason="requires panorama connection"),
-        ),
+        "shadowingvalue-basic",
+        "shadowingvalue-ssl",
         "shadowing-basic",
         "shadowing-multiple-dg",
     ],
@@ -72,7 +66,7 @@ def test_run_example(runner, name):
     phrases = [
         f"Selected example: '{name}'",
         "Executing scenario with",
-        "results",
+        "Example execution completed",
     ]
     assert result.exit_code == 0
     for phrase in phrases:

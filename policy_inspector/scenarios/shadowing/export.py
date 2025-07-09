@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from policy_inspector.scenarios.shadowing.advanced import AdvancedShadowing
-from policy_inspector.scenarios.shadowing.base import Shadowing
+from policy_inspector.scenarios.shadowing.simple import Shadowing
 from policy_inspector.utils import load_jinja_template, register_export
 
 

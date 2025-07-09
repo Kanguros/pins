@@ -40,10 +40,6 @@ panorama:
     "yaml_content, expected_error",
     [
         (
-            "",
-            "panorama\n  Field required",
-        ),
-        (
             """
 panorama:
     hostname: 123
@@ -51,6 +47,14 @@ panorama:
     password: test
 """,
             "hostname\n  Input should be a valid string",
+        ),
+        (
+            """
+panorama:
+    hostname: "test"
+    username: "test"
+""",
+            "password\n  Field required",
         ),
     ],
 )
@@ -106,3 +110,15 @@ def test_password_obfuscation(tmp_path):
     assert isinstance(cfg.panorama.password, SecretStr)
     assert "secret!" not in repr(cfg)
     assert "********" in repr(cfg.panorama.password)
+
+
+def test_empty_config(tmp_path):
+    """Test that empty config file works with optional panorama."""
+    config_file = tmp_path / "empty.yaml"
+    config_file.write_text("")
+
+    cfg = AppConfig.from_yaml_file(config_file)
+    assert cfg.panorama is None
+    assert cfg.files is None
+    assert cfg.export == ()
+    assert cfg.show == ("text",)

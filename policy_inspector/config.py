@@ -1,10 +1,23 @@
 from functools import wraps
-from typing import Union
+from typing import Optional, Union
 
 import rich_click as click
 import yaml
 from pydanclick import from_pydantic
 from pydantic import BaseModel, Field, SecretStr
+
+
+class FileDataConfig(BaseModel):
+    """Configuration for file-based data sources (examples)."""
+
+    device_group: str
+    """Device group name"""
+    security_rules: str
+    """Path to security rules JSON file"""
+    address_objects: str
+    """Path to address objects JSON file"""
+    address_groups: str
+    """Path to address groups JSON file"""
 
 
 class PanoramaConfig(BaseModel):
@@ -20,10 +33,37 @@ class PanoramaConfig(BaseModel):
     """Default SSL verification setting"""
 
 
-class AppConfig(BaseModel):
-    panorama: PanoramaConfig
+class ExampleConfig(BaseModel):
+    """Configuration for example scenarios using file-based data."""
+
+    files: list[FileDataConfig]
+    """List of file-based data configurations"""
     export: tuple[str, ...] = Field(default_factory=tuple)
-    show: tuple[str, ...] = Field(tuple("text"))
+    show: tuple[str, ...] = Field(default_factory=lambda: ("text",))
+
+    @classmethod
+    def from_yaml_file(cls, file_path: str) -> "ExampleConfig":
+        """Load configuration from a YAML file."""
+        try:
+            with open(file_path) as f:
+                data = yaml.safe_load(f) or {}
+        except FileNotFoundError as ex:
+            raise FileNotFoundError(
+                f"Configuration file {file_path} not found."
+            ) from ex
+        except yaml.YAMLError:
+            raise
+
+        return cls(**data)
+
+
+class AppConfig(BaseModel):
+    panorama: Optional[PanoramaConfig] = None
+    """Panorama configuration (optional for examples)"""
+    files: Optional[list[FileDataConfig]] = None
+    """File-based data configuration (for examples)"""
+    export: tuple[str, ...] = Field(default_factory=tuple)
+    show: tuple[str, ...] = Field(default_factory=lambda: ("text",))
 
     @classmethod
     def from_yaml_file(cls, file_path: str) -> "AppConfig":

@@ -5,11 +5,12 @@ from textwrap import dedent
 import rich_click as click
 from rich_click import rich_config
 
-from policy_inspector.config import AppConfig
+from policy_inspector.config import AppConfig, ExampleConfig
+from policy_inspector.mock_panorama import MockPanoramaConnector
 from policy_inspector.panorama import PanoramaConnector
 from policy_inspector.scenario import Scenario
 from policy_inspector.scenarios.shadowing.advanced import AdvancedShadowing
-from policy_inspector.scenarios.shadowing.base import Shadowing
+from policy_inspector.scenarios.shadowing.simple import Shadowing
 from policy_inspector.utils import (
     Example,
     ExampleChoice,
@@ -104,10 +105,55 @@ def run_scenario_with_panorama(
         scenario.export(config.export)
 
 
+def run_scenario_with_mock_data(
+    scenario_cls: type[Scenario],
+    config_file: Path,
+    device_groups: tuple[str] = (),
+    **kwargs,
+) -> None:
+    """Run scenario using mock data from JSON files for examples."""
+    # Load example configuration
+    example_config = ExampleConfig.from_yaml_file(str(config_file))
+
+    # Get the data directory from the config file location
+    data_dir = config_file.parent
+
+    # Use the first file configuration (examples typically have one)
+    file_config = example_config.files[0]
+
+    # Create mock panorama connector
+    panorama = MockPanoramaConnector(
+        data_dir=data_dir,
+        device_group=file_config.device_group,
+    )
+
+    # Convert tuple to list for device_groups
+    device_groups_list = (
+        list(device_groups) if device_groups else [file_config.device_group]
+    )
+
+    # Create and run scenario
+    scenario = scenario_cls(
+        panorama=panorama, device_groups=device_groups_list, **kwargs
+    )
+    scenario.execute_and_analyze()
+
+    # Show and export results if configured
+    if example_config.show:
+        scenario.show(example_config.show)
+    if example_config.export:
+        scenario.export(example_config.export)
+
+
 @main_run.command("shadowing", no_args_is_help=True)
 @verbose_option()
 @AppConfig.option()
-def run_shadowing(config: AppConfig, device_groups) -> None:
+@click.option(
+    "--device-groups",
+    multiple=True,
+    help="Device groups to analyze (can be specified multiple times)",
+)
+def run_shadowing(config: AppConfig, device_groups: tuple[str]) -> None:
     """Run shadowing analysis using Panorama data."""
     run_scenario_with_panorama(Shadowing, config, device_groups=device_groups)
 
@@ -115,6 +161,11 @@ def run_shadowing(config: AppConfig, device_groups) -> None:
 @main_run.command("shadowingvalue", no_args_is_help=True)
 @verbose_option()
 @AppConfig.option()
+@click.option(
+    "--device-groups",
+    multiple=True,
+    help="Device groups to analyze (can be specified multiple times)",
+)
 def run_shadowingvalue(config: AppConfig, device_groups: tuple[str]) -> None:
     """Run advanced shadowing analysis using Panorama data."""
     run_scenario_with_panorama(
@@ -122,20 +173,30 @@ def run_shadowingvalue(config: AppConfig, device_groups: tuple[str]) -> None:
     )
 
 
+def run_shadowing_example(config_file: Path, **kwargs) -> None:
+    """Run shadowing example with mock data."""
+    run_scenario_with_mock_data(Shadowing, config_file, **kwargs)
+
+
+def run_shadowingvalue_example(config_file: Path, **kwargs) -> None:
+    """Run advanced shadowing example with mock data."""
+    run_scenario_with_mock_data(AdvancedShadowing, config_file, **kwargs)
+
+
 examples = [
     Example(
         name="shadowing-basic",
-        cmd=run_shadowingvalue,
+        cmd=run_shadowing_example,
         args={"config_file": Path(__file__).parent / "example/1/config.yaml"},
     ),
     Example(
         name="shadowing-multiple-dg",
-        cmd=run_shadowingvalue,
+        cmd=run_shadowing_example,
         args={"config_file": Path(__file__).parent / "example/2/config.yaml"},
     ),
     Example(
         name="shadowingvalue-basic",
-        cmd=run_shadowingvalue,
+        cmd=run_shadowingvalue_example,
         args={
             "config_file": Path(__file__).parent.parent
             / "tests/data/test_shadowing_by_value/config.yaml"
@@ -143,7 +204,7 @@ examples = [
     ),
     Example(
         name="shadowingvalue-ssl",
-        cmd=run_shadowingvalue,
+        cmd=run_shadowingvalue_example,
         args={
             "config_file": Path(__file__).parent.parent
             / "tests/data/test_shadowing_by_value/config.yaml",
@@ -170,15 +231,31 @@ def run_example(
     )
     logger.info(f"Config file path: {example.args['config_file'].absolute()}")
     logger.info("Executing scenario with provided example configuration...")
+
     try:
-        ctx.invoke(example.cmd, **example.args)
+        # Extract device groups from the file config if available
+        config_file = example.args["config_file"]
+        try:
+            example_config = ExampleConfig.from_yaml_file(str(config_file))
+            device_groups = tuple(
+                file_config.device_group for file_config in example_config.files
+            )
+            # Add device_groups to the args
+            example_args = {**example.args, "device_groups": device_groups}
+        except Exception:
+            # Fallback for non-example configs
+            example_args = example.args
+
+        # Run the example command
+        example.cmd(**example_args)
+
     except Exception as ex:
         logger.error(
             "Example run failed. This is expected if required files or connectivity are missing."
         )
         logger.error(f"Error: {ex}")
     finally:
-        logger.info("results")
+        logger.info("Example execution completed")
 
 
 if __name__ == "__main__":

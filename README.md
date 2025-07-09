@@ -1,4 +1,4 @@
-# **pins**
+# **_pins_**
 
 Find out which firewall security policy is being shadowed and write
 your own custom checks.
@@ -7,17 +7,24 @@ your own custom checks.
 
 ## What _pins_ really is?
 
-It is a CLI tool to run a analysis of provided firewall security
-policies against a predefined series of checks
-called [Scenarios](#scenarios).
+_pins_ is a CLI tool that connects directly to your Palo Alto Panorama to analyze
+firewall security policies in real-time. It runs automated analysis against
+predefined series of checks called [Scenarios](#scenarios).
 
-It started as a tool to detect shadowing firewall rules. It evolved
-into a small framework that allows to define different scenario very
-easily.
+Originally designed to detect shadowing firewall rules, it has evolved
+into a comprehensive framework that allows you to define and execute
+different security policy scenarios with ease.
 
-> [!NOTE]
-> As of today, _pins_ only supports security policies
-> from Palo Alto Firewall (and Panorama).
+**Key Capabilities:**
+
+- **Direct Panorama Integration**: Connects via REST API for real-time analysis
+- **Device Group Analysis**: Supports multiple device groups simultaneously
+- **Advanced Shadowing Detection**: Identifies truly unreachable rules by resolving IP addresses
+- **Extensible Framework**: Easy to add custom scenarios and checks
+- **Multiple Output Formats**: Text, HTML, and JSON reporting
+
+> [!NOTE] > _pins_ requires direct connectivity to Palo Alto Panorama and
+> uses REST API for all data retrieval. No manual file exports needed.
 
 ## Installation
 
@@ -34,39 +41,49 @@ poetry add pins
 pipx install pins
 ```
 
+## Prerequisites
+
+Before using _pins_, ensure you have:
+
+- **Direct network access** to your Palo Alto Panorama instance
+- **Valid credentials** with API access permissions
+- **REST API enabled** on your Panorama (version 10.0 or higher recommended)
+
 ## Quick Start
 
-To use _pins_ with Palo Alto firewalls, you'll first
-need to export security rules. The simplest way to export security
-rules is using `curl`. First, get API key:
+_pins_ connects directly to your Palo Alto Panorama via REST API to analyze security policies in real-time.
 
-```shell
-# Linux
-API_KEY=$(curl -k -s "https://<FIREWALL-IP>/api/?type=keygen&user=<USERNAME>&password=<PASSWORD>" | grep -o "<key>.*</key>" | sed -e 's/<key>//g' -e 's/<\/key>//g')
+### 1. Create Configuration File
 
-# Windows
-$API_KEY = (Invoke-RestMethod -SkipCertificateCheck -Uri "https://<FIREWALL-IP>/api/?type=keygen&user=<USERNAME>&password=<PASSWORD>").response.result.key
+Create a `config.yaml` file with your Panorama connection details:
+
+```yaml
+panorama:
+    hostname: "your-panorama.company.com"
+    username: "your-username"
+    password: "your-password"
+    api_version: "v11.1" # Optional, defaults to v11.1
+    verify_ssl: false # Optional, defaults to false
 ```
 
-Then export security rules:
+### 2. Run Analysis
+
+Execute shadowing analysis on your device groups:
 
 ```shell
-# Linux
-curl -k -o policies.xml "https://<FIREWALL-IP>/api/?type=config&action=show&key=$API_KEY&xpath=/config/devices/entry[@name='localhost.localdomain']/vsys/entry[@name='vsys1']/rulebase/security"
+# Analyze specific device groups
+pins run shadowing --config-file config.yaml --device-groups "DG-Production" "DG-DMZ"
 
-# Windows
-Invoke-RestMethod -SkipCertificateCheck -Uri "https://<FIREWALL-IP>/api/?type=config&action=show&key=$API_KEY&xpath=/config/devices/entry[@name='localhost.localdomain']/vsys/entry[@name='vsys1']/rulebase/security" -OutFile policies.xml
+# Or use default config.yaml in current directory
+pins run shadowing --device-groups "DG-Production"
 ```
 
-> [!IMPORTANT]
-> You may need to update the `xpath` to match your specific
-> environment.
+### 3. Try Example Data
 
-Once you have your security policies file, from the same directory,
-run:
+To see how _pins_ works without connecting to your environment:
 
 ```shell
-pins run shadowing policies.xml
+pins run example shadowing-basic
 ```
 
 ## Usage
@@ -83,32 +100,47 @@ To list available scenarios:
 pins list
 ```
 
-To run scenario on your own firewall rules:
+To run analysis on your Panorama device groups:
 
 ```shell
-pins run shadowing policies.json
+# Basic shadowing analysis
+pins run shadowing --device-groups "DG-Production" "DG-DMZ"
+
+# Advanced shadowing analysis (resolves IP addresses)
+pins run shadowingvalue --device-groups "DG-Production"
+
+# Use custom config file
+pins run shadowing --config-file /path/to/config.yaml --device-groups "DG-Production"
 ```
 
-To see how it works for yourself, run scenario on example data:
+To see how it works with example data:
 
 ```shell
-pins run example shadowing
+pins run example shadowing-basic
 ```
 
-```shell
-$ pins run example shadowing
-Executing Shadowing scenario
-Shadowed rules detection complete
-Analyzing results...
-[rule-example2] Rule is shadowed by: ['rule-example1']
+### Configuration Options
 
+You can customize the analysis behavior in your `config.yaml`:
+
+```yaml
+panorama:
+    hostname: "panorama.company.com"
+    username: "api-user"
+    password: "secure-password"
+    api_version: "v11.1"
+    verify_ssl: true
+
+# Optional: Control output formats
+show: ["text"] # Display results in terminal
+export: ["html", "json"] # Export results to files
 ```
 
 ## Scenarios
 
 List of currently available scenarios.
 
-### Shadowing
+### Shadowing (`shadowing`)
 
 Identifies policies that will never be triggered because they're
 completely hidden behind earlier rules in the processing order.
@@ -124,37 +156,56 @@ It checks if all these elements are covered by a preceding rule:
 When **all conditions match**, the later rule is **flagged as
 shadowed**.
 
-### Shadowing by Value
+**Usage:**
 
-Advanced version of [Shadowing](#shadowing). It analyze the
+```shell
+pins run shadowing --device-groups "DG-Production"
+```
+
+### Advanced Shadowing (`shadowingvalue`)
+
+Advanced version of [Shadowing](#shadowing). It analyzes the
 actual IP addresses behind Address Objects and Address Groups.
 
-It identifies shadowing at the precise IP subnet level by resolving Address's
-name to actual IP address.
+It identifies shadowing at the precise IP subnet level by resolving Address
+names to actual IP addresses, providing more accurate detection of truly
+shadowed rules.
 
-#### Requirements
+**Usage:**
 
-This scenario needs three input files:
+```shell
+pins run shadowingvalue --device-groups "DG-Production"
+```
 
-- Security rules file
-- Address groups file
-- Address objects file
+**Requirements:**
+
+- Address Objects and Address Groups must be accessible via Panorama API
+- Proper API permissions to read object configurations
 
 ## Details
 
 ### How does it work?
 
-It's pretty straightforward.
+_pins_ connects directly to your Palo Alto Panorama and analyzes security policies in real-time.
 
 ```mermaid
 flowchart TD
-    SelectScenario[Select Scenario]
-    SelectScenario --> LoadRules[Load Security Rules]
-    LoadRules --> FilterRules[Filter Security Rules]
+    Config[Load Configuration] --> Connect[Connect to Panorama]
+    Connect --> SelectScenario[Select Scenario]
+    SelectScenario --> LoadRules[Retrieve Security Rules via API]
+    LoadRules --> LoadObjects[Retrieve Address Objects/Groups via API]
+    LoadObjects --> FilterRules[Filter Security Rules]
     FilterRules --> RunChecks[Run Checks for each Rule]
     RunChecks --> Analyze[Analyze Results]
     Analyze --> Report[Create Report]
 ```
+
+**Key Features:**
+
+- **Real-time Analysis**: Direct API connection to Panorama eliminates the need for manual file exports
+- **Device Group Support**: Analyze multiple device groups simultaneously
+- **Flexible Configuration**: YAML-based configuration with environment-specific settings
+- **Multiple Output Formats**: Support for text, HTML, and JSON report formats
 
 ### What _Scenarios_ is?
 
@@ -167,6 +218,81 @@ logging, or other security policy issues.
 
 A _check_ is simply a function. It takes security policy or policies
 as an argument, assess whether the policies fulfill a check or not.
+
+## Available Examples
+
+You can explore _pins_ functionality with built-in examples:
+
+```shell
+# Basic shadowing scenario
+pins run example shadowing-basic
+
+# Multiple device groups scenario
+pins run example shadowing-multiple-dg
+
+# Advanced shadowing with IP resolution
+pins run example shadowingvalue-basic
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Connection Errors:**
+
+- Verify network connectivity to Panorama
+- Check if REST API is enabled on Panorama
+- Confirm API user has proper permissions
+
+**Authentication Failures:**
+
+- Verify username and password in config.yaml
+- Ensure API user account is not locked
+- Check if multi-factor authentication is disabled for API user
+
+**No Rules Found:**
+
+- Verify device group names are correct
+- Check if the specified device groups contain security rules
+- Ensure API user has read permissions for the device groups
+
+### Configuration Tips
+
+**For Production Use:**
+
+```yaml
+panorama:
+    hostname: "panorama.company.com"
+    username: "pins-api-user"
+    password: "secure-password"
+    verify_ssl: true # Enable SSL verification
+    api_version: "v11.1"
+```
+
+**For Testing/Lab:**
+
+```yaml
+panorama:
+    hostname: "lab-panorama.local"
+    username: "admin"
+    password: "admin"
+    verify_ssl: false # Disable for self-signed certificates
+```
+
+## Output Formats
+
+_pins_ supports multiple output formats:
+
+- **Text**: Human-readable console output (default)
+- **HTML**: Rich web-based reports with interactive elements
+- **JSON**: Machine-readable format for integration with other tools
+
+Configure output in your `config.yaml`:
+
+```yaml
+show: ["text"] # Console output
+export: ["html", "json"] # File exports
+```
 
 ## Contribution & Development
 
