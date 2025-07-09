@@ -1,7 +1,6 @@
 import logging
 from pathlib import Path
 from textwrap import dedent
-from typing import TypeVar
 
 import rich_click as click
 from rich_click import rich_config
@@ -26,8 +25,6 @@ click.rich_click.USE_MARKDOWN = True
 click.rich_click.SHOW_METAVARS_COLUMN = True
 
 logger = logging.getLogger(__name__)
-
-ConcreteScenario = TypeVar("ConcreteScenario", bound="Scenario")
 
 
 @click.group(no_args_is_help=True, add_help_option=True)
@@ -86,21 +83,20 @@ def main_run():
 
 
 def run_scenario_with_panorama(
-    scenario_cls,
+    scenario_cls: type[Scenario],
     config: AppConfig,
-    device_groups,
+    panorama_cls: type[PanoramaConnector] = PanoramaConnector,
+    **kwargs,
 ) -> None:
     """Common scenario execution logic for Panorama-based scenarios."""
-    panorama = PanoramaConnector(
+    panorama = panorama_cls(
         hostname=config.panorama.hostname,
         username=config.panorama.username,
         password=config.panorama.password.get_secret_value(),
         verify_ssl=config.panorama.verify_ssl,
         api_version=config.panorama.api_version,
     )
-    scenario = scenario_cls(
-        panorama=panorama, device_groups=list(device_groups)
-    )
+    scenario = scenario_cls(panorama=panorama, **kwargs)
     scenario.execute_and_analyze()
     if config.show:
         scenario.show(config.show)
