@@ -36,6 +36,7 @@ class Resolver:
             ag.name: ag.static for ag in address_groups
         }
         self.cache: dict[str, list[AddressObject]] = {}
+        self._resolution_stack: set[str] = set()
 
     def resolve(self, names: Iterable[str]) -> list["AddressObject"]:
         """Resolve given names.
@@ -56,38 +57,52 @@ class Resolver:
         if name in self.cache:
             return self.cache[name]
 
-        try:
-            logger.debug(f"Resolving Address Group by name: {name}")
-            resolved = []
-            for member in self.address_groups[name]:
-                resolved.extend(self._resolve_name(member))
-            self.cache[name] = resolved
-            return resolved
-        except KeyError:
-            pass
-
-        try:
-            logger.debug(f"Resolving Address Object by name: {name}")
-            resolved = [self.address_objects[name]]
-            self.cache[name] = resolved
-            return resolved
-        except KeyError:
-            pass
-
-        try:
-            logger.debug(
-                f"Creating {AddressObjectIPNetwork} from value: {name}"
+        # Check for circular dependency
+        if name in self._resolution_stack:
+            raise ValueError(
+                f"Circular dependency detected: {name} is already being resolved"
             )
-            resolved = [AddressObjectIPNetwork(name=name, value=name)]
-            self.cache[name] = resolved
-            return resolved
-        except ValueError:
-            pass
 
+        self._resolution_stack.add(name)
         try:
-            logger.debug(f"Creating {AddressObjectIPRange} from value: {name}")
-            resolved = [AddressObjectIPRange(name=name, value=name)]
-            self.cache[name] = resolved
-            return resolved
-        except ValueError as ex:
-            raise ValueError(f"Unknown address object/group: {name}") from ex
+            try:
+                logger.debug(f"Resolving Address Group by name: {name}")
+                resolved = []
+                for member in self.address_groups[name]:
+                    resolved.extend(self._resolve_name(member))
+                self.cache[name] = resolved
+                return resolved
+            except KeyError:
+                pass
+
+            try:
+                logger.debug(f"Resolving Address Object by name: {name}")
+                resolved = [self.address_objects[name]]
+                self.cache[name] = resolved
+                return resolved
+            except KeyError:
+                pass
+
+            try:
+                logger.debug(
+                    f"Creating {AddressObjectIPNetwork} from value: {name}"
+                )
+                resolved = [AddressObjectIPNetwork(name=name, value=name)]
+                self.cache[name] = resolved
+                return resolved
+            except ValueError:
+                pass
+
+            try:
+                logger.debug(
+                    f"Creating {AddressObjectIPRange} from value: {name}"
+                )
+                resolved = [AddressObjectIPRange(name=name, value=name)]
+                self.cache[name] = resolved
+                return resolved
+            except ValueError as ex:
+                raise ValueError(
+                    f"Unknown address object/group: {name}"
+                ) from ex
+        finally:
+            self._resolution_stack.discard(name)

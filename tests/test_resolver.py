@@ -126,9 +126,35 @@ def test_circular_dependency():
     ]
     resolver = Resolver([], groups)
 
-    with pytest.raises(RecursionError) as excinfo:
+    with pytest.raises(ValueError) as excinfo:
         resolver.resolve({"groupA"})
-    assert "maximum recursion depth" in str(excinfo.value)
+    assert "Circular dependency detected" in str(excinfo.value)
+
+
+def test_complex_circular_dependency():
+    """Test longer circular dependency chain: A -> B -> C -> A"""
+    groups = [
+        AddressGroup(name="groupA", static={"groupB"}),
+        AddressGroup(name="groupB", static={"groupC"}),
+        AddressGroup(name="groupC", static={"groupA"}),
+    ]
+    resolver = Resolver([], groups)
+
+    with pytest.raises(ValueError) as excinfo:
+        resolver.resolve({"groupA"})
+    assert "Circular dependency detected" in str(excinfo.value)
+
+
+def test_self_reference_circular_dependency():
+    """Test self-reference circular dependency: A -> A"""
+    groups = [
+        AddressGroup(name="groupA", static={"groupA"}),
+    ]
+    resolver = Resolver([], groups)
+
+    with pytest.raises(ValueError) as excinfo:
+        resolver.resolve({"groupA"})
+    assert "Circular dependency detected" in str(excinfo.value)
 
 
 def test_cache_usage(objects_and_groups):
