@@ -1,89 +1,150 @@
-from functools import wraps
-from typing import Optional, Union
+import logging
 
 import rich_click as click
 import yaml
-from pydanclick import from_pydantic
-from pydantic import BaseModel, Field, SecretStr
+
+logger = logging.getLogger(__name__)
 
 
-class FileDataConfig(BaseModel):
-    """Configuration for file-based data sources (examples)."""
+def configure_from_yaml(ctx, param, filename):
+    """
+    Callback for --config option that reads YAML configuration file
+    and sets ctx.default_map for Click to use as parameter defaults.
 
-    device_group: str
-    """Device group name"""
-    security_rules: str
-    """Path to security rules JSON file"""
-    address_objects: str
-    """Path to address objects JSON file"""
-    address_groups: str
-    """Path to address groups JSON file"""
+    Args:
+        ctx: Click context
+        param: The parameter object (not used)
+        filename: Path to the YAML configuration file
+    """
+    if filename is None:
+        return
+
+    try:
+        with open(filename) as f:
+            data = yaml.safe_load(f) or {}
+    except FileNotFoundError:
+        # If config file doesn't exist, just continue with no defaults
+        return
+    except yaml.YAMLError as e:
+        raise click.BadParameter(f"Invalid YAML in config file: {e}") from e
+
+    ctx.default_map = {}
+
+    for key, value in data.items():
+        if key == "panorama" and isinstance(value, dict):
+            for pano_key, pano_value in value.items():
+                ctx.default_map[f"panorama_{pano_key}"] = pano_value
+        elif isinstance(value, dict):
+            ctx.default_map[key] = value
+        else:
+            if isinstance(value, list):
+                value = tuple(value)
+            ctx.default_map[key] = value
+
+    logger.debug("Default map set from YAML: %s", ctx.default_map)
+    logger.debug("Final ctx.default_map: %s", ctx.default_map)
+    print("ctx.default_map:", ctx.default_map)
 
 
-class PanoramaConfig(BaseModel):
-    hostname: str
-    """Panorama address"""
-    username: str
-    """Privileged used to access Panorama"""
-    password: SecretStr
-    """Password for a ``username``"""
-    api_version: str = "v11.1"
-    """PAN-OS version"""
-    verify_ssl: Union[bool, str] = False
-    """Default SSL verification setting"""
+def yaml_config_option(
+    config_file_name: str = "--config", default: str = "config.yaml"
+):
+    """
+    Decorator that adds a --config option to read defaults from a YAML file.
+
+    This uses Click's ctx.default_map mechanism to set parameter defaults
+    from the configuration file. The configuration file is processed eagerly
+    before other options.
+
+    Args:
+        config_file_name: The option name (default: "--config")
+        default: Default config file name
+        help_text: Help text for the option
+
+    Returns:
+    """
+
+    def decorator(f):
+        return click.option(
+            config_file_name,
+            type=click.Path(dir_okay=False),
+            default=default,
+            callback=configure_from_yaml,
+            is_eager=True,
+            expose_value=False,
+            help="Read configuration from YAML file",
+            show_default=True,
+        )(f)
+
+    return decorator
 
 
-class AppConfig(BaseModel):
-    panorama: Optional[PanoramaConfig] = None
-    """Panorama configuration (optional for examples)"""
-    files: Optional[list[FileDataConfig]] = None
-    """File-based data configuration (for examples)"""
-    export: tuple[str, ...] = Field(default_factory=tuple)
-    show: tuple[str, ...] = Field(default_factory=lambda: ("text",))
+def export_show_options(f):
+    """
+    Decorator that adds --export and --show click options to a command.
 
-    @classmethod
-    def from_yaml_file(cls, file_path: str) -> "AppConfig":
-        """Load configuration from a YAML file."""
-        try:
-            with open(file_path) as f:
-                data = yaml.safe_load(f) or {}
-        except FileNotFoundError as ex:
-            raise FileNotFoundError(
-                f"Configuration file {file_path} not found."
-            ) from ex
-        except yaml.YAMLError:
-            raise
+    These options are for output formatting:
+    - export: tuple[str, ...] - Export formats (can be specified multiple times)
+    - show: tuple[str, ...] - Output formats (can be specified multiple times)
 
-        return cls(**data)
+    Args:
+        f: The function to decorate
 
-    @classmethod
-    def option(
-        cls, config_option_name="config_file", default_config="config.yaml"
-    ):
-        def decorator(f):
-            @click.option(
-                f"--{config_option_name.replace('_', '-')}",
-                type=click.Path(),
-                default=default_config,
-                show_default=True,
-            )
-            @from_pydantic(cls)
-            @wraps(f)
-            def wrapper(*args, **kwargs):
-                config_file = kwargs.pop(config_option_name)
-                model_data = kwargs.pop(cls.__name__.lower())
-                try:
-                    yaml_data = cls.from_yaml_file(config_file)
-                except FileNotFoundError:
-                    yaml_data = {}
-                merged = cls(
-                    **{
-                        **yaml_data,
-                        **model_data.model_dump(exclude_unset=True),
-                    }
-                )
-                return f(*args, config=merged, **kwargs)
+    Returns:
+        The decorated function with --export and --show options added
+    """
+    options = [
+        click.option(
+            "--show",
+            multiple=True,
+            help="Output format (can be specified multiple times)",
+        ),
+        click.option(
+            "--export",
+            multiple=True,
+            help="Export format (can be specified multiple times)",
+        ),
+    ]
+    for option in reversed(options):
+        f = option(f)
+    return f
 
-            return wrapper
 
-        return decorator
+def panorama_options(f):
+    """
+    Decorator that adds panorama connection click options to a command.
+
+    These options are for connecting to Panorama:
+    - panorama_hostname: str - Panorama hostname/IP
+    - panorama_username: str - Username for authentication
+    - panorama_password: str - Password for authentication (hidden input)
+    - panorama_api_version: str - PAN-OS API version (default: v11.1)
+    - panorama_verify_ssl: bool - Whether to verify SSL certificates (default: False)
+
+    Args:
+        f: The function to decorate
+
+    Returns:
+        The decorated function with panorama options added
+    """
+    options = [
+        click.option(
+            "--panorama-verify-ssl",
+            type=bool,
+            default=False,
+            help="Verify SSL certificates",
+        ),
+        click.option(
+            "--panorama-api-version", default="v11.1", help="PAN-OS API version"
+        ),
+        click.option(
+            "--panorama-password", help="Panorama password", hide_input=True
+        ),
+        click.option("--panorama-username", help="Panorama username"),
+        click.option("--panorama-hostname", help="Panorama hostname"),
+    ]
+    for option in reversed(options):
+        f = option(f)
+
+    logger.debug("Panorama options applied: %s", options)
+    return f

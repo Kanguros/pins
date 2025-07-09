@@ -4,7 +4,11 @@ from textwrap import dedent
 
 import rich_click as click
 
-from policy_inspector.config import AppConfig
+from policy_inspector.config import (
+    export_show_options,
+    panorama_options,
+    yaml_config_option,
+)
 from policy_inspector.mock_panorama import MockPanoramaConnector
 from policy_inspector.panorama import PanoramaConnector
 from policy_inspector.scenario import Scenario
@@ -75,24 +79,30 @@ def main_run():
 
 def run_scenario_with_panorama(
     scenario_cls: type[Scenario],
-    config: AppConfig,
+    panorama_hostname: str,
+    panorama_username: str,
+    panorama_password: str,
+    panorama_api_version: str = "v11.1",
+    panorama_verify_ssl: bool = False,
+    export: tuple[str, ...] = (),
+    show: tuple[str, ...] = ("text",),
     panorama_cls: type[PanoramaConnector] = PanoramaConnector,
     **kwargs,
 ) -> None:
     """Common scenario execution logic for Panorama-based scenarios."""
     panorama = panorama_cls(
-        hostname=config.panorama.hostname,
-        username=config.panorama.username,
-        password=config.panorama.password.get_secret_value(),
-        verify_ssl=config.panorama.verify_ssl,
-        api_version=config.panorama.api_version,
+        hostname=panorama_hostname,
+        username=panorama_username,
+        password=panorama_password,
+        verify_ssl=panorama_verify_ssl,
+        api_version=panorama_api_version,
     )
     scenario = scenario_cls(panorama=panorama, **kwargs)
     scenario.execute_and_analyze()
-    if config.show:
-        scenario.show(config.show)
-    if config.export:
-        scenario.export(config.export)
+    if show:
+        scenario.show(show)
+    if export:
+        scenario.export(export)
 
 
 def run_scenario_with_mock_data(
@@ -112,7 +122,9 @@ def run_scenario_with_mock_data(
     )
 
     # Use provided device_groups or default to the main device_group
-    device_groups_list = list(device_groups) if device_groups else [device_group]
+    device_groups_list = (
+        list(device_groups) if device_groups else [device_group]
+    )
 
     # Create and run scenario
     scenario = scenario_cls(
@@ -126,30 +138,69 @@ def run_scenario_with_mock_data(
 
 
 @main_run.command("shadowing", no_args_is_help=True)
-@AppConfig.option()
+@yaml_config_option()
+@panorama_options
+@export_show_options
 @click.option(
     "--device-groups",
     multiple=True,
     help="Device groups to analyze (can be specified multiple times)",
 )
-def run_shadowing(config: AppConfig, device_groups: tuple[str]) -> None:
+def run_shadowing(
+    panorama_hostname: str,
+    panorama_username: str,
+    panorama_password: str,
+    panorama_api_version: str,
+    panorama_verify_ssl: bool,
+    export: tuple[str, ...],
+    show: tuple[str, ...],
+    device_groups: tuple[str],
+) -> None:
     """Run shadowing analysis using Panorama data."""
-    run_scenario_with_panorama(Shadowing, config, device_groups=device_groups)
+    run_scenario_with_panorama(
+        Shadowing,
+        panorama_hostname=panorama_hostname,
+        panorama_username=panorama_username,
+        panorama_password=panorama_password,
+        panorama_api_version=panorama_api_version,
+        panorama_verify_ssl=panorama_verify_ssl,
+        export=export,
+        show=show,
+        device_groups=device_groups,
+    )
 
 
 @main_run.command("shadowingvalue", no_args_is_help=True)
-@AppConfig.option()
+@yaml_config_option()
+@panorama_options
+@export_show_options
 @click.option(
     "--device-groups",
     multiple=True,
     help="Device groups to analyze (can be specified multiple times)",
 )
-def run_shadowingvalue(config: AppConfig, device_groups: tuple[str]) -> None:
+def run_shadowingvalue(
+    panorama_hostname: str,
+    panorama_username: str,
+    panorama_password: str,
+    panorama_api_version: str,
+    panorama_verify_ssl: bool,
+    export: tuple[str, ...],
+    show: tuple[str, ...],
+    device_groups: tuple[str],
+) -> None:
     """Run advanced shadowing analysis using Panorama data."""
     run_scenario_with_panorama(
-        AdvancedShadowing, config, device_groups=device_groups
+        AdvancedShadowing,
+        panorama_hostname=panorama_hostname,
+        panorama_username=panorama_username,
+        panorama_password=panorama_password,
+        panorama_api_version=panorama_api_version,
+        panorama_verify_ssl=panorama_verify_ssl,
+        export=export,
+        show=show,
+        device_groups=device_groups,
     )
-
 
 
 examples = [
@@ -185,7 +236,7 @@ examples = [
 
 
 @main_run.command("example", no_args_is_help=True)
-@AppConfig.option()
+@export_show_options
 @click.argument(
     "example",
     type=ExampleChoice(examples),
@@ -196,16 +247,17 @@ examples = [
     help="Device groups to analyze (can be specified multiple times)",
 )
 def run_example(
-    config: AppConfig,
-    example: Example,
+    export: tuple[str, ...],
+    show: tuple[str, ...],
     device_groups: tuple[str],
+    example: Example,
 ) -> None:
     """Run one of the examples."""
     logger.info(f"▶ Selected example: '{example.name}'")
     logger.info(
         "This is a demonstration run using example config/data. Results may not reflect your environment."
     )
-    
+
     # Get the data directory from the example
     data_dir = example.get_data_dir()
     logger.info(f"Data directory: {data_dir.absolute()}")
@@ -213,9 +265,9 @@ def run_example(
 
     try:
         # Determine show and export options - CLI options override example defaults
-        final_show = config.show if config.show else example.show
-        final_export = config.export if config.export else example.export
-        
+        final_show = show if show else example.show
+        final_export = export if export else example.export
+
         # Call run_scenario_with_mock_data directly
         run_scenario_with_mock_data(
             scenario_cls=example.scenario,

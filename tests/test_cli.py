@@ -68,7 +68,9 @@ def test_run_example(runner, name):
         "Executing scenario with",
         "Example execution completed",
     ]
-    assert result.exit_code == 0, f"Exit code {result.exit_code}, output: {result.output}"
+    assert result.exit_code == 0, (
+        f"Exit code {result.exit_code}, output: {result.output}"
+    )
     for phrase in phrases:
         assert phrase in result.output
 
@@ -87,14 +89,16 @@ def test_run_example_with_export(runner, name, export_format):
     result = runner.invoke(
         cli.run_example,
         [name, "--export", export_format],
-        catch_exceptions=True
+        catch_exceptions=True,
     )
     phrases = [
         f"Selected example: '{name}'",
         "Executing scenario with",
         "Example execution completed",
     ]
-    assert result.exit_code == 0, f"Exit code {result.exit_code}, output: {result.output}"
+    assert result.exit_code == 0, (
+        f"Exit code {result.exit_code}, output: {result.output}"
+    )
     for phrase in phrases:
         assert phrase in result.output
 
@@ -111,16 +115,16 @@ def test_run_example_with_export(runner, name, export_format):
 def test_run_example_with_show(runner, name, show_format):
     """Test examples with different show formats."""
     result = runner.invoke(
-        cli.run_example,
-        [name, "--show", show_format],
-        catch_exceptions=True
+        cli.run_example, [name, "--show", show_format], catch_exceptions=True
     )
     phrases = [
         f"Selected example: '{name}'",
         "Executing scenario with",
         "Example execution completed",
     ]
-    assert result.exit_code == 0, f"Exit code {result.exit_code}, output: {result.output}"
+    assert result.exit_code == 0, (
+        f"Exit code {result.exit_code}, output: {result.output}"
+    )
     for phrase in phrases:
         assert phrase in result.output
 
@@ -136,15 +140,17 @@ def test_run_example_with_device_groups(runner, name):
     """Test examples with custom device groups."""
     result = runner.invoke(
         cli.run_example,
-        [name, "--device-groups", "CustomDG1", "CustomDG2"],
-        catch_exceptions=True
+        [name, "--device-groups", "CustomDG1", "--device-groups", "CustomDG2"],
+        catch_exceptions=True,
     )
     phrases = [
         f"Selected example: '{name}'",
         "Executing scenario with",
         "Example execution completed",
     ]
-    assert result.exit_code == 0, f"Exit code {result.exit_code}, output: {result.output}"
+    assert result.exit_code == 0, (
+        f"Exit code {result.exit_code}, output: {result.output}"
+    )
     for phrase in phrases:
         assert phrase in result.output
 
@@ -155,17 +161,22 @@ def test_run_example_with_combined_options(runner):
         cli.run_example,
         [
             "shadowing-basic",
-            "--export", "json",
-            "--show", "table",
-            "--device-groups", "TestDG"
+            "--export",
+            "json",
+            "--show",
+            "table",
+            "--device-groups",
+            "TestDG",
         ],
-        catch_exceptions=True
+        catch_exceptions=True,
     )
     phrases = [
         "Selected example: 'shadowing-basic'",
         "Executing scenario with",
         "Example execution completed",
     ]
-    assert result.exit_code == 0, f"Exit code {result.exit_code}, output: {result.output}"
+    assert result.exit_code == 0, (
+        f"Exit code {result.exit_code}, output: {result.output}"
+    )
     for phrase in phrases:
         assert phrase in result.output

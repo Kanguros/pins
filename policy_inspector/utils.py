@@ -5,7 +5,6 @@ from typing import Any, Callable, Optional
 
 import rich_click as click
 from click.types import Choice as clickChoice
-from click.types import Path as ClickPath
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pydantic import BaseModel, ConfigDict
 from rich.logging import RichHandler
@@ -156,13 +155,6 @@ class Example(BaseModel):
         cli_dir = Path(__file__).parent
         # Construct the path to the example data directory
         return cli_dir / "example" / self.data_dir
-
-
-class FilePath(ClickPath):
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            *args, exists=True, dir_okay=False, path_type=Path, **kwargs
-        )
 
 
 class ExampleChoice(clickChoice):
