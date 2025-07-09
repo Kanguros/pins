@@ -6,7 +6,7 @@ from typing import TypeVar
 import rich_click as click
 from rich_click import rich_config
 
-from policy_inspector.config import Config
+from policy_inspector.config import AppConfig
 from policy_inspector.panorama import PanoramaConnector
 from policy_inspector.scenario import Scenario
 from policy_inspector.scenarios.shadowing.advanced import AdvancedShadowing
@@ -87,7 +87,7 @@ def main_run():
 
 def run_scenario_with_panorama(
     scenario_cls,
-    config: Config,
+    config: AppConfig,
     device_groups,
 ) -> None:
     """Common scenario execution logic for Panorama-based scenarios."""
@@ -110,16 +110,16 @@ def run_scenario_with_panorama(
 
 @main_run.command("shadowing", no_args_is_help=True)
 @verbose_option()
-@Config.option()
-def run_shadowing(config: Config, device_groups) -> None:
+@AppConfig.option()
+def run_shadowing(config: AppConfig, device_groups) -> None:
     """Run shadowing analysis using Panorama data."""
     run_scenario_with_panorama(Shadowing, config, device_groups=device_groups)
 
 
 @main_run.command("shadowingvalue", no_args_is_help=True)
 @verbose_option()
-@Config.option()
-def run_shadowingvalue(config: Config, device_groups: tuple[str]) -> None:
+@AppConfig.option()
+def run_shadowingvalue(config: AppConfig, device_groups: tuple[str]) -> None:
     """Run advanced shadowing analysis using Panorama data."""
     run_scenario_with_panorama(
         AdvancedShadowing, config, device_groups=device_groups

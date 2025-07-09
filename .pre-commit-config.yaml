@@ -10,8 +10,8 @@ repos:
     - repo: local
       hooks:
           - id: pytest
-            name: pytest
-            entry: pytest
+            name: pytest (with coverage)
+            entry: pytest --cov=policy_inspector --cov-report=term-missing
             language: system
             types: [python]
             pass_filenames: false

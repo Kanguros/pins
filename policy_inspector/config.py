@@ -20,13 +20,13 @@ class PanoramaConfig(BaseModel):
     """Default SSL verification setting"""
 
 
-class Config(BaseModel):
+class AppConfig(BaseModel):
     panorama: PanoramaConfig
     export: tuple[str, ...] = Field(default_factory=tuple)
     show: tuple[str, ...] = Field(tuple("text"))
 
     @classmethod
-    def from_yaml_file(cls, file_path: str) -> "Config":
+    def from_yaml_file(cls, file_path: str) -> "AppConfig":
         """Load configuration from a YAML file."""
         try:
             with open(file_path) as f:

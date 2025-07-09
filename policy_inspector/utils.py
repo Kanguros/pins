@@ -1,3 +1,4 @@
+import json
 import logging
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -6,8 +7,15 @@ import rich_click as click
 from click.types import Choice as clickChoice
 from click.types import Path as ClickPath
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from rich.logging import RichHandler
+
+
+def load_json(path: Path) -> list[dict[str, Any]]:
+    """Load and parse a JSON file, returning its contents as a list of dictionaries."""
+    with path.open("r", encoding="utf-8") as f:
+        return json.load(f)
+
 
 _EXPORT_REGISTRY: dict[tuple[type, str], Callable] = {}
 _SHOW_REGISTRY: dict[tuple[type, str], Callable] = {}
@@ -56,9 +64,6 @@ def load_jinja_template(template_dir: Path, template_name: str):
     return env.get_template(template_name)
 
 
-# ruff: noqa: RET503
-
-
 def verbose_option() -> Callable:
     """Wrapper around Click ``option``. Sets logger and its handlers to the ``DEBUG`` level."""
 
@@ -86,48 +91,6 @@ def verbose_option() -> Callable:
         "help": "More verbose and detailed output with each `-v` up to `-vvvv`",
     }
     return click.option("-v", "--verbose", **kwargs)
-
-
-def exclude_check_option(arg_name: str = "exclude_checks") -> Callable:
-    return click.option(
-        "-ec",
-        "--exclude-check",
-        arg_name,
-        multiple=True,
-        type=click.STRING,
-        nargs=1,
-        help="Exclude 'check' from Scenario if it contains provided keyword",
-    )
-
-
-def show_option(arg_name: str = "show_formats") -> Callable:
-    formats = ["text", "table"]
-    return click.option(
-        "-s",
-        "--show",
-        arg_name,
-        multiple=True,
-        type=click.Choice(formats, case_sensitive=False),
-        default=("text",),
-        show_default=True,
-        nargs=1,
-        help="Format of the output.",
-    )
-
-
-def export_formats(arg_name: str = "export_formats") -> Callable:
-    formats = ["html", "json"]
-    return click.option(
-        "-e",
-        "--export",
-        arg_name,
-        multiple=True,
-        type=click.Choice(formats, case_sensitive=False),
-        default=(),
-        show_default=True,
-        nargs=1,
-        help="Save results as format",
-    )
 
 
 def config_logger(
@@ -164,12 +127,11 @@ def config_logger(
 class Example(BaseModel):
     """Represents an example that can be run."""
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     name: str
     cmd: Callable
     args: dict[str, Any]
-
-    class Config:
-        arbitrary_types_allowed = True
 
 
 class FilePath(ClickPath):

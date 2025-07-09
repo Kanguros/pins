@@ -121,8 +121,6 @@ class Shadowing(Scenario):
 
     def _load_security_rules_per_dg(self) -> dict[str, list["SecurityRule"]]:
         """Load security rules from Panorama for each device group separately."""
-        if not self.panorama:
-            return {dg: [] for dg in self.device_groups}
         rules_by_dg = {}
         for device_group in self.device_groups:
             rules_by_dg[device_group] = self._get_security_rules(device_group)

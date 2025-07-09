@@ -1,12 +1,8 @@
 import logging
-from typing import TYPE_CHECKING
 
 from policy_inspector.model.address_object import AddressObjectFQDN
 from policy_inspector.model.base import AnyObj
-from policy_inspector.model.security_rule import (
-    AdvancedSecurityRule,
-    SecurityRule,
-)
+from policy_inspector.model.security_rule import AdvancedSecurityRule
 from policy_inspector.resolver import Resolver
 from policy_inspector.scenarios.shadowing.base import (
     CheckFunction,
@@ -17,20 +13,10 @@ from policy_inspector.scenarios.shadowing.base import (
     check_destination_zone,
     check_services,
     check_source_zone,
+    run_checks,
 )
 
-if TYPE_CHECKING:
-    pass
-
-
 logger = logging.getLogger(__name__)
-
-
-def check_services_and_application(
-    rule: "SecurityRule",
-    preceding_rule: "SecurityRule",
-) -> CheckResult:
-    pass
 
 
 def check_source_addresses_by_ip(
@@ -138,13 +124,58 @@ class AdvancedShadowing(Shadowing):
         check_action,
     ]
 
+    def __init__(
+        self,
+        panorama=None,
+        device_groups=None,
+        **kwargs,
+    ):
+        super().__init__(
+            panorama=panorama,
+            device_groups=device_groups,
+            **kwargs,
+        )
+        self.address_objects_by_dg = {}
+        self.address_groups_by_dg = {}
+        # Store test-provided address objects/groups for merging logic
+        self._address_objects_by_dg = kwargs.get("address_objects_by_dg")
+        self._address_groups_by_dg = kwargs.get("address_groups_by_dg")
+
+    def prepare_address_objects_and_groups(self):
+        """Prepare address objects/groups from scenario attributes if present."""
+        address_objects_by_dg = getattr(self, "_address_objects_by_dg", None)
+        address_groups_by_dg = getattr(self, "_address_groups_by_dg", None)
+        self.address_objects_by_dg = {}
+        self.address_groups_by_dg = {}
+        address_objects_by_dg = address_objects_by_dg or {}
+        address_groups_by_dg = address_groups_by_dg or {}
+        shared_objects = address_objects_by_dg.get("shared", [])
+        shared_groups = address_groups_by_dg.get("shared", [])
+
+        def to_obj_dict(objs):
+            if isinstance(objs, dict):
+                return objs
+            return {obj.name: obj for obj in objs}
+
+        for dg in self.device_groups:
+            dg_objects = address_objects_by_dg.get(dg, [])
+            dg_groups = address_groups_by_dg.get(dg, [])
+            all_objects = list(shared_objects) + list(dg_objects)
+            self.address_objects_by_dg[dg] = to_obj_dict(all_objects)
+            self.address_groups_by_dg[dg] = list(shared_groups) + list(
+                dg_groups
+            )
+
     def execute(self) -> dict[str, dict[str, dict[str, CheckResult]]]:
         logger.info(
             "↺ Resolving Address Groups and Address Objects per device group"
         )
+        self.prepare_address_objects_and_groups()
         for dg in self.device_groups:
+            address_objects_dict = self.address_objects_by_dg.get(dg, {})
+            address_objects_list = list(address_objects_dict.values())
             resolver = Resolver(
-                address_objects=self.address_objects_by_dg.get(dg, []),
+                address_objects=address_objects_list,
                 address_groups=self.address_groups_by_dg.get(dg, []),
             )
             rules = self.security_rules_by_dg.get(dg, [])
@@ -160,4 +191,18 @@ class AdvancedShadowing(Shadowing):
                 advanced_rules.append(advanced_rule)
             self.security_rules_by_dg[dg] = advanced_rules
 
-        return super().execute()
+        # Custom execute logic to use self.checks
+        results_by_dg = {}
+        for dg, rules in self.security_rules_by_dg.items():
+            results = {}
+            for i, rule in enumerate(rules):
+                output = {}
+                for j in range(i):
+                    preceding_rule = rules[j]
+                    output[preceding_rule.name] = run_checks(
+                        self.checks, rule, preceding_rule
+                    )
+                results[rule.name] = output
+            results_by_dg[dg] = results
+        self.execution_results_by_dg = results_by_dg
+        return results_by_dg
