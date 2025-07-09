@@ -1,0 +1,8 @@
+[
+    {
+        "@name": "test-group-1",
+        "static": {
+            "member": ["test-addr-1"]
+        }
+    }
+]

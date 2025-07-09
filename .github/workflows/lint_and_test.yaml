@@ -50,8 +50,19 @@ jobs:
             - name: Install dependencies
               run: poetry install --no-interaction --with=dev
 
-            - name: Run pre-commit
-              run: poetry run pre-commit run --all-files
+            - name: Run pre-commit (skip pytest hook)
+              run: poetry run pre-commit run --all-files --hook-stage manual
+
+            - name: Run pytest with coverage (terminal, XML, and HTML)
+              run: poetry run pytest --cov=policy_inspector --cov-report=term-missing --cov-report=html
+              env:
+                  PYTHONPATH: .
+
+            - name: Upload HTML coverage report
+              uses: actions/upload-artifact@v4
+              with:
+                  name: coverage-html
+                  path: htmlcov/
 
     publish:
         name: Build and Publish

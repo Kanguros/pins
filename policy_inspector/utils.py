@@ -1,96 +1,108 @@
-# ruff: noqa: RET503
+import json
 import logging
 from pathlib import Path
 from typing import Any, Callable, Optional
 
 import rich_click as click
 from click.types import Choice as clickChoice
-from click.types import Path as ClickPath
-from pydantic import BaseModel
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+from pydantic import BaseModel, ConfigDict
 from rich.logging import RichHandler
 
-EXAMPLES_DIR = Path(__file__).parent / "example"
+
+def load_json(path: Path) -> list[dict[str, Any]]:
+    """Load and parse a JSON file, returning its contents as a list of dictionaries."""
+    with path.open("r", encoding="utf-8") as f:
+        return json.load(f)
 
 
-def get_example_file_path(file_path: Path) -> Path:
-    return EXAMPLES_DIR / file_path
+_EXPORT_REGISTRY: dict[tuple[type, str], Callable] = {}
+_SHOW_REGISTRY: dict[tuple[type, str], Callable] = {}
 
 
-# It's just make use of pydantic because it's available ;)
-class Example(BaseModel):
-    name: str
-    args: list
-    cmd: Callable
+def register_export(scenario_cls: type, fmt: str):
+    """Decorator to register an export function for a scenario and format."""
 
-    def model_post_init(self, data):
-        self.args = [get_example_file_path(arg) for arg in self.args]
+    def decorator(func: Callable):
+        _EXPORT_REGISTRY[(scenario_cls, fmt)] = func
+        return func
 
-
-def verbose_option() -> Callable:
-    """Wrapper around Click ``option``. Sets logger and its handlers to the ``DEBUG`` level."""
-
-    def callback(ctx: click.Context, param, value) -> None:
-        if not value:
-            return
-        _logger = logging.getLogger(__name__).parent
-        print(_logger)
-        count = len(value)
-        if count > 0:
-            _logger.setLevel(logging.DEBUG)
-        if count > 1:
-            handler = _logger.handlers[0]
-            handler._log_render.show_level = True
-        if count > 2:
-            handler = _logger.handlers[0]
-            handler._log_render.show_path = True
-            handler._log_render.show_time = True
-
-    kwargs = {
-        "is_flag": True,
-        "multiple": True,
-        "callback": callback,
-        "expose_value": False,
-        "is_eager": True,
-        "help": "More verbose and detailed output with each `-v` up to `-vvvv`",
-    }
-    return click.option("-v", "--verbose", **kwargs)
+    return decorator
 
 
-def exclude_check_option(arg_name: str = "exclude_checks") -> Callable:
-    return click.option(
-        "-ec",
-        "--exclude-check",
-        arg_name,
-        multiple=True,
-        type=click.STRING,
-        nargs=1,
-        help="Exclude 'check' from Scenario if it contains provided keyword",
+def get_export_func(scenario, fmt: str):
+    """Get export function for scenario instance and format."""
+    return _EXPORT_REGISTRY.get((type(scenario), fmt))
+
+
+def register_show(scenario_cls: type, fmt: str):
+    """Decorator to register a show function for a scenario and format."""
+
+    def decorator(func: Callable):
+        _SHOW_REGISTRY[(scenario_cls, fmt)] = func
+        return func
+
+    return decorator
+
+
+def get_show_func(scenario, fmt: str):
+    """Get show function for scenario instance and format."""
+    return _SHOW_REGISTRY.get((type(scenario), fmt))
+
+
+def load_jinja_template(template_dir: Path, template_name: str):
+    """
+    Load a Jinja2 template from the current directory.
+    """
+    env = Environment(
+        loader=FileSystemLoader(str(template_dir)),
+        autoescape=select_autoescape(["html", "xml"]),
+        trim_blocks=True,
+        lstrip_blocks=True,
     )
+    return env.get_template(template_name)
 
 
-def output_format_option(arg_name: str = "display_formats") -> Callable:
-    formats = ["text", "table"]
-    return click.option(
-        "-d",
-        "--display",
-        arg_name,
-        multiple=True,
-        type=click.Choice(formats, case_sensitive=False),
-        default=("text",),
-        show_default=True,
-        nargs=1,
-        help="Format of the output.",
-    )
+def _verbose_callback(ctx: click.Context, param, value) -> None:
+    """Callback function for verbose option."""
+    if not value:
+        return
+    _logger = logging.getLogger(__name__).parent
+    count = len(value)
+    if count > 0:
+        _logger.setLevel(logging.DEBUG)
+    if count > 1:
+        handler = _logger.handlers[0]
+        handler._log_render.show_level = True
+    if count > 2:
+        handler = _logger.handlers[0]
+        handler._log_render.show_path = True
+        handler._log_render.show_time = True
 
 
-def html_report(arg_name: str = "html_report") -> Callable:
-    return click.option(
-        "-hr",
-        "--html-report",
-        arg_name,
-        is_flag=True,
-        help="Save results as HTML report",
-    )
+class VerboseGroup(click.RichGroup):
+    """Click Group that automatically adds verbose option to all commands."""
+
+    def __init__(self, name=None, commands=None, **attrs):
+        super().__init__(name, commands, **attrs)
+        self.params.append(self._verbose_option())
+
+    def add_command(self, cmd, name=None):
+        """Override to add verbose option to all commands."""
+        cmd.params.append(self._verbose_option())
+        super().add_command(cmd, name)
+
+    @staticmethod
+    def _verbose_option() -> click.Option:
+        return click.Option(
+            ["-v", "--verbose"],
+            is_flag=True,
+            multiple=True,
+            callback=_verbose_callback,
+            expose_value=False,
+            is_eager=True,
+            help="More verbose and detailed output with each `-v` up to `-vvvv`",
+        )
 
 
 def config_logger(
@@ -124,11 +136,25 @@ def config_logger(
     main_logger.setLevel(logging.INFO)
 
 
-class FilePath(ClickPath):
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            *args, exists=True, dir_okay=False, path_type=Path, **kwargs
-        )
+class Example(BaseModel):
+    """Represents an example that can be run."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    name: str
+    scenario: type
+    data_dir: str
+    device_group: str
+    show: tuple[str, ...] = ("text",)
+    export: tuple[str, ...] = ()
+    args: dict[str, Any] = {}
+
+    def get_data_dir(self) -> Path:
+        """Get the absolute path to the data directory."""
+        # Get the directory where cli.py is located (policy_inspector package)
+        cli_dir = Path(__file__).parent
+        # Construct the path to the example data directory
+        return cli_dir / "example" / self.data_dir
 
 
 class ExampleChoice(clickChoice):
@@ -175,3 +201,8 @@ class ExampleChoice(clickChoice):
             choices_str = ", ".join(map(repr, matching_choices))
             message = f"{value!r} too many matches: {choices_str}."
         raise click.UsageError(message=message, ctx=ctx)
+
+
+def get_example_file_path(name: str) -> Path:
+    """Get the path to an example file."""
+    return Path(__file__).parent / "example" / name

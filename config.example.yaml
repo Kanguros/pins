@@ -1,0 +1,39 @@
+# Example configuration file for Policy Inspector
+# This shows how to configure the application using YAML
+
+# Export formats - can be a list of formats
+export:
+    - json
+    - csv
+
+# Output/show formats - can be a list of formats
+show:
+    - table
+    - rich
+
+# Panorama configuration (optional)
+panorama:
+    hostname: "panorama.example.com"
+    username: "admin"
+    # password: "secret"  # Can be provided via CLI or environment
+    api_version: "v11.1"
+    verify_ssl: false
+
+# File-based data sources (for examples/testing)
+files:
+    - device_group: "Production"
+      security_rules: "data/prod_rules.json"
+      address_objects: "data/prod_addresses.json"
+      address_groups: "data/prod_groups.json"
+
+    - device_group: "Development"
+      security_rules: "data/dev_rules.json"
+      address_objects: "data/dev_addresses.json"
+      address_groups: "data/dev_groups.json"
+# Command-specific settings (for command groups)
+# Example: settings for different subcommands
+# run:
+#   shadowing:
+#     device_groups: ["Production", "Staging"]
+#   shadowingvalue:
+#     device_groups: ["Production"]

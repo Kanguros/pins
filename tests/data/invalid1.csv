@@ -1,4 +1,0 @@
-"",Attribute;Rule, "Preceding Rule 1"
-1,name, MyRule,;, "My OtherPrevous Rule"
-"",source, any
-destination,web-servers, web-web-servers

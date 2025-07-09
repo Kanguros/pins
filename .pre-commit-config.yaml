@@ -3,7 +3,6 @@ repos:
       rev: v5.0.0
       hooks:
           - id: check-added-large-files
-          - id: check-toml
           - id: detect-private-key
           - id: end-of-file-fixer
 
@@ -29,8 +28,8 @@ repos:
     - repo: https://github.com/astral-sh/ruff-pre-commit
       rev: v0.9.7
       hooks:
+          - id: ruff-format
+            types_or: [python, pyi]
           - id: ruff
             args: [--fix]
-            types_or: [python, pyi]
-          - id: ruff-format
             types_or: [python, pyi]

@@ -50,6 +50,9 @@ class Resolver:
 
     def _resolve_name(self, name: str) -> list["AddressObject"]:
         """Resolve single ``name``"""
+        if name == "any":
+            return []
+
         if name in self.cache:
             return self.cache[name]
 

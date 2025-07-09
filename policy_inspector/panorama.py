@@ -4,6 +4,10 @@ from typing import Literal, Optional
 import urllib3
 from requests import RequestException, Session
 
+from policy_inspector.model.address_group import AddressGroup
+from policy_inspector.model.address_object import AddressObject
+from policy_inspector.model.security_rule import SecurityRule
+
 logger = logging.getLogger(__name__)
 
 
@@ -52,6 +56,7 @@ class PanoramaConnector:
 
     def _authenticate(self, username: str, password: str) -> None:
         """Authenticate to Panorama REST API and get token."""
+        logger.info(f"↺ Connecting to Panorama at {self.hostname}")
         try:
             response = self.session.post(
                 f"https://{self.hostname}:{self.port}/api/?type=keygen",
@@ -66,7 +71,7 @@ class PanoramaConnector:
             token = data.split("<key>")[1].split("</key>")[0]
             self.token = token
             self.headers["X-PAN-KEY"] = token
-
+            logger.info("✓ Successfully authenticated to Panorama")
         except RequestException as ex:
             error_msg = f"Failed to connect to Panorama. \n{str(ex)}"
             if hasattr(ex, "response") and ex.response:
@@ -110,14 +115,14 @@ class PanoramaConnector:
 
     def get_address_objects(
         self, device_group: Optional[str] = None
-    ) -> list[dict]:
+    ) -> list[AddressObject]:
         """Retrieve address objects from Panorama using REST API.
 
         Args:
             device_group: Name of the Device Group or shared if ``None``.
 
         Returns:
-            List of Address Objects as dict.
+            List of ``AddressObject`` instances.
         """
         logger.info("↺ Retrieving Address Objects")
         if device_group:
@@ -130,11 +135,11 @@ class PanoramaConnector:
             logger.warning("No Address Objects found")
             return []
         logger.info(f"✓ Retrieved {len(entries)} Address Objects")
-        return entries
+        return AddressObject.parse_json(entries)
 
     def get_address_groups(
         self, device_group: Optional[str] = None
-    ) -> list[dict]:
+    ) -> list[AddressGroup]:
         """Retrieve address groups from Panorama using REST API.
 
         Args:
@@ -154,13 +159,13 @@ class PanoramaConnector:
             logger.warning("No Address Groups found")
             return []
         logger.info(f"✓ Retrieved {len(entries)} Address Groups")
-        return entries
+        return AddressGroup.parse_json(entries)
 
     def get_security_rules(
         self,
         device_group: Optional[str] = None,
         rulebase: Literal["pre", "post"] = "post",
-    ) -> list[dict]:
+    ) -> list[SecurityRule]:
         """Retrieve security rules from Panorama using REST API.
 
         Args:
@@ -168,7 +173,7 @@ class PanoramaConnector:
             rulebase: Type of rulebase.
 
         Returns:
-            List of `SecurityRule` instances.
+            List of ``SecurityRule`` instances.
         """
         if rulebase == "pre":
             resource = "Policies/SecurityPreRules"
@@ -188,4 +193,13 @@ class PanoramaConnector:
             logger.warning("No Security Rules found")
             return []
         logger.info(f"✓ Retrieved {len(entries)} Security Rules")
-        return entries
+        return SecurityRule.parse_json(entries)
+
+    def get_device_groups(self) -> list[str]:
+        """Retrieve device groups from Panorama using REST API.
+
+        Returns:
+            List of device group names.
+        """
+        # TODO: Implement device groups retrieval
+        pass

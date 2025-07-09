@@ -1,6 +1,6 @@
 import pytest
 
-from policy_inspector.shadowing import Scenario
+from policy_inspector.scenario import Scenario
 
 
 class TestScenarioWithImplementation:
