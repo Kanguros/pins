@@ -64,33 +64,46 @@ def load_jinja_template(template_dir: Path, template_name: str):
     return env.get_template(template_name)
 
 
-def verbose_option() -> Callable:
-    """Wrapper around Click ``option``. Sets logger and its handlers to the ``DEBUG`` level."""
+def _verbose_callback(ctx: click.Context, param, value) -> None:
+    """Callback function for verbose option."""
+    if not value:
+        return
+    _logger = logging.getLogger(__name__).parent
+    count = len(value)
+    if count > 0:
+        _logger.setLevel(logging.DEBUG)
+    if count > 1:
+        handler = _logger.handlers[0]
+        handler._log_render.show_level = True
+    if count > 2:
+        handler = _logger.handlers[0]
+        handler._log_render.show_path = True
+        handler._log_render.show_time = True
 
-    def callback(ctx: click.Context, param, value) -> None:
-        if not value:
-            return
-        _logger = logging.getLogger(__name__).parent
-        count = len(value)
-        if count > 0:
-            _logger.setLevel(logging.DEBUG)
-        if count > 1:
-            handler = _logger.handlers[0]
-            handler._log_render.show_level = True
-        if count > 2:
-            handler = _logger.handlers[0]
-            handler._log_render.show_path = True
-            handler._log_render.show_time = True
 
-    kwargs = {
-        "is_flag": True,
-        "multiple": True,
-        "callback": callback,
-        "expose_value": False,
-        "is_eager": True,
-        "help": "More verbose and detailed output with each `-v` up to `-vvvv`",
-    }
-    return click.option("-v", "--verbose", **kwargs)
+class VerboseGroup(click.RichGroup):
+    """Click Group that automatically adds verbose option to all commands."""
+
+    def __init__(self, name=None, commands=None, **attrs):
+        super().__init__(name, commands, **attrs)
+        self.params.append(self._verbose_option())
+
+    def add_command(self, cmd, name=None):
+        """Override to add verbose option to all commands."""
+        cmd.params.append(self._verbose_option())
+        super().add_command(cmd, name)
+
+    @staticmethod
+    def _verbose_option() -> click.Option:
+        return click.Option(
+            ["-v", "--verbose"],
+            is_flag=True,
+            multiple=True,
+            callback=_verbose_callback,
+            expose_value=False,
+            is_eager=True,
+            help="More verbose and detailed output with each `-v` up to `-vvvv`",
+        )
 
 
 def config_logger(

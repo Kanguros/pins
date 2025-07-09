@@ -26,7 +26,7 @@ def test_run_command(runner, arg):
         args.append(arg)
     result = runner.invoke(cli.main, args)
     assert result.exit_code == 0
-    phrases = ["Scenarios", "Execute a Scenario.", "example"]
+    phrases = ["To see how it works", "Execute a Scenario.", "example"]
     for phrase in phrases:
         assert phrase in result.output
 

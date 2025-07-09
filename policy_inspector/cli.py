@@ -3,7 +3,6 @@ from pathlib import Path
 from textwrap import dedent
 
 import rich_click as click
-from rich_click import rich_config
 
 from policy_inspector.config import AppConfig, ExampleConfig
 from policy_inspector.mock_panorama import MockPanoramaConnector
@@ -14,8 +13,8 @@ from policy_inspector.scenarios.shadowing.simple import Shadowing
 from policy_inspector.utils import (
     Example,
     ExampleChoice,
+    VerboseGroup,
     config_logger,
-    verbose_option,
 )
 
 config_logger()
@@ -28,8 +27,7 @@ click.rich_click.SHOW_METAVARS_COLUMN = True
 logger = logging.getLogger(__name__)
 
 
-@click.group(no_args_is_help=True, add_help_option=True)
-@verbose_option()
+@click.group(no_args_is_help=True, add_help_option=True, cls=VerboseGroup)
 def main():
     """*PINS*
     as Policy Inspector
@@ -37,7 +35,6 @@ def main():
 
 
 @main.command("list")
-@verbose_option()
 def main_list() -> None:
     """List available Scenarios."""
     logger.info("")
@@ -60,14 +57,7 @@ def main_list() -> None:
         logger.info("")
 
 
-@main.group("run", no_args_is_help=True)
-@verbose_option()
-@rich_config(
-    help_config={
-        "style_argument": "bold yellow",
-        "commands_panel_title": "Scenarios",
-    }
-)
+@main.group("run", no_args_is_help=True, cls=VerboseGroup)
 def main_run():
     """Execute a Scenario.
 
@@ -146,7 +136,6 @@ def run_scenario_with_mock_data(
 
 
 @main_run.command("shadowing", no_args_is_help=True)
-@verbose_option()
 @AppConfig.option()
 @click.option(
     "--device-groups",
@@ -159,7 +148,6 @@ def run_shadowing(config: AppConfig, device_groups: tuple[str]) -> None:
 
 
 @main_run.command("shadowingvalue", no_args_is_help=True)
-@verbose_option()
 @AppConfig.option()
 @click.option(
     "--device-groups",
