@@ -13,7 +13,9 @@ def test_export_show_options_decorator():
     @export_options
     @show_options
     @click.command()
-    def test_command(export: tuple[str, ...], show: tuple[str, ...], export_dir: str):
+    def test_command(
+        export: tuple[str, ...], show: tuple[str, ...], export_dir: str
+    ):
         """Test command with export, show, and export_dir options."""
         click.echo(f"export={export}")
         click.echo(f"show={show}")
@@ -60,7 +62,9 @@ def test_export_show_options_help():
     @export_options
     @show_options
     @click.command()
-    def test_command(export: tuple[str, ...], show: tuple[str, ...], export_dir: str):
+    def test_command(
+        export: tuple[str, ...], show: tuple[str, ...], export_dir: str
+    ):
         """Test command with export, show, and export_dir options."""
         pass
 
