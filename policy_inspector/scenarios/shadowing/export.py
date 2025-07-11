@@ -24,6 +24,7 @@ def export_as_html(scenario, *args, output_path: str = None, **kwargs) -> str:
 
     html = template.render(
         scenario=scenario,
+        scenario_doc=getattr(scenario, "__doc__", None),
         address_groups_count=len(getattr(scenario, "address_groups", [])),
         address_objects_count=len(getattr(scenario, "address_objects", [])),
         total_policies=total_policies,

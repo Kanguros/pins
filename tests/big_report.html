@@ -1,0 +1,1945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firewall Policy Analysis Report</title>
+    <style>
+        :root {
+            --primary-color: #FF6B35;
+            --secondary-color: #FF9F1C;
+            --accent-color: #EE4B2B;
+            --bg-cream: #FFF9F0;
+            --text-color: #333;
+            --border-color: #e9ecef;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        /* ---------- CONTAINER ---------- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            background: #fff;
+            box-shadow: 0 0 20px rgba(0,0,0,.08);
+        }
+
+        /* ---------- HEADER ---------- */
+        .report-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: #fff;
+            padding: 2rem 1rem;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .report-header h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            opacity: .9;
+            margin-top: .5rem;
+        }
+
+        /* ---------- MOBILE MENU BUTTON ---------- */
+        .toc-toggle {
+            display: none;
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            padding: .6rem .9rem;
+            border-radius: 4px;
+            font-size: 1rem;
+            margin-top: 1rem;
+            cursor: pointer;
+        }
+
+        /* ---------- LAYOUT ---------- */
+        .main {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+        }
+
+        /* ---------- TOC SIDEBAR ---------- */
+        .sidebar {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1rem 2rem;
+            background: #fff;
+            position: sticky;
+            top: 1rem;
+            max-height: calc(100vh - 2rem);
+            overflow-y: auto;
+            transition: transform .3s ease;
+        }
+        
+        .sidebar h2 {
+            margin: 0 0 .75rem;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+        
+        nav a {
+            display: block;
+            padding: .4rem .6rem;
+            text-decoration: none;
+            color: var(--text-color);
+            border-radius: 4px;
+            transition: background .25s;
+        }
+        
+        nav a:hover,
+        nav a.active {
+            background: var(--bg-cream);
+            color: var(--accent-color);
+        }
+
+        /* Orange background for device groups + findings */
+        details[open] > summary,
+        .device-link,
+        .finding-link {
+            background: var(--bg-cream);
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        /* Details / summary styling */
+        summary {
+            cursor: pointer;
+            list-style: none;
+            padding: .4rem .6rem;
+            border-radius: 4px;
+            transition: background .25s;
+        }
+        
+        summary::-webkit-details-marker {
+            display: none;
+        }
+        
+        summary:hover {
+            background: var(--bg-cream);
+        }
+
+        /* Nested lists */
+        .nested {
+            padding-left: 1rem;
+            margin: 0;
+            list-style: none;
+        }
+        
+        .nested li {
+            margin: .25rem 0;
+        }
+
+        /* ---------- CONTENT SECTION ---------- */
+        .section {
+            border: 1px solid var(--border-color);
+            background: #fff;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .section h2 {
+            margin-top: 0;
+            font-size: 1.6rem;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: .4rem;
+        }
+        
+        .section h3 {
+            color: var(--accent-color);
+            margin-top: 1.5rem;
+        }
+        
+        .section h4 {
+            color: var(--primary-color);
+            margin-top: 1.5rem;
+        }
+
+        /* ---------- TABLE WRAPPER ---------- */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 1rem 0;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .9rem;
+        }
+        
+        th {
+            background: var(--primary-color);
+            color: #fff;
+            padding: .75rem;
+            text-align: left;
+        }
+        
+        td {
+            padding: .6rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+        
+        .attribute-cell {
+            background: rgba(255,107,53,.08);
+            font-weight: 600;
+            min-width: 140px;
+            color: var(--primary-color);
+        }
+        
+        tr:hover {
+            background: rgba(255,107,53,.05);
+        }
+
+        /* ---------- ALERT BOXES ---------- */
+        .alert {
+            padding: 1rem 1.25rem;
+            border-left: 4px solid var(--secondary-color);
+            background: var(--bg-cream);
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+
+        /* ---------- MOBILE RESPONSIVE ---------- */
+        @media (max-width: 767px) {
+            .main {
+                grid-template-columns: 1fr;
+            }
+            
+            .toc-toggle {
+                display: inline-block;
+            }
+            
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                max-height: none;
+                width: 280px;
+                transform: translateX(-100%);
+                z-index: 999;
+                box-shadow: 0 0 15px rgba(0,0,0,.25);
+                overflow-y: auto;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .container {
+                padding: 0.5rem;
+            }
+            
+            .report-header {
+                padding: 1.5rem 1rem;
+            }
+            
+            .report-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .section {
+                padding: 1rem;
+            }
+            
+            .table-wrapper {
+                font-size: 0.8rem;
+            }
+            
+            th, td {
+                padding: 0.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 100vw;
+            }
+            
+            .table-wrapper {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ---------- HEADER ---------- -->
+        <header class="report-header">
+            <h1>Firewall Policy Analysis Report</h1>
+            <p class="subtitle">Generated: July 11, 2025 22:36:06</p>
+            <button class="toc-toggle" id="tocBtn" aria-controls="toc">☰ Menu</button>
+        </header>
+
+        <!-- ---------- MAIN GRID ---------- -->
+        <div class="main">
+            <!-- ---------- SIDEBAR NAV ---------- -->
+            <aside class="sidebar" id="toc" role="navigation" aria-label="Table of Contents">
+                <h2>Table of Contents</h2>
+                <nav>
+                    <a href="#executive-summary">Executive Summary</a>
+                    <a href="#introduction">1. Introduction</a>
+                    <a href="#scenario-overview">2. Scenario Overview</a>
+                    <details>
+                        <summary class="device-link">3. Analysis Results</summary>
+                        <ul class="nested">
+                            <li>
+                                <details>
+                                    <summary class="device-link">3.1 Branch_1_FW</summary>
+                                    <ul class="nested">
+                                        <li>
+                                            <a class="finding-link" href="#device-group-branch_1_fw-finding-1">
+                                                3.1.1 Deny_Guest_to_Internal_Branch_1_FW_2
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="finding-link" href="#device-group-branch_1_fw-finding-1">
+                                                3.1.1 Allow_VPN_to_Internal_Branch_1_FW_3
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="finding-link" href="#device-group-branch_1_fw-finding-1">
+                                                3.1.1 Allow_Admin_to_Firewall_Branch_1_FW_4
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="finding-link" href="#device-group-branch_1_fw-finding-1">
+                                                3.1.1 Allow_Monitoring_to_Servers_Branch_1_FW_5
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="finding-link" href="#device-group-branch_1_fw-finding-1">
+                                                3.1.1 Deny_All_Branch_1_FW_6
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </details>
+                            </li>
+                            <li>
+                                <details>
+                                    <summary class="device-link">3.1 Branch_2_FW</summary>
+                                    <ul class="nested">
+                                        <li>
+                                            <a class="finding-link" href="#device-group-branch_2_fw-finding-1">
+                                                3.1.1 Deny_Guest_to_Internal_Branch_2_FW_2
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="finding-link" href="#device-group-branch_2_fw-finding-1">
+                                                3.1.1 Allow_VPN_to_Internal_Branch_2_FW_3
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="finding-link" href="#device-group-branch_2_fw-finding-1">
+                                                3.1.1 Allow_Admin_to_Firewall_Branch_2_FW_4
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="finding-link" href="#device-group-branch_2_fw-finding-1">
+                                                3.1.1 Allow_Monitoring_to_Servers_Branch_2_FW_5
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="finding-link" href="#device-group-branch_2_fw-finding-1">
+                                                3.1.1 Deny_All_Branch_2_FW_6
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </details>
+                            </li>
+                            <li>
+                                <details>
+                                    <summary class="device-link">3.1 HQ_FW</summary>
+                                    <ul class="nested">
+                                        <li>
+                                            <a class="finding-link" href="#device-group-hq_fw-finding-1">
+                                                3.1.1 Deny_Guest_to_Internal_HQ_FW_2
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="finding-link" href="#device-group-hq_fw-finding-1">
+                                                3.1.1 Allow_VPN_to_Internal_HQ_FW_3
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="finding-link" href="#device-group-hq_fw-finding-1">
+                                                3.1.1 Allow_Admin_to_Firewall_HQ_FW_4
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="finding-link" href="#device-group-hq_fw-finding-1">
+                                                3.1.1 Allow_Monitoring_to_Servers_HQ_FW_5
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="finding-link" href="#device-group-hq_fw-finding-1">
+                                                3.1.1 Deny_All_HQ_FW_6
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </details>
+                            </li>
+                        </ul>
+                    </details>
+                    <a href="#methodology">4. Methodology</a>
+                    <a href="#recommendations">5. Recommendations</a>
+                    <a href="#appendix">6. Appendix</a>
+                </nav>
+            </aside>
+
+            <!-- ---------- CONTENT ---------- -->
+            <main>
+                <!-- EXECUTIVE SUMMARY -->
+                <section class="section" id="executive-summary">
+                    <h2>Executive Summary</h2>
+                    <p>This report analyzes firewall policy configurations for potential rule shadowing issues across 3 device group(s). The analysis identified 15 shadowing findings that require attention to ensure optimal security policy performance.</p>
+                </section>
+
+                <!-- INTRODUCTION -->
+                <section class="section" id="introduction">
+                    <h2>1. Introduction</h2>
+                    <p>This comprehensive policy analysis report examines firewall rule configurations for scenario "<strong>Shadowing</strong>" to identify potential shadowing issues that may impact security policy effectiveness.</p>
+                    
+                    <div class="alert">
+                        <strong>Scenario Description:</strong> Scenario for detecting shadowing rules in Palo Alto Panorama.
+                    </div>
+                </section>
+
+                <!-- SCENARIO OVERVIEW -->
+                <section class="section" id="scenario-overview">
+                    <h2>2. Scenario Overview</h2>
+                    <p>Scenario for detecting shadowing rules in Palo Alto Panorama.</p>
+                    
+                    <div class="alert">
+                        <strong>Analysis Scope:</strong> 3 device group(s) containing 18 security rules in total.
+                    </div>
+                </section>
+
+                <!-- ANALYSIS RESULTS -->
+                <section class="section" id="analysis-results">
+                    <h2>3. Analysis Results</h2>
+
+                    <div class="section" id="device-group-branch_1_fw">
+                        <h3>3.1 Device Group: Branch_1_FW</h3>
+
+                        <div class="alert">
+                            <strong>5 shadowing issue(s) detected.</strong>
+                        </div>
+
+                        <h4 class="finding-header" id="device-group-branch_1_fw-finding-1">
+                            3.1.1 Finding 1 – Deny_Guest_to_Internal_Branch_1_FW_2
+                        </h4>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Attribute</th>
+                                        <th>Shadowed Rule</th>
+                                        <th>Preceding 1</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="attribute-cell">Index</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Name</td>
+                                        <td>Deny_Guest_to_Internal_Branch_1_FW_2</td>
+                                        <td>Allow_Trust_to_DMZ_Branch_1_FW_1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Enabled</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Action</td>
+                                        <td>deny</td>
+                                        <td>allow</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Zones</td>
+                                        <td>{&#39;Guest&#39;}</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Zones</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                        <td>{&#39;DMZ&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Addresses</td>
+                                        <td>{&#39;Guest-WiFi&#39;}</td>
+                                        <td>{&#39;CorpNet&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Addresses</td>
+                                        <td>{&#39;App-Servers&#39;}</td>
+                                        <td>{&#39;Web-Servers&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Applications</td>
+                                        <td>{&#39;sql&#39;}</td>
+                                        <td>{&#39;web-browsing&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Services</td>
+                                        <td>{&#39;tcp-1433&#39;}</td>
+                                        <td>{&#39;tcp-80&#39;, &#39;tcp-443&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Category</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <h4 class="finding-header" id="device-group-branch_1_fw-finding-1">
+                            3.1.1 Finding 1 – Allow_VPN_to_Internal_Branch_1_FW_3
+                        </h4>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Attribute</th>
+                                        <th>Shadowed Rule</th>
+                                        <th>Preceding 1</th>
+                                        <th>Preceding 2</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="attribute-cell">Index</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Name</td>
+                                        <td>Allow_VPN_to_Internal_Branch_1_FW_3</td>
+                                        <td>Allow_Trust_to_DMZ_Branch_1_FW_1</td>
+                                        <td>Deny_Guest_to_Internal_Branch_1_FW_2</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Enabled</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Action</td>
+                                        <td>allow</td>
+                                        <td>allow</td>
+                                        <td>deny</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Zones</td>
+                                        <td>{&#39;VPN&#39;}</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                        <td>{&#39;Guest&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Zones</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                        <td>{&#39;DMZ&#39;}</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Addresses</td>
+                                        <td>{&#39;VPN-Users&#39;}</td>
+                                        <td>{&#39;CorpNet&#39;}</td>
+                                        <td>{&#39;Guest-WiFi&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Addresses</td>
+                                        <td>{&#39;DB-Servers&#39;}</td>
+                                        <td>{&#39;Web-Servers&#39;}</td>
+                                        <td>{&#39;App-Servers&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Applications</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                        <td>{&#39;web-browsing&#39;}</td>
+                                        <td>{&#39;sql&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Services</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                        <td>{&#39;tcp-80&#39;, &#39;tcp-443&#39;}</td>
+                                        <td>{&#39;tcp-1433&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Category</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <h4 class="finding-header" id="device-group-branch_1_fw-finding-1">
+                            3.1.1 Finding 1 – Allow_Admin_to_Firewall_Branch_1_FW_4
+                        </h4>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Attribute</th>
+                                        <th>Shadowed Rule</th>
+                                        <th>Preceding 1</th>
+                                        <th>Preceding 2</th>
+                                        <th>Preceding 3</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="attribute-cell">Index</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Name</td>
+                                        <td>Allow_Admin_to_Firewall_Branch_1_FW_4</td>
+                                        <td>Allow_Trust_to_DMZ_Branch_1_FW_1</td>
+                                        <td>Deny_Guest_to_Internal_Branch_1_FW_2</td>
+                                        <td>Allow_VPN_to_Internal_Branch_1_FW_3</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Enabled</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Action</td>
+                                        <td>allow</td>
+                                        <td>allow</td>
+                                        <td>deny</td>
+                                        <td>allow</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Zones</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                        <td>{&#39;Guest&#39;}</td>
+                                        <td>{&#39;VPN&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Zones</td>
+                                        <td>{&#39;Untrust&#39;}</td>
+                                        <td>{&#39;DMZ&#39;}</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Addresses</td>
+                                        <td>{&#39;AdminPC&#39;}</td>
+                                        <td>{&#39;CorpNet&#39;}</td>
+                                        <td>{&#39;Guest-WiFi&#39;}</td>
+                                        <td>{&#39;VPN-Users&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Addresses</td>
+                                        <td>{&#39;Firewall&#39;}</td>
+                                        <td>{&#39;Web-Servers&#39;}</td>
+                                        <td>{&#39;App-Servers&#39;}</td>
+                                        <td>{&#39;DB-Servers&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Applications</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                        <td>{&#39;web-browsing&#39;}</td>
+                                        <td>{&#39;sql&#39;}</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Services</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                        <td>{&#39;tcp-80&#39;, &#39;tcp-443&#39;}</td>
+                                        <td>{&#39;tcp-1433&#39;}</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Category</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <h4 class="finding-header" id="device-group-branch_1_fw-finding-1">
+                            3.1.1 Finding 1 – Allow_Monitoring_to_Servers_Branch_1_FW_5
+                        </h4>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Attribute</th>
+                                        <th>Shadowed Rule</th>
+                                        <th>Preceding 1</th>
+                                        <th>Preceding 2</th>
+                                        <th>Preceding 3</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="attribute-cell">Index</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Name</td>
+                                        <td>Allow_Monitoring_to_Servers_Branch_1_FW_5</td>
+                                        <td>Deny_Guest_to_Internal_Branch_1_FW_2</td>
+                                        <td>Allow_VPN_to_Internal_Branch_1_FW_3</td>
+                                        <td>Allow_Admin_to_Firewall_Branch_1_FW_4</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Enabled</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Action</td>
+                                        <td>allow</td>
+                                        <td>deny</td>
+                                        <td>allow</td>
+                                        <td>allow</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Zones</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                        <td>{&#39;Guest&#39;}</td>
+                                        <td>{&#39;VPN&#39;}</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Zones</td>
+                                        <td>{&#39;Internal&#39;, &#39;DMZ&#39;}</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                        <td>{&#39;Untrust&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Addresses</td>
+                                        <td>{&#39;Monitoring&#39;}</td>
+                                        <td>{&#39;Guest-WiFi&#39;}</td>
+                                        <td>{&#39;VPN-Users&#39;}</td>
+                                        <td>{&#39;AdminPC&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Addresses</td>
+                                        <td>{&#39;DB-Servers&#39;, &#39;Web-Servers&#39;}</td>
+                                        <td>{&#39;App-Servers&#39;}</td>
+                                        <td>{&#39;DB-Servers&#39;}</td>
+                                        <td>{&#39;Firewall&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Applications</td>
+                                        <td>{&#39;dns&#39;}</td>
+                                        <td>{&#39;sql&#39;}</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Services</td>
+                                        <td>{&#39;udp-53&#39;}</td>
+                                        <td>{&#39;tcp-1433&#39;}</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Category</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <h4 class="finding-header" id="device-group-branch_1_fw-finding-1">
+                            3.1.1 Finding 1 – Deny_All_Branch_1_FW_6
+                        </h4>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Attribute</th>
+                                        <th>Shadowed Rule</th>
+                                        <th>Preceding 1</th>
+                                        <th>Preceding 2</th>
+                                        <th>Preceding 3</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="attribute-cell">Index</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Name</td>
+                                        <td>Deny_All_Branch_1_FW_6</td>
+                                        <td>Allow_VPN_to_Internal_Branch_1_FW_3</td>
+                                        <td>Allow_Admin_to_Firewall_Branch_1_FW_4</td>
+                                        <td>Allow_Monitoring_to_Servers_Branch_1_FW_5</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Enabled</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Action</td>
+                                        <td>deny</td>
+                                        <td>allow</td>
+                                        <td>allow</td>
+                                        <td>allow</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Zones</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;VPN&#39;}</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Zones</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                        <td>{&#39;Untrust&#39;}</td>
+                                        <td>{&#39;Internal&#39;, &#39;DMZ&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Addresses</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;VPN-Users&#39;}</td>
+                                        <td>{&#39;AdminPC&#39;}</td>
+                                        <td>{&#39;Monitoring&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Addresses</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;DB-Servers&#39;}</td>
+                                        <td>{&#39;Firewall&#39;}</td>
+                                        <td>{&#39;DB-Servers&#39;, &#39;Web-Servers&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Applications</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                        <td>{&#39;dns&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Services</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                        <td>{&#39;udp-53&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Category</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="section" id="device-group-branch_2_fw">
+                        <h3>3.1 Device Group: Branch_2_FW</h3>
+
+                        <div class="alert">
+                            <strong>5 shadowing issue(s) detected.</strong>
+                        </div>
+
+                        <h4 class="finding-header" id="device-group-branch_2_fw-finding-1">
+                            3.1.1 Finding 1 – Deny_Guest_to_Internal_Branch_2_FW_2
+                        </h4>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Attribute</th>
+                                        <th>Shadowed Rule</th>
+                                        <th>Preceding 1</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="attribute-cell">Index</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Name</td>
+                                        <td>Deny_Guest_to_Internal_Branch_2_FW_2</td>
+                                        <td>Allow_Trust_to_DMZ_Branch_2_FW_1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Enabled</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Action</td>
+                                        <td>deny</td>
+                                        <td>allow</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Zones</td>
+                                        <td>{&#39;Guest&#39;}</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Zones</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                        <td>{&#39;DMZ&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Addresses</td>
+                                        <td>{&#39;Guest-WiFi&#39;}</td>
+                                        <td>{&#39;CorpNet&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Addresses</td>
+                                        <td>{&#39;App-Servers&#39;}</td>
+                                        <td>{&#39;Web-Servers&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Applications</td>
+                                        <td>{&#39;sql&#39;}</td>
+                                        <td>{&#39;web-browsing&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Services</td>
+                                        <td>{&#39;tcp-1433&#39;}</td>
+                                        <td>{&#39;tcp-80&#39;, &#39;tcp-443&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Category</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <h4 class="finding-header" id="device-group-branch_2_fw-finding-1">
+                            3.1.1 Finding 1 – Allow_VPN_to_Internal_Branch_2_FW_3
+                        </h4>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Attribute</th>
+                                        <th>Shadowed Rule</th>
+                                        <th>Preceding 1</th>
+                                        <th>Preceding 2</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="attribute-cell">Index</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Name</td>
+                                        <td>Allow_VPN_to_Internal_Branch_2_FW_3</td>
+                                        <td>Allow_Trust_to_DMZ_Branch_2_FW_1</td>
+                                        <td>Deny_Guest_to_Internal_Branch_2_FW_2</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Enabled</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Action</td>
+                                        <td>allow</td>
+                                        <td>allow</td>
+                                        <td>deny</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Zones</td>
+                                        <td>{&#39;VPN&#39;}</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                        <td>{&#39;Guest&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Zones</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                        <td>{&#39;DMZ&#39;}</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Addresses</td>
+                                        <td>{&#39;VPN-Users&#39;}</td>
+                                        <td>{&#39;CorpNet&#39;}</td>
+                                        <td>{&#39;Guest-WiFi&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Addresses</td>
+                                        <td>{&#39;DB-Servers&#39;}</td>
+                                        <td>{&#39;Web-Servers&#39;}</td>
+                                        <td>{&#39;App-Servers&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Applications</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                        <td>{&#39;web-browsing&#39;}</td>
+                                        <td>{&#39;sql&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Services</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                        <td>{&#39;tcp-80&#39;, &#39;tcp-443&#39;}</td>
+                                        <td>{&#39;tcp-1433&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Category</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <h4 class="finding-header" id="device-group-branch_2_fw-finding-1">
+                            3.1.1 Finding 1 – Allow_Admin_to_Firewall_Branch_2_FW_4
+                        </h4>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Attribute</th>
+                                        <th>Shadowed Rule</th>
+                                        <th>Preceding 1</th>
+                                        <th>Preceding 2</th>
+                                        <th>Preceding 3</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="attribute-cell">Index</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Name</td>
+                                        <td>Allow_Admin_to_Firewall_Branch_2_FW_4</td>
+                                        <td>Allow_Trust_to_DMZ_Branch_2_FW_1</td>
+                                        <td>Deny_Guest_to_Internal_Branch_2_FW_2</td>
+                                        <td>Allow_VPN_to_Internal_Branch_2_FW_3</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Enabled</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Action</td>
+                                        <td>allow</td>
+                                        <td>allow</td>
+                                        <td>deny</td>
+                                        <td>allow</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Zones</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                        <td>{&#39;Guest&#39;}</td>
+                                        <td>{&#39;VPN&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Zones</td>
+                                        <td>{&#39;Untrust&#39;}</td>
+                                        <td>{&#39;DMZ&#39;}</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Addresses</td>
+                                        <td>{&#39;AdminPC&#39;}</td>
+                                        <td>{&#39;CorpNet&#39;}</td>
+                                        <td>{&#39;Guest-WiFi&#39;}</td>
+                                        <td>{&#39;VPN-Users&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Addresses</td>
+                                        <td>{&#39;Firewall&#39;}</td>
+                                        <td>{&#39;Web-Servers&#39;}</td>
+                                        <td>{&#39;App-Servers&#39;}</td>
+                                        <td>{&#39;DB-Servers&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Applications</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                        <td>{&#39;web-browsing&#39;}</td>
+                                        <td>{&#39;sql&#39;}</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Services</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                        <td>{&#39;tcp-80&#39;, &#39;tcp-443&#39;}</td>
+                                        <td>{&#39;tcp-1433&#39;}</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Category</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <h4 class="finding-header" id="device-group-branch_2_fw-finding-1">
+                            3.1.1 Finding 1 – Allow_Monitoring_to_Servers_Branch_2_FW_5
+                        </h4>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Attribute</th>
+                                        <th>Shadowed Rule</th>
+                                        <th>Preceding 1</th>
+                                        <th>Preceding 2</th>
+                                        <th>Preceding 3</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="attribute-cell">Index</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Name</td>
+                                        <td>Allow_Monitoring_to_Servers_Branch_2_FW_5</td>
+                                        <td>Deny_Guest_to_Internal_Branch_2_FW_2</td>
+                                        <td>Allow_VPN_to_Internal_Branch_2_FW_3</td>
+                                        <td>Allow_Admin_to_Firewall_Branch_2_FW_4</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Enabled</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Action</td>
+                                        <td>allow</td>
+                                        <td>deny</td>
+                                        <td>allow</td>
+                                        <td>allow</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Zones</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                        <td>{&#39;Guest&#39;}</td>
+                                        <td>{&#39;VPN&#39;}</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Zones</td>
+                                        <td>{&#39;Internal&#39;, &#39;DMZ&#39;}</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                        <td>{&#39;Untrust&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Addresses</td>
+                                        <td>{&#39;Monitoring&#39;}</td>
+                                        <td>{&#39;Guest-WiFi&#39;}</td>
+                                        <td>{&#39;VPN-Users&#39;}</td>
+                                        <td>{&#39;AdminPC&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Addresses</td>
+                                        <td>{&#39;DB-Servers&#39;, &#39;Web-Servers&#39;}</td>
+                                        <td>{&#39;App-Servers&#39;}</td>
+                                        <td>{&#39;DB-Servers&#39;}</td>
+                                        <td>{&#39;Firewall&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Applications</td>
+                                        <td>{&#39;dns&#39;}</td>
+                                        <td>{&#39;sql&#39;}</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Services</td>
+                                        <td>{&#39;udp-53&#39;}</td>
+                                        <td>{&#39;tcp-1433&#39;}</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Category</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <h4 class="finding-header" id="device-group-branch_2_fw-finding-1">
+                            3.1.1 Finding 1 – Deny_All_Branch_2_FW_6
+                        </h4>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Attribute</th>
+                                        <th>Shadowed Rule</th>
+                                        <th>Preceding 1</th>
+                                        <th>Preceding 2</th>
+                                        <th>Preceding 3</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="attribute-cell">Index</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Name</td>
+                                        <td>Deny_All_Branch_2_FW_6</td>
+                                        <td>Allow_VPN_to_Internal_Branch_2_FW_3</td>
+                                        <td>Allow_Admin_to_Firewall_Branch_2_FW_4</td>
+                                        <td>Allow_Monitoring_to_Servers_Branch_2_FW_5</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Enabled</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Action</td>
+                                        <td>deny</td>
+                                        <td>allow</td>
+                                        <td>allow</td>
+                                        <td>allow</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Zones</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;VPN&#39;}</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Zones</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                        <td>{&#39;Untrust&#39;}</td>
+                                        <td>{&#39;Internal&#39;, &#39;DMZ&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Addresses</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;VPN-Users&#39;}</td>
+                                        <td>{&#39;AdminPC&#39;}</td>
+                                        <td>{&#39;Monitoring&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Addresses</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;DB-Servers&#39;}</td>
+                                        <td>{&#39;Firewall&#39;}</td>
+                                        <td>{&#39;DB-Servers&#39;, &#39;Web-Servers&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Applications</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                        <td>{&#39;dns&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Services</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                        <td>{&#39;udp-53&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Category</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="section" id="device-group-hq_fw">
+                        <h3>3.1 Device Group: HQ_FW</h3>
+
+                        <div class="alert">
+                            <strong>5 shadowing issue(s) detected.</strong>
+                        </div>
+
+                        <h4 class="finding-header" id="device-group-hq_fw-finding-1">
+                            3.1.1 Finding 1 – Deny_Guest_to_Internal_HQ_FW_2
+                        </h4>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Attribute</th>
+                                        <th>Shadowed Rule</th>
+                                        <th>Preceding 1</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="attribute-cell">Index</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Name</td>
+                                        <td>Deny_Guest_to_Internal_HQ_FW_2</td>
+                                        <td>Allow_Trust_to_DMZ_HQ_FW_1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Enabled</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Action</td>
+                                        <td>deny</td>
+                                        <td>allow</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Zones</td>
+                                        <td>{&#39;Guest&#39;}</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Zones</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                        <td>{&#39;DMZ&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Addresses</td>
+                                        <td>{&#39;Guest-WiFi&#39;}</td>
+                                        <td>{&#39;CorpNet&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Addresses</td>
+                                        <td>{&#39;App-Servers&#39;}</td>
+                                        <td>{&#39;Web-Servers&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Applications</td>
+                                        <td>{&#39;sql&#39;}</td>
+                                        <td>{&#39;web-browsing&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Services</td>
+                                        <td>{&#39;tcp-1433&#39;}</td>
+                                        <td>{&#39;tcp-80&#39;, &#39;tcp-443&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Category</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <h4 class="finding-header" id="device-group-hq_fw-finding-1">
+                            3.1.1 Finding 1 – Allow_VPN_to_Internal_HQ_FW_3
+                        </h4>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Attribute</th>
+                                        <th>Shadowed Rule</th>
+                                        <th>Preceding 1</th>
+                                        <th>Preceding 2</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="attribute-cell">Index</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Name</td>
+                                        <td>Allow_VPN_to_Internal_HQ_FW_3</td>
+                                        <td>Allow_Trust_to_DMZ_HQ_FW_1</td>
+                                        <td>Deny_Guest_to_Internal_HQ_FW_2</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Enabled</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Action</td>
+                                        <td>allow</td>
+                                        <td>allow</td>
+                                        <td>deny</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Zones</td>
+                                        <td>{&#39;VPN&#39;}</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                        <td>{&#39;Guest&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Zones</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                        <td>{&#39;DMZ&#39;}</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Addresses</td>
+                                        <td>{&#39;VPN-Users&#39;}</td>
+                                        <td>{&#39;CorpNet&#39;}</td>
+                                        <td>{&#39;Guest-WiFi&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Addresses</td>
+                                        <td>{&#39;DB-Servers&#39;}</td>
+                                        <td>{&#39;Web-Servers&#39;}</td>
+                                        <td>{&#39;App-Servers&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Applications</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                        <td>{&#39;web-browsing&#39;}</td>
+                                        <td>{&#39;sql&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Services</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                        <td>{&#39;tcp-80&#39;, &#39;tcp-443&#39;}</td>
+                                        <td>{&#39;tcp-1433&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Category</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <h4 class="finding-header" id="device-group-hq_fw-finding-1">
+                            3.1.1 Finding 1 – Allow_Admin_to_Firewall_HQ_FW_4
+                        </h4>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Attribute</th>
+                                        <th>Shadowed Rule</th>
+                                        <th>Preceding 1</th>
+                                        <th>Preceding 2</th>
+                                        <th>Preceding 3</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="attribute-cell">Index</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Name</td>
+                                        <td>Allow_Admin_to_Firewall_HQ_FW_4</td>
+                                        <td>Allow_Trust_to_DMZ_HQ_FW_1</td>
+                                        <td>Deny_Guest_to_Internal_HQ_FW_2</td>
+                                        <td>Allow_VPN_to_Internal_HQ_FW_3</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Enabled</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Action</td>
+                                        <td>allow</td>
+                                        <td>allow</td>
+                                        <td>deny</td>
+                                        <td>allow</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Zones</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                        <td>{&#39;Guest&#39;}</td>
+                                        <td>{&#39;VPN&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Zones</td>
+                                        <td>{&#39;Untrust&#39;}</td>
+                                        <td>{&#39;DMZ&#39;}</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Addresses</td>
+                                        <td>{&#39;AdminPC&#39;}</td>
+                                        <td>{&#39;CorpNet&#39;}</td>
+                                        <td>{&#39;Guest-WiFi&#39;}</td>
+                                        <td>{&#39;VPN-Users&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Addresses</td>
+                                        <td>{&#39;Firewall&#39;}</td>
+                                        <td>{&#39;Web-Servers&#39;}</td>
+                                        <td>{&#39;App-Servers&#39;}</td>
+                                        <td>{&#39;DB-Servers&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Applications</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                        <td>{&#39;web-browsing&#39;}</td>
+                                        <td>{&#39;sql&#39;}</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Services</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                        <td>{&#39;tcp-80&#39;, &#39;tcp-443&#39;}</td>
+                                        <td>{&#39;tcp-1433&#39;}</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Category</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <h4 class="finding-header" id="device-group-hq_fw-finding-1">
+                            3.1.1 Finding 1 – Allow_Monitoring_to_Servers_HQ_FW_5
+                        </h4>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Attribute</th>
+                                        <th>Shadowed Rule</th>
+                                        <th>Preceding 1</th>
+                                        <th>Preceding 2</th>
+                                        <th>Preceding 3</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="attribute-cell">Index</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Name</td>
+                                        <td>Allow_Monitoring_to_Servers_HQ_FW_5</td>
+                                        <td>Deny_Guest_to_Internal_HQ_FW_2</td>
+                                        <td>Allow_VPN_to_Internal_HQ_FW_3</td>
+                                        <td>Allow_Admin_to_Firewall_HQ_FW_4</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Enabled</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Action</td>
+                                        <td>allow</td>
+                                        <td>deny</td>
+                                        <td>allow</td>
+                                        <td>allow</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Zones</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                        <td>{&#39;Guest&#39;}</td>
+                                        <td>{&#39;VPN&#39;}</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Zones</td>
+                                        <td>{&#39;Internal&#39;, &#39;DMZ&#39;}</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                        <td>{&#39;Untrust&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Addresses</td>
+                                        <td>{&#39;Monitoring&#39;}</td>
+                                        <td>{&#39;Guest-WiFi&#39;}</td>
+                                        <td>{&#39;VPN-Users&#39;}</td>
+                                        <td>{&#39;AdminPC&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Addresses</td>
+                                        <td>{&#39;DB-Servers&#39;, &#39;Web-Servers&#39;}</td>
+                                        <td>{&#39;App-Servers&#39;}</td>
+                                        <td>{&#39;DB-Servers&#39;}</td>
+                                        <td>{&#39;Firewall&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Applications</td>
+                                        <td>{&#39;dns&#39;}</td>
+                                        <td>{&#39;sql&#39;}</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Services</td>
+                                        <td>{&#39;udp-53&#39;}</td>
+                                        <td>{&#39;tcp-1433&#39;}</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Category</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <h4 class="finding-header" id="device-group-hq_fw-finding-1">
+                            3.1.1 Finding 1 – Deny_All_HQ_FW_6
+                        </h4>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Attribute</th>
+                                        <th>Shadowed Rule</th>
+                                        <th>Preceding 1</th>
+                                        <th>Preceding 2</th>
+                                        <th>Preceding 3</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="attribute-cell">Index</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                        <td>1</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Name</td>
+                                        <td>Deny_All_HQ_FW_6</td>
+                                        <td>Allow_VPN_to_Internal_HQ_FW_3</td>
+                                        <td>Allow_Admin_to_Firewall_HQ_FW_4</td>
+                                        <td>Allow_Monitoring_to_Servers_HQ_FW_5</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Enabled</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                        <td>True</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Action</td>
+                                        <td>deny</td>
+                                        <td>allow</td>
+                                        <td>allow</td>
+                                        <td>allow</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Zones</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;VPN&#39;}</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                        <td>{&#39;Trust&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Zones</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;Internal&#39;}</td>
+                                        <td>{&#39;Untrust&#39;}</td>
+                                        <td>{&#39;Internal&#39;, &#39;DMZ&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Source Addresses</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;VPN-Users&#39;}</td>
+                                        <td>{&#39;AdminPC&#39;}</td>
+                                        <td>{&#39;Monitoring&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Destination Addresses</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;DB-Servers&#39;}</td>
+                                        <td>{&#39;Firewall&#39;}</td>
+                                        <td>{&#39;DB-Servers&#39;, &#39;Web-Servers&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Applications</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                        <td>{&#39;ssh&#39;}</td>
+                                        <td>{&#39;dns&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Services</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                        <td>{&#39;tcp-22&#39;}</td>
+                                        <td>{&#39;udp-53&#39;}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="attribute-cell">Category</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                        <td>{&#39;any&#39;}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- METHODOLOGY -->
+                <section class="section" id="methodology">
+                    <h2>4. Methodology</h2>
+                    <p>This analysis employs automated checks to identify potential rule shadowing scenarios. Each check examines specific rule attributes to determine if preceding rules may prevent subsequent rules from being evaluated.</p>
+                    
+                    <h3>Validation Checks</h3>
+                    <div class="alert">
+                        <strong>Check Action</strong>
+                        <p>
+    Checks if both rules have the same action (like &#39;allow&#39; or &#39;deny&#39;).
+    If the actions are different, the first rule does not fully hide the second one.
+    </p>
+                    </div>
+                    <div class="alert">
+                        <strong>Check Application</strong>
+                        <p>
+    Checks if the first rule allows all the same applications as the second rule.
+    If the first rule uses &#39;any&#39; or all the same apps, it can hide the second rule.
+    </p>
+                    </div>
+                    <div class="alert">
+                        <strong>Check Services</strong>
+                        <p>
+    Checks if the first rule allows all the same network services or ports.
+    If the first rule covers all the same services, it can hide the second rule.
+    </p>
+                    </div>
+                    <div class="alert">
+                        <strong>Check Source Zone</strong>
+                        <p>
+    Checks if the first rule covers all the same source zones as the second rule.
+    If the first rule uses &#39;any&#39; or all the same zones, it can hide the second rule.
+    </p>
+                    </div>
+                    <div class="alert">
+                        <strong>Check Destination Zone</strong>
+                        <p>
+    Checks if the first rule covers all the same destination zones as the second rule.
+    If the first rule uses &#39;any&#39; or all the same zones, it can hide the second rule.
+    </p>
+                    </div>
+                    <div class="alert">
+                        <strong>Check Source Address</strong>
+                        <p>
+    Checks if the first rule covers all the same source addresses (like IPs or groups).
+    If the first rule uses &#39;any&#39; or all the same addresses, it can hide the second rule.
+    </p>
+                    </div>
+                    <div class="alert">
+                        <strong>Check Destination Address</strong>
+                        <p>
+    Checks if the first rule covers all the same destination addresses.
+    If the first rule uses &#39;any&#39; or all the same addresses, it can hide the second rule.
+    </p>
+                    </div>
+                </section>
+
+                <!-- RECOMMENDATIONS -->
+                <section class="section" id="recommendations">
+                    <h2>5. Recommendations</h2>
+                    
+                    <div class="alert">
+                        <strong>Immediate Action Required:</strong> 15 shadowing issue(s) need attention.
+                    </div>
+                    
+                    <h3>Priority Actions</h3>
+                    <ol>
+                        <li><strong>Review Rule Ordering:</strong> Examine the sequence of rules in affected device groups to ensure more specific rules are positioned before general ones.</li>
+                        <li><strong>Consolidate Redundant Rules:</strong> Consider merging or removing rules that may be redundant due to shadowing.</li>
+                        <li><strong>Implement Rule Testing:</strong> Test rule modifications in a controlled environment before applying to production.</li>
+                        <li><strong>Regular Policy Audits:</strong> Establish periodic reviews to prevent future shadowing issues.</li>
+                    </ol>
+                </section>
+
+                <!-- APPENDIX -->
+                <section class="section" id="appendix">
+                    <h2>6. Appendix</h2>
+                    <h3>Technical Details</h3>
+                    <p>This report was generated using automated policy analysis tools designed to identify potential configuration issues in firewall rule sets.</p>
+                    
+                    <h3>Glossary</h3>
+                    <dl>
+                        <dt><strong>Rule Shadowing</strong></dt>
+                        <dd>A condition where a firewall rule is never evaluated because a preceding rule with broader criteria has already matched and processed the traffic.</dd>
+                        
+                        <dt><strong>Device Group</strong></dt>
+                        <dd>A logical grouping of network devices that share common security policies and rules.</dd>
+                        
+                        <dt><strong>Preceding Rule</strong></dt>
+                        <dd>A rule that appears earlier in the rule evaluation sequence and may prevent subsequent rules from being processed.</dd>
+                    </dl>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Mobile sidebar toggle
+        const btn = document.getElementById('tocBtn');
+        const toc = document.getElementById('toc');
+        
+        if (btn && toc) {
+            btn.addEventListener('click', function() {
+                toc.classList.toggle('open');
+            });
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth <= 767 && 
+                    !toc.contains(event.target) && 
+                    !btn.contains(event.target)) {
+                    toc.classList.remove('open');
+                }
+            });
+        }
+        
+        // Highlight active link on scroll
+        const links = document.querySelectorAll('nav a[href^="#"]');
+        const sections = document.querySelectorAll('section[id]');
+
+        function setActive() {
+            const pos = window.scrollY + 100;
+            let current = '';
+            
+            sections.forEach(sec => {
+                if (pos >= sec.offsetTop) {
+                    current = sec.getAttribute('id');
+                }
+            });
+            
+            links.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        // Initialize and bind scroll event
+        setActive();
+        window.addEventListener('scroll', setActive);
+    </script>
+</body>
+</html>

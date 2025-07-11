@@ -9,352 +9,541 @@
             --primary-color: #FF6B35;
             --secondary-color: #FF9F1C;
             --accent-color: #EE4B2B;
-            --text-color: #333333;
             --bg-cream: #FFF9F0;
+            --text-color: #333;
+            --border-color: #e9ecef;
         }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            line-height: 1.5;
-            margin: 0 auto;
-            background-color: white;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
             color: var(--text-color);
-            max-width: 1000px;
-            padding: 1rem;
+            line-height: 1.6;
         }
+
+        /* ---------- CONTAINER ---------- */
         .container {
-            width: 100%;
-            box-shadow: 0 0 10px rgba(0,0,0,0.05);
-            border-radius: 8px;
-            overflow: hidden;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            background: #fff;
+            box-shadow: 0 0 20px rgba(0,0,0,.08);
         }
+
+        /* ---------- HEADER ---------- */
         .report-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: #fff;
+            padding: 2rem 1rem;
+            border-radius: 8px;
             text-align: center;
-            padding: 1.2rem;
-            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-            color: white;
-            margin-bottom: 1rem;
+            margin-bottom: 2rem;
         }
+        
         .report-header h1 {
             margin: 0;
-            font-size: 1.6rem;
+            font-size: 2rem;
+            font-weight: 600;
         }
-        .report-header p {
-            margin: 0.3rem 0 0;
-            font-size: 0.9rem;
+        
+        .subtitle {
+            opacity: .9;
+            margin-top: .5rem;
         }
-        .content {
-            padding: 0 1.5rem 1.5rem;
+
+        /* ---------- MOBILE MENU BUTTON ---------- */
+        .toc-toggle {
+            display: none;
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            padding: .6rem .9rem;
+            border-radius: 4px;
+            font-size: 1rem;
+            margin-top: 1rem;
+            cursor: pointer;
         }
-        .top-section {
+
+        /* ---------- LAYOUT ---------- */
+        .main {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
         }
-        .toc {
-            background: white;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 1rem;
+
+        /* ---------- TOC SIDEBAR ---------- */
+        .sidebar {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1rem 2rem;
+            background: #fff;
+            position: sticky;
+            top: 1rem;
+            max-height: calc(100vh - 2rem);
+            overflow-y: auto;
+            transition: transform .3s ease;
         }
-        .toc h2 {
-            margin-top: 0.5rem;
+        
+        .sidebar h2 {
+            margin: 0 0 .75rem;
             font-size: 1.2rem;
             color: var(--primary-color);
-            margin-bottom: 0.8rem;
         }
-        .toc-list {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
-        .toc-list li {
-            margin-bottom: 0.4rem;
-        }
-        .toc-list a {
-            display: grid;
-            grid-template-columns: auto max-content;
+        
+        nav a {
+            display: block;
+            padding: .4rem .6rem;
             text-decoration: none;
             color: var(--text-color);
-            align-items: end;
-            position: relative;
-            overflow: hidden;
-        }
-        .toc-list a:hover {
-            color: var(--primary-color);
-        }
-        .toc-list a::after {
-            content: "";
-            position: absolute;
-            bottom: 0.3em;
-            width: 100%;
-            border-bottom: 1px dotted #ccc;
-            margin-right: -1rem;
-            margin-left: 0.3rem;
-        }
-        .toc-list a span.title {
-            position: relative;
-            background: white;
-            padding-right: 0.5rem;
-            z-index: 1;
-        }
-        .toc-list a span.page {
-            position: relative;
-            background: white;
-            padding-left: 0.5rem;
-            z-index: 1;
-            font-weight: 500;
-        }
-        .nested-toc {
-            list-style-type: none;
-            padding-left: 1rem;
-            margin-top: 0.5rem;
-        }
-        .nested-toc li {
-            margin-bottom: 0.3rem;
-        }
-        .nested-toc a {
-            font-size: 0.9rem;
-        }
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.8rem;
-        }
-        .summary-card {
-            background: white;
             border-radius: 4px;
-            padding: 0.7rem;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            border: 1px solid #eee;
-            border-left: 3px solid var(--secondary-color);
+            transition: background .25s;
         }
-        .summary-card h3 {
-            margin: 0 0 0.3rem 0;
-            font-size: 0.9rem;
+        
+        nav a:hover,
+        nav a.active {
+            background: var(--bg-cream);
+            color: var(--accent-color);
+        }
+
+        /* Orange background for device groups + findings */
+        details[open] > summary,
+        .device-link,
+        .finding-link {
+            background: var(--bg-cream);
             color: var(--primary-color);
+            font-weight: 500;
         }
-        .summary-card p {
+
+        /* Details / summary styling */
+        summary {
+            cursor: pointer;
+            list-style: none;
+            padding: .4rem .6rem;
+            border-radius: 4px;
+            transition: background .25s;
+        }
+        
+        summary::-webkit-details-marker {
+            display: none;
+        }
+        
+        summary:hover {
+            background: var(--bg-cream);
+        }
+
+        /* Nested lists */
+        .nested {
+            padding-left: 1rem;
             margin: 0;
-            font-size: 1rem;
-            font-weight: 500;
+            list-style: none;
         }
-        .finding-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 1rem 0;
-            background: white;
-            border: 1px solid #eee;
-            font-size: 0.85rem;
+        
+        .nested li {
+            margin: .25rem 0;
         }
-        .finding-table th {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 0.5rem;
-            text-align: left;
-            font-size: 0.85rem;
+
+        /* ---------- CONTENT SECTION ---------- */
+        .section {
+            border: 1px solid var(--border-color);
+            background: #fff;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
         }
-        .finding-table td {
-            padding: 0.5rem;
-            border-bottom: 1px solid #eee;
-            font-size: 0.85rem;
-            word-break: break-word;
-            max-width: 200px;
+        
+        .section h2 {
+            margin-top: 0;
+            font-size: 1.6rem;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: .4rem;
         }
-        .finding-table td:first-child {
-            background-color: rgba(255, 107, 53, 0.08);
-            font-weight: 500;
-            max-width: 120px;
-        }
-        .finding-table tr:hover {
-            background-color: rgba(255, 159, 28, 0.03);
-        }
-        h2.finding-header, h2.checks-header {
+        
+        .section h3 {
             color: var(--accent-color);
             margin-top: 1.5rem;
-            margin-bottom: 0.5rem;
-            padding-bottom: 0.3rem;
-            border-bottom: 1px solid var(--secondary-color);
-            font-size: 1.2rem;
         }
-        .checks-list {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
+        
+        .section h4 {
+            color: var(--primary-color);
+            margin-top: 1.5rem;
         }
-        .check-item {
-            margin-bottom: 1rem;
-            padding: 0.8rem;
-            background-color: rgba(255, 159, 28, 0.05);
-            border-radius: 4px;
-            border-left: 3px solid var(--secondary-color);
+
+        /* ---------- TABLE WRAPPER ---------- */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 1rem 0;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
         }
-        .check-name {
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .9rem;
+        }
+        
+        th {
+            background: var(--primary-color);
+            color: #fff;
+            padding: .75rem;
+            text-align: left;
+        }
+        
+        td {
+            padding: .6rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+        
+        .attribute-cell {
+            background: rgba(255,107,53,.08);
             font-weight: 600;
+            min-width: 140px;
             color: var(--primary-color);
-            margin-bottom: 0.5rem;
         }
-        .check-doc {
-            margin: 0;
-            font-size: 0.9rem;
-            line-height: 1.4;
+        
+        tr:hover {
+            background: rgba(255,107,53,.05);
         }
-        .scenario-doc {
-            background-color: rgba(255, 159, 28, 0.05);
-            padding: 0.8rem;
+
+        /* ---------- ALERT BOXES ---------- */
+        .alert {
+            padding: 1rem 1.25rem;
+            border-left: 4px solid var(--secondary-color);
+            background: var(--bg-cream);
             border-radius: 4px;
-            margin-bottom: 1rem;
-            border-left: 3px solid var(--secondary-color);
+            margin: 1rem 0;
         }
-        .device-group-section {
-            margin-bottom: 2rem;
-            padding: 1rem;
-            border: 1px solid #eee;
-            border-radius: 4px;
+
+        /* ---------- MOBILE RESPONSIVE ---------- */
+        @media (max-width: 767px) {
+            .main {
+                grid-template-columns: 1fr;
+            }
+            
+            .toc-toggle {
+                display: inline-block;
+            }
+            
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                max-height: none;
+                width: 280px;
+                transform: translateX(-100%);
+                z-index: 999;
+                box-shadow: 0 0 15px rgba(0,0,0,.25);
+                overflow-y: auto;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .container {
+                padding: 0.5rem;
+            }
+            
+            .report-header {
+                padding: 1.5rem 1rem;
+            }
+            
+            .report-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .section {
+                padding: 1rem;
+            }
+            
+            .table-wrapper {
+                font-size: 0.8rem;
+            }
+            
+            th, td {
+                padding: 0.5rem;
+            }
         }
-        .device-group-title {
-            color: var(--primary-color);
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-            padding-bottom: 0.3rem;
-            border-bottom: 1px solid #eee;
+
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 100vw;
+            }
+            
+            .table-wrapper {
+                font-size: 0.75rem;
+            }
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="report-header">
-        <h1>Firewall Policy Analysis Report</h1>
-        <p>Generated: {{ current_date }}</p>
-    </div>
-    <div class="content">
-        <div class="top-section">
-            <div class="toc">
+    <div class="container">
+        <!-- ---------- HEADER ---------- -->
+        <header class="report-header">
+            <h1>Firewall Policy Analysis Report</h1>
+            <p class="subtitle">Generated: {{ current_date }}</p>
+            <button class="toc-toggle" id="tocBtn" aria-controls="toc">☰ Menu</button>
+        </header>
+
+        <!-- ---------- MAIN GRID ---------- -->
+        <div class="main">
+            <!-- ---------- SIDEBAR NAV ---------- -->
+            <aside class="sidebar" id="toc" role="navigation" aria-label="Table of Contents">
                 <h2>Table of Contents</h2>
-                <ul class="toc-list">
-                    <li><a href="#introduction"><span class="title">Introduction</span></a></li>
-                    <li>
-                        <a href="#scenario-{{ scenario.name|lower|replace(' ', '-') }}"><span class="title">Scenario {{ scenario.name }}</span></a>
-                        {% if scenario.analysis_results_by_dg %}
-                        <ul class="nested-toc">
+                <nav>
+                    <a href="#executive-summary">Executive Summary</a>
+                    <a href="#introduction">1. Introduction</a>
+                    <a href="#scenario-overview">2. Scenario Overview</a>
+                    <details>
+                        <summary class="device-link">3. Analysis Results</summary>
+                        <ul class="nested">
+                            {% if scenario.analysis_results_by_dg %}
+                            {% set dg_idx = 1 %}
                             {% for dg, analysis_results in scenario.analysis_results_by_dg.items() %}
                             <li>
-                                <a href="#device-group-{{ dg|lower|replace(' ', '-') }}">
-                                    <span class="title">Device Group: {{ dg }}</span>
-                                </a>
+                                <details>
+                                    <summary class="device-link">3.{{ dg_idx }} {{ dg }}</summary>
+                                    {% if analysis_results %}
+                                    <ul class="nested">
+                                        {% set finding_idx = 1 %}
+                                        {% for idx, (rule, _) in enumerate(analysis_results) %}
+                                        <li>
+                                            <a class="finding-link" href="#device-group-{{ dg|lower|replace(' ', '-') }}-finding-{{ finding_idx }}">
+                                                3.{{ dg_idx }}.{{ finding_idx }} {{ rule.name }}
+                                            </a>
+                                        </li>
+                                        {% set finding_idx = finding_idx + 1 %}
+                                        {% endfor %}
+                                    </ul>
+                                    {% endif %}
+                                </details>
                             </li>
-                            {% for idx, (rule, shadowing_rules) in enumerate(analysis_results) %}
-                            <li>
-                                <a href="#scenario-{{ scenario.name|lower|replace(' ', '-') }}-{{ dg|lower|replace(' ', '-') }}-finding-{{ idx+1 }}">
-                                    <span class="title">Finding {{ idx+1 }} - {{ rule.name }}</span>
-                                </a>
-                            </li>
+                            {% set dg_idx = dg_idx + 1 %}
                             {% endfor %}
-                            {% endfor %}
-                            <li>
-                                <a href="#scenario-{{ scenario.name|lower|replace(' ', '-') }}-checks"><span class="title">Checks</span></a>
-                            </li>
+                            {% endif %}
                         </ul>
-                        {% endif %}
-                    </li>
-                </ul>
-            </div>
-            <div>
-                <div class="summary-grid">
-                    <div class="summary-card">
-                        <h3>Device Groups</h3>
-                        <p>{{ scenario.device_groups|length if scenario.device_groups else 0 }}</p>
-                    </div>
-                    <div class="summary-card">
-                        <h3>Address Groups</h3>
-                        <p>{{ address_groups_count }}</p>
-                    </div>
-                    <div class="summary-card">
-                        <h3>Address Objects</h3>
-                        <p>{{ address_objects_count }}</p>
-                    </div>
-                    <div class="summary-card">
-                        <h3>Total Policies</h3>
-                        <p>{{ total_policies }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <h2 id="introduction">Introduction</h2>
-        <p>Comprehensive policy analysis for scenario "{{ scenario.name }}".</p>
-        
-        <h2 id="scenario-{{ scenario.name|lower|replace(' ', '-') }}">Scenario {{ scenario.name }}</h2>
-        <div class="scenario-doc">{{ scenario.__doc__ or "No description available." }}</div>
-        
-        {% if scenario.security_rules_by_dg %}
-        <div class="summary-grid">
-            <div class="summary-card">
-                <h3>Total Device Groups</h3>
-                <p>{{ scenario.security_rules_by_dg.keys()|length }}</p>
-            </div>
-            <div class="summary-card">
-                <h3>Total Rules Analyzed</h3>
-                <p>{{ scenario.security_rules_by_dg.values()|map('length')|sum }}</p>
-            </div>
-        </div>
-        {% endif %}
+                    </details>
+                    <a href="#methodology">4. Methodology</a>
+                    <a href="#recommendations">5. Recommendations</a>
+                    <a href="#appendix">6. Appendix</a>
+                </nav>
+            </aside>
 
-        {% if scenario.analysis_results_by_dg %}
-            {% for dg, analysis_results in scenario.analysis_results_by_dg.items() %}
-                <div class="device-group-section" id="device-group-{{ dg|lower|replace(' ', '-') }}">
-                    <h3 class="device-group-title">Device Group: {{ dg }}</h3>
-                    <div class="summary-card">
-                        <h3>Shadowing Findings</h3>
-                        <p>{{ analysis_results|length }}</p>
+            <!-- ---------- CONTENT ---------- -->
+            <main>
+                <!-- EXECUTIVE SUMMARY -->
+                <section class="section" id="executive-summary">
+                    <h2>Executive Summary</h2>
+                    <p>This report analyzes firewall policy configurations for potential rule shadowing issues across {{ scenario.device_groups|length if scenario.device_groups else 0 }} device group(s). The analysis identified {{ scenario.analysis_results_by_dg.values()|map('length')|sum if scenario.analysis_results_by_dg else 0 }} shadowing findings that require attention to ensure optimal security policy performance.</p>
+                </section>
+
+                <!-- INTRODUCTION -->
+                <section class="section" id="introduction">
+                    <h2>1. Introduction</h2>
+                    <p>This comprehensive policy analysis report examines firewall rule configurations for scenario "<strong>{{ scenario.name }}</strong>" to identify potential shadowing issues that may impact security policy effectiveness.</p>
+                    
+                    {% if scenario.__doc__ %}
+                    <div class="alert">
+                        <strong>Scenario Description:</strong> {{ scenario.__doc__ }}
+                    </div>
+                    {% endif %}
+                </section>
+
+                <!-- SCENARIO OVERVIEW -->
+                <section class="section" id="scenario-overview">
+                    <h2>2. Scenario Overview</h2>
+                    <p>{{ scenario.__doc__ or "Analysis of firewall policy configurations to detect rule shadowing patterns." }}</p>
+                    
+                    {% if scenario.security_rules_by_dg %}
+                    <div class="alert">
+                        <strong>Analysis Scope:</strong> {{ scenario.security_rules_by_dg.keys()|length }} device group(s) containing {{ scenario.security_rules_by_dg.values()|map('length')|sum }} security rules in total.
+                    </div>
+                    {% endif %}
+                </section>
+
+                <!-- ANALYSIS RESULTS -->
+                <section class="section" id="analysis-results">
+                    <h2>3. Analysis Results</h2>
+
+                    {% if scenario.analysis_results_by_dg %}
+                    {% set dg_idx = 1 %}
+                    {% for dg, analysis_results in scenario.analysis_results_by_dg.items() %}
+                    <div class="section" id="device-group-{{ dg|lower|replace(' ', '-') }}">
+                        <h3>3.{{ dg_idx }} Device Group: {{ dg }}</h3>
+
+                        {% if analysis_results|length %}
+                        <div class="alert">
+                            <strong>{{ analysis_results|length }} shadowing issue(s) detected.</strong>
+                        </div>
+                        {% else %}
+                        <div class="alert">
+                            <strong>No shadowing issues detected</strong> in this device group.
+                        </div>
+                        {% endif %}
+
+                        {% set finding_idx = 1 %}
+                        {% for idx, (rule, shadowing_rules) in enumerate(analysis_results) %}
+                        <h4 class="finding-header" id="device-group-{{ dg|lower|replace(' ', '-') }}-finding-{{ finding_idx }}">
+                            3.{{ dg_idx }}.{{ finding_idx }} Finding {{ finding_idx }} – {{ rule.name }}
+                        </h4>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Attribute</th>
+                                        <th>Shadowed Rule</th>
+                                        {% for j in range(shadowing_rules|length) %}
+                                        <th>Preceding {{ j+1 }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for attr in rule.__pydantic_fields__.keys() %}
+                                    {% set rule_val = getattr(rule, attr) %}
+                                    {% set preceding_vals = [] %}
+                                    {% for pr in shadowing_rules %}
+                                    {% set _ = preceding_vals.append(getattr(pr, attr)) %}
+                                    {% endfor %}
+                                    {% if rule_val or preceding_vals|select('string')|list %}
+                                    <tr>
+                                        <td class="attribute-cell">{{ attr.replace('_', ' ').title() }}</td>
+                                        <td>{{ rule_val }}</td>
+                                        {% for val in preceding_vals %}
+                                        <td>{{ val }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% set finding_idx = finding_idx + 1 %}
+                        {% endfor %}
+                    </div>
+                    {% set dg_idx = dg_idx + 1 %}
+                    {% endfor %}
+                    {% else %}
+                    <div class="alert">
+                        <strong>No analysis results available.</strong> The analysis may not have been executed yet.
+                    </div>
+                    {% endif %}
+                </section>
+
+                <!-- METHODOLOGY -->
+                <section class="section" id="methodology">
+                    <h2>4. Methodology</h2>
+                    <p>This analysis employs automated checks to identify potential rule shadowing scenarios. Each check examines specific rule attributes to determine if preceding rules may prevent subsequent rules from being evaluated.</p>
+                    
+                    {% if scenario.checks %}
+                    <h3>Validation Checks</h3>
+                    {% for check in scenario.checks %}
+                    <div class="alert">
+                        <strong>{{ check.__name__.replace('_', ' ').title() }}</strong>
+                        <p>{{ check.__doc__ or "No description available" }}</p>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                </section>
+
+                <!-- RECOMMENDATIONS -->
+                <section class="section" id="recommendations">
+                    <h2>5. Recommendations</h2>
+                    
+                    {% if scenario.analysis_results_by_dg and scenario.analysis_results_by_dg.values()|map('length')|sum > 0 %}
+                    <div class="alert">
+                        <strong>Immediate Action Required:</strong> {{ scenario.analysis_results_by_dg.values()|map('length')|sum }} shadowing issue(s) need attention.
                     </div>
                     
-                    {% if analysis_results %}
-                        {% for idx, (rule, shadowing_rules) in enumerate(analysis_results) %}
-                        <h2 class="finding-header" id="scenario-{{ scenario.name|lower|replace(' ', '-') }}-{{ dg|lower|replace(' ', '-') }}-finding-{{ idx+1 }}">
-                            Finding {{ idx+1 }} - {{ rule.name }}
-                        </h2>
-                        <table class="finding-table">
-                            <thead>
-                                <tr>
-                                    <th>Attribute</th>
-                                    <th>Shadowed Rule</th>
-                                    {% for j in range(shadowing_rules|length) %}
-                                    <th>Preceding Rule {{ j+1 }}</th>
-                                    {% endfor %}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for attr in rule.__pydantic_fields__.keys() %}
-                                <tr>
-                                    <td><strong>{{ attr }}</strong></td>
-                                    <td>{{ getattr(rule, attr) }}</td>
-                                    {% for preceding_rule in shadowing_rules %}
-                                    <td>{{ getattr(preceding_rule, attr) }}</td>
-                                    {% endfor %}
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        {% endfor %}
+                    <h3>Priority Actions</h3>
+                    <ol>
+                        <li><strong>Review Rule Ordering:</strong> Examine the sequence of rules in affected device groups to ensure more specific rules are positioned before general ones.</li>
+                        <li><strong>Consolidate Redundant Rules:</strong> Consider merging or removing rules that may be redundant due to shadowing.</li>
+                        <li><strong>Implement Rule Testing:</strong> Test rule modifications in a controlled environment before applying to production.</li>
+                        <li><strong>Regular Policy Audits:</strong> Establish periodic reviews to prevent future shadowing issues.</li>
+                    </ol>
                     {% else %}
-                        <p>No shadowing findings detected for this device group.</p>
+                    <div class="alert">
+                        <strong>No immediate action required.</strong> No shadowing issues were detected in the analyzed policies.
+                    </div>
                     {% endif %}
-                </div>
-            {% endfor %}
-        {% else %}
-            <p>No analysis results available. The analysis may not have been executed yet.</p>
-        {% endif %}
+                </section>
 
-        <h2 class="checks-header" id="scenario-{{ scenario.name|lower|replace(' ', '-') }}-checks">Checks</h2>
-        <div class="checks-list">
-            {% for check in scenario.checks %}
-            <div class="check-item">
-                <div class="check-name">{{ check.__name__ }}</div>
-                <p class="check-doc">{{ check.__doc__ or "No description available" }}</p>
-            </div>
-            {% endfor %}
+                <!-- APPENDIX -->
+                <section class="section" id="appendix">
+                    <h2>6. Appendix</h2>
+                    <h3>Technical Details</h3>
+                    <p>This report was generated using automated policy analysis tools designed to identify potential configuration issues in firewall rule sets.</p>
+                    
+                    <h3>Glossary</h3>
+                    <dl>
+                        <dt><strong>Rule Shadowing</strong></dt>
+                        <dd>A condition where a firewall rule is never evaluated because a preceding rule with broader criteria has already matched and processed the traffic.</dd>
+                        
+                        <dt><strong>Device Group</strong></dt>
+                        <dd>A logical grouping of network devices that share common security policies and rules.</dd>
+                        
+                        <dt><strong>Preceding Rule</strong></dt>
+                        <dd>A rule that appears earlier in the rule evaluation sequence and may prevent subsequent rules from being processed.</dd>
+                    </dl>
+                </section>
+            </main>
         </div>
     </div>
-</div>
+
+    <script>
+        // Mobile sidebar toggle
+        const btn = document.getElementById('tocBtn');
+        const toc = document.getElementById('toc');
+        
+        if (btn && toc) {
+            btn.addEventListener('click', function() {
+                toc.classList.toggle('open');
+            });
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth <= 767 && 
+                    !toc.contains(event.target) && 
+                    !btn.contains(event.target)) {
+                    toc.classList.remove('open');
+                }
+            });
+        }
+        
+        // Highlight active link on scroll
+        const links = document.querySelectorAll('nav a[href^="#"]');
+        const sections = document.querySelectorAll('section[id]');
+
+        function setActive() {
+            const pos = window.scrollY + 100;
+            let current = '';
+            
+            sections.forEach(sec => {
+                if (pos >= sec.offsetTop) {
+                    current = sec.getAttribute('id');
+                }
+            });
+            
+            links.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        // Initialize and bind scroll event
+        setActive();
+        window.addEventListener('scroll', setActive);
+    </script>
 </body>
 </html>
