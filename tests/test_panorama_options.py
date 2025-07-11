@@ -102,6 +102,7 @@ def test_combined_decorators_with_yaml():
         panorama_verify_ssl: bool,
         export: tuple[str, ...],
         show: tuple[str, ...],
+        export_dir: str,
         threshold: int,
     ):
         """Test command with all decorators."""

@@ -21,7 +21,7 @@ def test_yaml_config_option_basic():
     @export_options
     @show_options
     @click.command()
-    def test_command(export: tuple[str, ...], show: tuple[str, ...]):
+    def test_command(export: tuple[str, ...], show: tuple[str, ...], export_dir: str):
         """Test command."""
         click.echo(f"export={export}")
         click.echo(f"show={show}")
@@ -69,7 +69,7 @@ def test_yaml_config_option_missing_file():
     @export_options
     @show_options
     @click.command()
-    def test_command(export: tuple[str, ...], show: tuple[str, ...]):
+    def test_command(export: tuple[str, ...], show: tuple[str, ...], export_dir: str):
         """Test command."""
         click.echo(f"export={export}")
         click.echo(f"show={show}")
@@ -90,7 +90,7 @@ def test_yaml_config_option_invalid_yaml():
     @export_options
     @show_options
     @click.command()
-    def test_command(export: tuple[str, ...], show: tuple[str, ...]):
+    def test_command(export: tuple[str, ...], show: tuple[str, ...], export_dir: str):
         """Test command."""
         click.echo(f"export={export}")
         click.echo(f"show={show}")
@@ -127,7 +127,7 @@ def test_comprehensive_config_option():
     @show_options
     @click.option("--name", default="test")
     @click.command()
-    def test_command(name: str, export: tuple[str, ...], show: tuple[str, ...]):
+    def test_command(name: str, export: tuple[str, ...], show: tuple[str, ...], export_dir: str):
         """Test command."""
         click.echo(f"name={name}")
         click.echo(f"export={export}")
