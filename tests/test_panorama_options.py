@@ -8,9 +8,10 @@ import rich_click as click
 from click.testing import CliRunner
 
 from policy_inspector.config import (
-    export_show_options,
+    config_option,
+    export_options,
     panorama_options,
-    yaml_config_option,
+    show_options,
 )
 
 
@@ -88,9 +89,10 @@ def test_combined_decorators_with_yaml():
     """Test combining all decorators with YAML configuration."""
 
     @click.command()
-    @yaml_config_option()
+    @config_option()
     @panorama_options
-    @export_show_options
+    @export_options
+    @show_options
     @click.option("--threshold", type=int, default=10)
     def test_command(
         panorama_hostname: str,

@@ -74,17 +74,31 @@ class Scenario:
                     f"No show function registered for {type(self).__name__} and format '{fmt}'"
                 )
 
-    def export(self, formats, *args, **kwargs):
+    def export(self, formats, *args, output_dir: str = None, **kwargs):
         """
         Export scenario results in the given formats using registered export functions.
+        If exporting to HTML, save the file to output_dir or current directory.
         """
+        from pathlib import Path
+
         for fmt in formats:
             export_func = None
             from policy_inspector.utils import get_export_func
 
             export_func = get_export_func(self, fmt)
             if export_func:
-                export_func(self, *args, **kwargs)
+                if fmt == "html":
+                    # Determine output path
+                    out_dir = Path(output_dir) if output_dir else Path.cwd()
+                    out_dir.mkdir(parents=True, exist_ok=True)
+                    filename = f"{type(self).__name__.lower()}_report.html"
+                    output_path = out_dir / filename
+                    export_func(
+                        self, *args, output_path=str(output_path), **kwargs
+                    )
+                    logger.info(f"HTML report saved to: {output_path}")
+                else:
+                    export_func(self, *args, **kwargs)
             else:
                 logger.warning(
                     f"No export function registered for {type(self).__name__} and format '{fmt}'"

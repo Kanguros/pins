@@ -104,6 +104,17 @@
             z-index: 1;
             font-weight: 500;
         }
+        .nested-toc {
+            list-style-type: none;
+            padding-left: 1rem;
+            margin-top: 0.5rem;
+        }
+        .nested-toc li {
+            margin-bottom: 0.3rem;
+        }
+        .nested-toc a {
+            font-size: 0.9rem;
+        }
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -133,6 +144,7 @@
             margin: 1rem 0;
             background: white;
             border: 1px solid #eee;
+            font-size: 0.85rem;
         }
         .finding-table th {
             background-color: var(--primary-color);
@@ -145,11 +157,13 @@
             padding: 0.5rem;
             border-bottom: 1px solid #eee;
             font-size: 0.85rem;
+            word-break: break-word;
+            max-width: 200px;
         }
         .finding-table td:first-child {
             background-color: rgba(255, 107, 53, 0.08);
             font-weight: 500;
-            max-width: 180px;
+            max-width: 120px;
         }
         .finding-table tr:hover {
             background-color: rgba(255, 159, 28, 0.03);
@@ -184,6 +198,26 @@
             font-size: 0.9rem;
             line-height: 1.4;
         }
+        .scenario-doc {
+            background-color: rgba(255, 159, 28, 0.05);
+            padding: 0.8rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            border-left: 3px solid var(--secondary-color);
+        }
+        .device-group-section {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border: 1px solid #eee;
+            border-radius: 4px;
+        }
+        .device-group-title {
+            color: var(--primary-color);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.3rem;
+            border-bottom: 1px solid #eee;
+        }
     </style>
 </head>
 <body>
@@ -198,30 +232,37 @@
                 <h2>Table of Contents</h2>
                 <ul class="toc-list">
                     <li><a href="#introduction"><span class="title">Introduction</span></a></li>
-                    {% for scenario in scenarios %}
                     <li>
                         <a href="#scenario-{{ scenario.name|lower|replace(' ', '-') }}"><span class="title">Scenario {{ scenario.name }}</span></a>
+                        {% if scenario.analysis_results_by_dg %}
                         <ul class="nested-toc">
-                            {% for idx, finding in enumerate(scenario.analysis_results) %}
+                            {% for dg, analysis_results in scenario.analysis_results_by_dg.items() %}
                             <li>
-                                <a href="#scenario-{{ scenario.name|lower|replace(' ', '-') }}-finding-{{ idx+1 }}">
-                                    <span class="title">Finding {{ idx+1 }} - {{ finding[0].name }}</span>
+                                <a href="#device-group-{{ dg|lower|replace(' ', '-') }}">
+                                    <span class="title">Device Group: {{ dg }}</span>
                                 </a>
                             </li>
+                            {% for idx, (rule, shadowing_rules) in enumerate(analysis_results) %}
+                            <li>
+                                <a href="#scenario-{{ scenario.name|lower|replace(' ', '-') }}-{{ dg|lower|replace(' ', '-') }}-finding-{{ idx+1 }}">
+                                    <span class="title">Finding {{ idx+1 }} - {{ rule.name }}</span>
+                                </a>
+                            </li>
+                            {% endfor %}
                             {% endfor %}
                             <li>
                                 <a href="#scenario-{{ scenario.name|lower|replace(' ', '-') }}-checks"><span class="title">Checks</span></a>
                             </li>
                         </ul>
+                        {% endif %}
                     </li>
-                    {% endfor %}
                 </ul>
             </div>
             <div>
                 <div class="summary-grid">
                     <div class="summary-card">
-                        <h3>Device Group</h3>
-                        <p>{{ device_group }}</p>
+                        <h3>Device Groups</h3>
+                        <p>{{ scenario.device_groups|length if scenario.device_groups else 0 }}</p>
                     </div>
                     <div class="summary-card">
                         <h3>Address Groups</h3>
@@ -238,47 +279,72 @@
                 </div>
             </div>
         </div>
+        
         <h2 id="introduction">Introduction</h2>
-        <p>Comprehensive policy analysis covering {{ scenarios|length }} scenarios.</p>
-        {% for scenario in scenarios %}
+        <p>Comprehensive policy analysis for scenario "{{ scenario.name }}".</p>
+        
         <h2 id="scenario-{{ scenario.name|lower|replace(' ', '-') }}">Scenario {{ scenario.name }}</h2>
         <div class="scenario-doc">{{ scenario.__doc__ or "No description available." }}</div>
+        
+        {% if scenario.security_rules_by_dg %}
         <div class="summary-grid">
             <div class="summary-card">
+                <h3>Total Device Groups</h3>
+                <p>{{ scenario.security_rules_by_dg.keys()|length }}</p>
+            </div>
+            <div class="summary-card">
                 <h3>Total Rules Analyzed</h3>
-                <p>{{ scenario.security_rules|length }}</p>
+                <p>{{ scenario.security_rules_by_dg.values()|map('length')|sum }}</p>
             </div>
         </div>
-        {% if scenario.analysis_results_by_dg is defined %}
-            {% for dg, analysis_results in scenario.analysis_results_by_dg.items() %}
-                <h3>Device Group: {{ dg }}</h3>
-                <div class="summary-card">
-                    <h3>Shadowing Findings</h3>
-                    <p>{{ analysis_results|length }}</p>
-                </div>
-                {% for idx, (rule, shadowing_rules) in enumerate(analysis_results) %}
-                <h2 class="finding-header" id="scenario-{{ scenario.name|lower|replace(' ', '-') }}-{{ dg|lower|replace(' ', '-') }}-finding-{{ idx+1 }}">Finding {{ idx+1 }} - {{ rule.name }}</h2>
-                <table class="finding-table">
-                    <tr>
-                        <th>Attribute</th>
-                        <th>Shadowed Rule</th>
-                        {% for j in range(shadowing_rules|length) %}
-                        <th>Preceding Rule {{ j+1 }}</th>
-                        {% endfor %}
-                    </tr>
-                    {% for attr in rule.__pydantic_fields__.keys() %}
-                    <tr>
-                        <td>{{ attr }}</td>
-                        <td>{{ getattr(rule, attr) }}</td>
-                        {% for preceding_rule in shadowing_rules %}
-                        <td>{{ getattr(preceding_rule, attr) }}</td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                </table>
-                {% endfor %}
-            {% endfor %}
         {% endif %}
+
+        {% if scenario.analysis_results_by_dg %}
+            {% for dg, analysis_results in scenario.analysis_results_by_dg.items() %}
+                <div class="device-group-section" id="device-group-{{ dg|lower|replace(' ', '-') }}">
+                    <h3 class="device-group-title">Device Group: {{ dg }}</h3>
+                    <div class="summary-card">
+                        <h3>Shadowing Findings</h3>
+                        <p>{{ analysis_results|length }}</p>
+                    </div>
+                    
+                    {% if analysis_results %}
+                        {% for idx, (rule, shadowing_rules) in enumerate(analysis_results) %}
+                        <h2 class="finding-header" id="scenario-{{ scenario.name|lower|replace(' ', '-') }}-{{ dg|lower|replace(' ', '-') }}-finding-{{ idx+1 }}">
+                            Finding {{ idx+1 }} - {{ rule.name }}
+                        </h2>
+                        <table class="finding-table">
+                            <thead>
+                                <tr>
+                                    <th>Attribute</th>
+                                    <th>Shadowed Rule</th>
+                                    {% for j in range(shadowing_rules|length) %}
+                                    <th>Preceding Rule {{ j+1 }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for attr in rule.__pydantic_fields__.keys() %}
+                                <tr>
+                                    <td><strong>{{ attr }}</strong></td>
+                                    <td>{{ getattr(rule, attr) }}</td>
+                                    {% for preceding_rule in shadowing_rules %}
+                                    <td>{{ getattr(preceding_rule, attr) }}</td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% endfor %}
+                    {% else %}
+                        <p>No shadowing findings detected for this device group.</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No analysis results available. The analysis may not have been executed yet.</p>
+        {% endif %}
+
         <h2 class="checks-header" id="scenario-{{ scenario.name|lower|replace(' ', '-') }}-checks">Checks</h2>
         <div class="checks-list">
             {% for check in scenario.checks %}
@@ -288,7 +354,6 @@
             </div>
             {% endfor %}
         </div>
-        {% endfor %}
     </div>
 </div>
 </body>
