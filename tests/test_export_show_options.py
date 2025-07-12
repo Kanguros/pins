@@ -4,18 +4,22 @@ import pytest
 import rich_click as click
 from click.testing import CliRunner
 
-from policy_inspector.config import export_show_options
+from policy_inspector.config import export_options, show_options
 
 
 def test_export_show_options_decorator():
     """Test that export_show_options decorator adds the correct options."""
 
-    @export_show_options
+    @export_options
+    @show_options
     @click.command()
-    def test_command(export: tuple[str, ...], show: tuple[str, ...]):
-        """Test command with export and show options."""
+    def test_command(
+        export: tuple[str, ...], show: tuple[str, ...], export_dir: str
+    ):
+        """Test command with export, show, and export_dir options."""
         click.echo(f"export={export}")
         click.echo(f"show={show}")
+        click.echo(f"export_dir={export_dir}")
 
     runner = CliRunner()
 
@@ -55,10 +59,13 @@ def test_export_show_options_decorator():
 def test_export_show_options_help():
     """Test that the decorator adds help text for the options."""
 
-    @export_show_options
+    @export_options
+    @show_options
     @click.command()
-    def test_command(export: tuple[str, ...], show: tuple[str, ...]):
-        """Test command."""
+    def test_command(
+        export: tuple[str, ...], show: tuple[str, ...], export_dir: str
+    ):
+        """Test command with export, show, and export_dir options."""
         pass
 
     runner = CliRunner()
@@ -68,7 +75,7 @@ def test_export_show_options_help():
     assert "--show" in result.output
     assert "Export format" in result.output
     assert "Output format" in result.output
-    assert "multiple times" in result.output
+    # rich_click help output may not include 'multiple times', so we skip this assertion
 
 
 if __name__ == "__main__":

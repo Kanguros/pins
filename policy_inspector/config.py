@@ -46,7 +46,7 @@ def configure_from_yaml(ctx, param, filename):
     print("ctx.default_map:", ctx.default_map)
 
 
-def yaml_config_option(
+def config_option(
     config_file_name: str = "--config", default: str = "config.yaml"
 ):
     """
@@ -79,27 +79,34 @@ def yaml_config_option(
     return decorator
 
 
-def export_show_options(f):
-    """
-    Decorator that adds --export and --show click options to a command.
-
-    These options are for output formatting:
-    - export: tuple[str, ...] - Export formats (can be specified multiple times)
-    - show: tuple[str, ...] - Output formats (can be specified multiple times)
-
-    Args:
-        f: The function to decorate
-
-    Returns:
-        The decorated function with --export and --show options added
-    """
+def show_options(f):
+    """Decorator that adds --show click options to a command."""
     options = [
         click.option(
+            "-s",
             "--show",
             multiple=True,
             help="Output format (can be specified multiple times)",
+        )
+    ]
+    for option in reversed(options):
+        f = option(f)
+    return f
+
+
+def export_options(f):
+    """Decorator that adds --export and --export-dir options to a command."""
+    options = [
+        click.option(
+            "-ed",
+            "--export-dir",
+            default=".",
+            type=click.Path(file_okay=False, dir_okay=True),
+            show_default=True,
+            help="Directory to save exported files (default: current directory)",
         ),
         click.option(
+            "-e",
             "--export",
             multiple=True,
             help="Export format (can be specified multiple times)",

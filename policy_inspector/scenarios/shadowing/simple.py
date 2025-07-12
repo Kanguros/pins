@@ -127,6 +127,8 @@ class Shadowing(Scenario):
         return rules_by_dg
 
     def _get_security_rules(self, device_group: str) -> list["SecurityRule"]:
+        if self.panorama is None:
+            return []
         pre_rules = self.panorama.get_security_rules(
             device_group=device_group, rulebase="pre"
         )

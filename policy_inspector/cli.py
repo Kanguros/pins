@@ -1,13 +1,18 @@
 import logging
 from pathlib import Path
 from textwrap import dedent
+from typing import Union
 
 import rich_click as click
 
+# Ensure export/show registration for all scenarios
+import policy_inspector.scenarios.shadowing.export  # noqa: F401
+import policy_inspector.scenarios.shadowing.show  # noqa: F401
 from policy_inspector.config import (
-    export_show_options,
+    config_option,
+    export_options,
     panorama_options,
-    yaml_config_option,
+    show_options,
 )
 from policy_inspector.mock_panorama import MockPanoramaConnector
 from policy_inspector.panorama import PanoramaConnector
@@ -85,6 +90,7 @@ def run_scenario_with_panorama(
     panorama_api_version: str = "v11.1",
     panorama_verify_ssl: bool = False,
     export: tuple[str, ...] = (),
+    export_dir: Union[str, None] = ".",
     show: tuple[str, ...] = ("text",),
     panorama_cls: type[PanoramaConnector] = PanoramaConnector,
     **kwargs,
@@ -102,7 +108,7 @@ def run_scenario_with_panorama(
     if show:
         scenario.show(show)
     if export:
-        scenario.export(export)
+        scenario.export(export, output_dir=export_dir)
 
 
 def run_scenario_with_mock_data(
@@ -112,6 +118,7 @@ def run_scenario_with_mock_data(
     device_groups: tuple[str] = (),
     show: tuple[str, ...] = (),
     export: tuple[str, ...] = (),
+    export_dir: Union[str, None] = ".",
     **kwargs,
 ) -> None:
     """Run scenario using mock data from JSON files."""
@@ -134,73 +141,37 @@ def run_scenario_with_mock_data(
     if show:
         scenario.show(show)
     if export:
-        scenario.export(export)
+        scenario.export(export, output_dir=export_dir)
 
 
 @main_run.command("shadowing", no_args_is_help=True)
-@yaml_config_option()
+@config_option()
 @panorama_options
-@export_show_options
+@show_options
+@export_options
 @click.option(
     "--device-groups",
     multiple=True,
     help="Device groups to analyze (can be specified multiple times)",
 )
-def run_shadowing(
-    panorama_hostname: str,
-    panorama_username: str,
-    panorama_password: str,
-    panorama_api_version: str,
-    panorama_verify_ssl: bool,
-    export: tuple[str, ...],
-    show: tuple[str, ...],
-    device_groups: tuple[str],
-) -> None:
+def run_shadowing(**kwargs) -> None:
     """Run shadowing analysis using Panorama data."""
-    run_scenario_with_panorama(
-        Shadowing,
-        panorama_hostname=panorama_hostname,
-        panorama_username=panorama_username,
-        panorama_password=panorama_password,
-        panorama_api_version=panorama_api_version,
-        panorama_verify_ssl=panorama_verify_ssl,
-        export=export,
-        show=show,
-        device_groups=device_groups,
-    )
+    run_scenario_with_panorama(**kwargs)
 
 
 @main_run.command("shadowingvalue", no_args_is_help=True)
-@yaml_config_option()
+@config_option()
 @panorama_options
-@export_show_options
+@show_options
+@export_options
 @click.option(
     "--device-groups",
     multiple=True,
     help="Device groups to analyze (can be specified multiple times)",
 )
-def run_shadowingvalue(
-    panorama_hostname: str,
-    panorama_username: str,
-    panorama_password: str,
-    panorama_api_version: str,
-    panorama_verify_ssl: bool,
-    export: tuple[str, ...],
-    show: tuple[str, ...],
-    device_groups: tuple[str],
-) -> None:
+def run_shadowingvalue(**kwargs) -> None:
     """Run advanced shadowing analysis using Panorama data."""
-    run_scenario_with_panorama(
-        AdvancedShadowing,
-        panorama_hostname=panorama_hostname,
-        panorama_username=panorama_username,
-        panorama_password=panorama_password,
-        panorama_api_version=panorama_api_version,
-        panorama_verify_ssl=panorama_verify_ssl,
-        export=export,
-        show=show,
-        device_groups=device_groups,
-    )
+    run_scenario_with_panorama(AdvancedShadowing, **kwargs)
 
 
 examples = [
@@ -236,7 +207,8 @@ examples = [
 
 
 @main_run.command("example", no_args_is_help=True)
-@export_show_options
+@show_options
+@export_options
 @click.argument(
     "example",
     type=ExampleChoice(examples),
@@ -247,8 +219,9 @@ examples = [
     help="Device groups to analyze (can be specified multiple times)",
 )
 def run_example(
-    export: tuple[str, ...],
     show: tuple[str, ...],
+    export: tuple[str, ...],
+    export_dir,
     device_groups: tuple[str],
     example: Example,
 ) -> None:
@@ -276,6 +249,7 @@ def run_example(
             device_groups=device_groups,
             show=final_show,
             export=final_export,
+            export_dir=export_dir,
             **example.args,
         )
 

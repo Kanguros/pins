@@ -60,6 +60,8 @@ def load_jinja_template(template_dir: Path, template_name: str):
         trim_blocks=True,
         lstrip_blocks=True,
     )
+    env.globals["enumerate"] = enumerate
+    env.globals["getattr"] = getattr
     return env.get_template(template_name)
 
 

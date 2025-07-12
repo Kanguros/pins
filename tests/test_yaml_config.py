@@ -8,18 +8,22 @@ import rich_click as click
 from click.testing import CliRunner
 
 from policy_inspector.config import (
-    export_show_options,
-    yaml_config_option,
+    config_option,
+    export_options,
+    show_options,
 )
 
 
 def test_yaml_config_option_basic():
     """Test basic YAML configuration loading."""
 
-    @yaml_config_option(default="test_config.yaml")
-    @export_show_options
+    @config_option(default="test_config.yaml")
+    @export_options
+    @show_options
     @click.command()
-    def test_command(export: tuple[str, ...], show: tuple[str, ...]):
+    def test_command(
+        export: tuple[str, ...], show: tuple[str, ...], export_dir: str
+    ):
         """Test command."""
         click.echo(f"export={export}")
         click.echo(f"show={show}")
@@ -63,10 +67,13 @@ show:
 def test_yaml_config_option_missing_file():
     """Test behavior when config file doesn't exist."""
 
-    @yaml_config_option(default="nonexistent.yaml")
-    @export_show_options
+    @config_option(default="nonexistent.yaml")
+    @export_options
+    @show_options
     @click.command()
-    def test_command(export: tuple[str, ...], show: tuple[str, ...]):
+    def test_command(
+        export: tuple[str, ...], show: tuple[str, ...], export_dir: str
+    ):
         """Test command."""
         click.echo(f"export={export}")
         click.echo(f"show={show}")
@@ -83,10 +90,13 @@ def test_yaml_config_option_missing_file():
 def test_yaml_config_option_invalid_yaml():
     """Test behavior with invalid YAML."""
 
-    @yaml_config_option(default="test_config.yaml")
-    @export_show_options
+    @config_option(default="test_config.yaml")
+    @export_options
+    @show_options
     @click.command()
-    def test_command(export: tuple[str, ...], show: tuple[str, ...]):
+    def test_command(
+        export: tuple[str, ...], show: tuple[str, ...], export_dir: str
+    ):
         """Test command."""
         click.echo(f"export={export}")
         click.echo(f"show={show}")
@@ -118,11 +128,17 @@ export: [
 def test_comprehensive_config_option():
     """Test the comprehensive config option decorator."""
 
-    @yaml_config_option()
-    @export_show_options
+    @config_option()
+    @export_options
+    @show_options
     @click.option("--name", default="test")
     @click.command()
-    def test_command(name: str, export: tuple[str, ...], show: tuple[str, ...]):
+    def test_command(
+        name: str,
+        export: tuple[str, ...],
+        show: tuple[str, ...],
+        export_dir: str,
+    ):
         """Test command."""
         click.echo(f"name={name}")
         click.echo(f"export={export}")
