@@ -54,6 +54,7 @@ def test_export_as_html_big_report():
     Generate a big HTML report with many device groups, rules, findings, address groups/objects.
     Save it to the current directory for manual inspection.
     """
+
     class BigPanorama:
         def get_security_rules(self, device_group, rulebase):
             return []
@@ -61,14 +62,18 @@ def test_export_as_html_big_report():
     from policy_inspector.model.security_rule import SecurityRule
     from policy_inspector.scenarios.shadowing.simple import Shadowing
 
-    num_device_groups = 3
     num_rules_per_dg = 6
-    num_address_groups = 3
-    num_address_objects = 6
 
     device_groups = ["Branch_1_FW", "Branch_2_FW", "HQ_FW"]
     address_groups = ["AG_Internal", "AG_DMZ", "AG_Guest"]
-    address_objects = ["AO_WebSrv", "AO_DB", "AO_AppSrv", "AO_AdminPC", "AO_GuestPC", "AO_VPNUser"]
+    address_objects = [
+        "AO_WebSrv",
+        "AO_DB",
+        "AO_AppSrv",
+        "AO_AdminPC",
+        "AO_GuestPC",
+        "AO_VPNUser",
+    ]
 
     # Realistic rules
     rules_data = [
@@ -141,7 +146,7 @@ def test_export_as_html_big_report():
         for j in range(num_rules_per_dg):
             rule_info = rules_data[j % len(rules_data)]
             rule = SecurityRule(
-                name=f"{rule_info['name']}_{dg}_{j+1}",
+                name=f"{rule_info['name']}_{dg}_{j + 1}",
                 action=rule_info["action"],
                 source_zones=rule_info["source_zones"],
                 destination_zones=rule_info["destination_zones"],
@@ -155,7 +160,7 @@ def test_export_as_html_big_report():
         findings = []
         for idx in range(1, len(rules)):
             rule = rules[idx]
-            preceding = rules[max(0, idx-3):idx]
+            preceding = rules[max(0, idx - 3) : idx]
             findings.append((rule, preceding))
         analysis_results_by_dg[dg] = findings
 
@@ -168,8 +173,7 @@ def test_export_as_html_big_report():
 
     html = export_as_html(scenario)
     out_path = Path(__file__).parent / "big_report.html"
-    out_path.write_text(html, encoding="utf-8")
+    out_path.write_text(f"{html}\n", encoding="utf-8")
     assert out_path.exists()
     # Optionally check some expected content
     assert "Firewall Policy Analysis Report" in html
-

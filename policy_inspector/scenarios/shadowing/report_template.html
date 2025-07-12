@@ -69,82 +69,38 @@
             cursor: pointer;
         }
 
-        /* ---------- LAYOUT ---------- */
-        .main {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 2rem;
-        }
-
-        /* ---------- TOC SIDEBAR ---------- */
-        .sidebar {
+        /* ---------- NAVIGATION ---------- */
+        .main-nav {
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 1rem 1rem 2rem;
+            padding: 1rem;
             background: #fff;
-            position: sticky;
-            top: 1rem;
-            max-height: calc(100vh - 2rem);
-            overflow-y: auto;
-            transition: transform .3s ease;
         }
         
-        .sidebar h2 {
-            margin: 0 0 .75rem;
-            font-size: 1.2rem;
+        .main-nav h2 {
+            margin: 0 0 1rem;
+            font-size: 1.5rem;
             color: var(--primary-color);
         }
         
-        nav a {
-            display: block;
-            padding: .4rem .6rem;
+        .main-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .main-nav li {
+            margin: .5rem 0;
+        }
+        
+        .main-nav a {
             text-decoration: none;
             color: var(--text-color);
-            border-radius: 4px;
-            transition: background .25s;
+            transition: color .25s;
         }
         
-        nav a:hover,
-        nav a.active {
-            background: var(--bg-cream);
+        .main-nav a:hover {
             color: var(--accent-color);
-        }
-
-        /* Orange background for device groups + findings */
-        details[open] > summary,
-        .device-link,
-        .finding-link {
-            background: var(--bg-cream);
-            color: var(--primary-color);
-            font-weight: 500;
-        }
-
-        /* Details / summary styling */
-        summary {
-            cursor: pointer;
-            list-style: none;
-            padding: .4rem .6rem;
-            border-radius: 4px;
-            transition: background .25s;
-        }
-        
-        summary::-webkit-details-marker {
-            display: none;
-        }
-        
-        summary:hover {
-            background: var(--bg-cream);
-        }
-
-        /* Nested lists */
-        .nested {
-            padding-left: 1rem;
-            margin: 0;
-            list-style: none;
-        }
-        
-        .nested li {
-            margin: .25rem 0;
         }
 
         /* ---------- CONTENT SECTION ---------- */
@@ -221,12 +177,65 @@
             margin: 1rem 0;
         }
 
-        /* ---------- MOBILE RESPONSIVE ---------- */
-        @media (max-width: 767px) {
-            .main {
+        /* ---------- SUMMARY STYLES ---------- */
+        .summary-nav-grid {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 2rem;
+            align-items: start;
+            margin-bottom: 2rem;
+        }
+        .executive-summary-cards {
+            background: #fff;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        .executive-summary-cards h2 {
+            margin-top: 0;
+            font-size: 1.6rem;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: .4rem;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+        .summary-card {
+            background: var(--bg-cream);
+            border-radius: 6px;
+            padding: 1.2rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .summary-card h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+        }
+        .summary-card p {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+        @media (max-width: 900px) {
+            .summary-nav-grid {
                 grid-template-columns: 1fr;
             }
-            
+            .executive-summary-cards {
+                margin-top: 2rem;
+            }
+        }
+
+        /* ---------- MOBILE RESPONSIVE ---------- */
+        @media (max-width: 767px) {
             .toc-toggle {
                 display: inline-block;
             }
@@ -282,6 +291,70 @@
                 font-size: 0.75rem;
             }
         }
+
+        @media print {
+            body {
+                background: #fff !important;
+                color: #222 !important;
+            }
+            .container {
+                box-shadow: none !important;
+                padding: 0 !important;
+                max-width: 100vw !important;
+            }
+            .report-header, .main-nav, .executive-summary-cards {
+                page-break-after: avoid;
+                page-break-before: avoid;
+                background: #fff !important;
+                color: #222 !important;
+                box-shadow: none !important;
+            }
+            .main-nav {
+                border: none !important;
+            }
+            .section {
+                background: #fff !important;
+                color: #222 !important;
+                box-shadow: none !important;
+                page-break-after: always;
+                page-break-before: auto;
+            }
+            .section#analysis-results {
+                page-break-after: avoid;
+            }
+            .section[id^="device-group-"] {
+                page-break-before: always;
+                page-break-after: always;
+            }
+            .table-wrapper, table {
+                page-break-inside: avoid !important;
+            }
+            th, td {
+                color: #222 !important;
+                background: #fff !important;
+                border-color: #ccc !important;
+            }
+            .alert {
+                background: #f9f9f9 !important;
+                color: #222 !important;
+                border-left: 4px solid #ccc !important;
+            }
+            nav, .main-nav, .toc-toggle, .sidebar {
+                display: none !important;
+            }
+            a {
+                color: #222 !important;
+                text-decoration: none !important;
+            }
+            h1, h2, h3, h4 {
+                color: #222 !important;
+                background: none !important;
+                page-break-after: avoid;
+            }
+            @page {
+                margin: 1.5cm;
+            }
+        }
     </style>
 </head>
 <body>
@@ -290,213 +363,281 @@
         <header class="report-header">
             <h1>Firewall Policy Analysis Report</h1>
             <p class="subtitle">Generated: {{ current_date }}</p>
-            <button class="toc-toggle" id="tocBtn" aria-controls="toc">☰ Menu</button>
         </header>
 
-        <!-- ---------- MAIN GRID ---------- -->
-        <div class="main">
-            <!-- ---------- SIDEBAR NAV ---------- -->
-            <aside class="sidebar" id="toc" role="navigation" aria-label="Table of Contents">
+        <div class="summary-nav-grid">
+            <!-- ---------- NAVIGATION ---------- -->
+            <nav class="main-nav" role="navigation" aria-label="Table of Contents">
                 <h2>Table of Contents</h2>
-                <nav>
-                    <a href="#executive-summary">Executive Summary</a>
-                    <a href="#introduction">1. Introduction</a>
-                    <a href="#scenario-overview">2. Scenario Overview</a>
-                    <details>
-                        <summary class="device-link">3. Analysis Results</summary>
-                        <ul class="nested">
-                            {% if scenario.analysis_results_by_dg %}
-                            {% set dg_idx = 1 %}
-                            {% for dg, analysis_results in scenario.analysis_results_by_dg.items() %}
-                            <li>
-                                <details>
-                                    <summary class="device-link">3.{{ dg_idx }} {{ dg }}</summary>
-                                    {% if analysis_results %}
-                                    <ul class="nested">
-                                        {% set finding_idx = 1 %}
-                                        {% for idx, (rule, _) in enumerate(analysis_results) %}
-                                        <li>
-                                            <a class="finding-link" href="#device-group-{{ dg|lower|replace(' ', '-') }}-finding-{{ finding_idx }}">
-                                                3.{{ dg_idx }}.{{ finding_idx }} {{ rule.name }}
-                                            </a>
-                                        </li>
-                                        {% set finding_idx = finding_idx + 1 %}
-                                        {% endfor %}
-                                    </ul>
-                                    {% endif %}
-                                </details>
-                            </li>
-                            {% set dg_idx = dg_idx + 1 %}
-                            {% endfor %}
-                            {% endif %}
-                        </ul>
-                    </details>
-                    <a href="#methodology">4. Methodology</a>
-                    <a href="#recommendations">5. Recommendations</a>
-                    <a href="#appendix">6. Appendix</a>
-                </nav>
-            </aside>
+                <ul>
+                    <li><a href="#executive-summary">Executive Summary</a></li>
+                    <li><a href="#introduction">Introduction</a></li>
+                    <li><a href="#scenario-overview">Scenario Overview</a></li>
+                    <li>
+                        <details>
+                            <summary class="device-link">Analysis Results</summary>
+                            <ul class="nested">
+                                {% if scenario.analysis_results_by_dg %}
+                                {% set dg_idx = 1 %}
+                                {% for dg, analysis_results in scenario.analysis_results_by_dg.items() %}
+                                <li>
+                                    <details>
+                                        <summary class="device-link">{{ dg }}</summary>
+                                        {% if analysis_results %}
+                                        <ul class="nested findings-list" style="display:none;">
+                                            {% set finding_idx = 1 %}
+                                            {% for idx, (rule, _) in enumerate(analysis_results) %}
+                                            <li>
+                                                <a class="finding-link" href="#device-group-{{ dg|lower|replace(' ', '-') }}-finding-{{ finding_idx }}">
+                                                    {{ rule.name }}
+                                                </a>
+                                            </li>
+                                            {% set finding_idx = finding_idx + 1 %}
+                                            {% endfor %}
+                                        </ul>
+                                        {% endif %}
+                                    </details>
+                                </li>
+                                {% set dg_idx = dg_idx + 1 %}
+                                {% endfor %}
+                                {% endif %}
+                            </ul>
+                        </details>
+                    </li>
+                    <li><a href="#methodology">Methodology</a></li>
+                    <li><a href="#recommendations">Recommendations</a></li>
+                    <li><a href="#appendix">Appendix</a></li>
+                </ul>
+            </nav>
 
-            <!-- ---------- CONTENT ---------- -->
-            <main>
-                <!-- EXECUTIVE SUMMARY -->
-                <section class="section" id="executive-summary">
-                    <h2>Executive Summary</h2>
-                    <p>This report analyzes firewall policy configurations for potential rule shadowing issues across {{ scenario.device_groups|length if scenario.device_groups else 0 }} device group(s). The analysis identified {{ scenario.analysis_results_by_dg.values()|map('length')|sum if scenario.analysis_results_by_dg else 0 }} shadowing findings that require attention to ensure optimal security policy performance.</p>
-                </section>
-
-                <!-- INTRODUCTION -->
-                <section class="section" id="introduction">
-                    <h2>1. Introduction</h2>
-                    <p>This comprehensive policy analysis report examines firewall rule configurations for scenario "<strong>{{ scenario.name }}</strong>" to identify potential shadowing issues that may impact security policy effectiveness.</p>
-                    
-                    {% if scenario.__doc__ %}
-                    <div class="alert">
-                        <strong>Scenario Description:</strong> {{ scenario.__doc__ }}
+            <!-- ---------- EXECUTIVE SUMMARY ---------- -->
+            <section class="executive-summary-cards" id="executive-summary">
+                <h2>Executive Summary</h2>
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <h3>Total Device Groups</h3>
+                        <p>{{ scenario.device_groups|length if scenario.device_groups else 0 }}</p>
                     </div>
-                    {% endif %}
-                </section>
-
-                <!-- SCENARIO OVERVIEW -->
-                <section class="section" id="scenario-overview">
-                    <h2>2. Scenario Overview</h2>
-                    <p>{{ scenario.__doc__ or "Analysis of firewall policy configurations to detect rule shadowing patterns." }}</p>
-                    
-                    {% if scenario.security_rules_by_dg %}
-                    <div class="alert">
-                        <strong>Analysis Scope:</strong> {{ scenario.security_rules_by_dg.keys()|length }} device group(s) containing {{ scenario.security_rules_by_dg.values()|map('length')|sum }} security rules in total.
+                    <div class="summary-card">
+                        <h3>Total Rules</h3>
+                        <p>{{ scenario.security_rules_by_dg.values()|map('length')|sum if scenario.security_rules_by_dg else 0 }}</p>
                     </div>
-                    {% endif %}
-                </section>
-
-                <!-- ANALYSIS RESULTS -->
-                <section class="section" id="analysis-results">
-                    <h2>3. Analysis Results</h2>
-
-                    {% if scenario.analysis_results_by_dg %}
-                    {% set dg_idx = 1 %}
-                    {% for dg, analysis_results in scenario.analysis_results_by_dg.items() %}
-                    <div class="section" id="device-group-{{ dg|lower|replace(' ', '-') }}">
-                        <h3>3.{{ dg_idx }} Device Group: {{ dg }}</h3>
-
-                        {% if analysis_results|length %}
-                        <div class="alert">
-                            <strong>{{ analysis_results|length }} shadowing issue(s) detected.</strong>
-                        </div>
-                        {% else %}
-                        <div class="alert">
-                            <strong>No shadowing issues detected</strong> in this device group.
-                        </div>
-                        {% endif %}
-
-                        {% set finding_idx = 1 %}
-                        {% for idx, (rule, shadowing_rules) in enumerate(analysis_results) %}
-                        <h4 class="finding-header" id="device-group-{{ dg|lower|replace(' ', '-') }}-finding-{{ finding_idx }}">
-                            3.{{ dg_idx }}.{{ finding_idx }} Finding {{ finding_idx }} – {{ rule.name }}
-                        </h4>
-
-                        <div class="table-wrapper">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Attribute</th>
-                                        <th>Shadowed Rule</th>
-                                        {% for j in range(shadowing_rules|length) %}
-                                        <th>Preceding {{ j+1 }}</th>
-                                        {% endfor %}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for attr in rule.__pydantic_fields__.keys() %}
-                                    {% set rule_val = getattr(rule, attr) %}
-                                    {% set preceding_vals = [] %}
-                                    {% for pr in shadowing_rules %}
-                                    {% set _ = preceding_vals.append(getattr(pr, attr)) %}
-                                    {% endfor %}
-                                    {% if rule_val or preceding_vals|select('string')|list %}
-                                    <tr>
-                                        <td class="attribute-cell">{{ attr.replace('_', ' ').title() }}</td>
-                                        <td>{{ rule_val }}</td>
-                                        {% for val in preceding_vals %}
-                                        <td>{{ val }}</td>
-                                        {% endfor %}
-                                    </tr>
-                                    {% endif %}
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        {% set finding_idx = finding_idx + 1 %}
-                        {% endfor %}
+                    <div class="summary-card">
+                        <h3>Total Findings</h3>
+                        <p>{{ scenario.analysis_results_by_dg.values()|map('length')|sum if scenario.analysis_results_by_dg else 0 }}</p>
                     </div>
-                    {% set dg_idx = dg_idx + 1 %}
-                    {% endfor %}
-                    {% else %}
-                    <div class="alert">
-                        <strong>No analysis results available.</strong> The analysis may not have been executed yet.
-                    </div>
-                    {% endif %}
-                </section>
-
-                <!-- METHODOLOGY -->
-                <section class="section" id="methodology">
-                    <h2>4. Methodology</h2>
-                    <p>This analysis employs automated checks to identify potential rule shadowing scenarios. Each check examines specific rule attributes to determine if preceding rules may prevent subsequent rules from being evaluated.</p>
-                    
-                    {% if scenario.checks %}
-                    <h3>Validation Checks</h3>
-                    {% for check in scenario.checks %}
-                    <div class="alert">
-                        <strong>{{ check.__name__.replace('_', ' ').title() }}</strong>
-                        <p>{{ check.__doc__ or "No description available" }}</p>
-                    </div>
-                    {% endfor %}
-                    {% endif %}
-                </section>
-
-                <!-- RECOMMENDATIONS -->
-                <section class="section" id="recommendations">
-                    <h2>5. Recommendations</h2>
-                    
-                    {% if scenario.analysis_results_by_dg and scenario.analysis_results_by_dg.values()|map('length')|sum > 0 %}
-                    <div class="alert">
-                        <strong>Immediate Action Required:</strong> {{ scenario.analysis_results_by_dg.values()|map('length')|sum }} shadowing issue(s) need attention.
-                    </div>
-                    
-                    <h3>Priority Actions</h3>
-                    <ol>
-                        <li><strong>Review Rule Ordering:</strong> Examine the sequence of rules in affected device groups to ensure more specific rules are positioned before general ones.</li>
-                        <li><strong>Consolidate Redundant Rules:</strong> Consider merging or removing rules that may be redundant due to shadowing.</li>
-                        <li><strong>Implement Rule Testing:</strong> Test rule modifications in a controlled environment before applying to production.</li>
-                        <li><strong>Regular Policy Audits:</strong> Establish periodic reviews to prevent future shadowing issues.</li>
-                    </ol>
-                    {% else %}
-                    <div class="alert">
-                        <strong>No immediate action required.</strong> No shadowing issues were detected in the analyzed policies.
-                    </div>
-                    {% endif %}
-                </section>
-
-                <!-- APPENDIX -->
-                <section class="section" id="appendix">
-                    <h2>6. Appendix</h2>
-                    <h3>Technical Details</h3>
-                    <p>This report was generated using automated policy analysis tools designed to identify potential configuration issues in firewall rule sets.</p>
-                    
-                    <h3>Glossary</h3>
-                    <dl>
-                        <dt><strong>Rule Shadowing</strong></dt>
-                        <dd>A condition where a firewall rule is never evaluated because a preceding rule with broader criteria has already matched and processed the traffic.</dd>
-                        
-                        <dt><strong>Device Group</strong></dt>
-                        <dd>A logical grouping of network devices that share common security policies and rules.</dd>
-                        
-                        <dt><strong>Preceding Rule</strong></dt>
-                        <dd>A rule that appears earlier in the rule evaluation sequence and may prevent subsequent rules from being processed.</dd>
-                    </dl>
-                </section>
-            </main>
+                </div>
+                <p>This report analyzes firewall policy configurations for potential rule shadowing issues across {{ scenario.device_groups|length if scenario.device_groups else 0 }} device group(s). The analysis identified {{ scenario.analysis_results_by_dg.values()|map('length')|sum if scenario.analysis_results_by_dg else 0 }} shadowing findings that require attention to ensure optimal security policy performance.</p>
+            </section>
         </div>
+
+        <!-- ---------- CONTENT ---------- -->
+        <main>
+            <!-- EXECUTIVE SUMMARY -->
+            <section class="section" id="executive-summary">
+                <h2>Executive Summary</h2>
+                <p>This report analyzes firewall policy configurations for potential rule shadowing issues across {{ scenario.device_groups|length if scenario.device_groups else 0 }} device group(s). The analysis identified {{ scenario.analysis_results_by_dg.values()|map('length')|sum if scenario.analysis_results_by_dg else 0 }} shadowing findings that require attention to ensure optimal security policy performance.</p>
+            </section>
+
+            <!-- INTRODUCTION -->
+            <section class="section" id="introduction">
+                <h2>1. Introduction</h2>
+                <p>This comprehensive policy analysis report examines firewall rule configurations for scenario "<strong>{{ scenario.name }}</strong>" to identify potential shadowing issues that may impact security policy effectiveness.</p>
+                
+                {% if scenario.__doc__ %}
+                <div class="alert">
+                    <strong>Scenario Description:</strong> {{ scenario.__doc__ }}
+                </div>
+                {% endif %}
+            </section>
+
+            <!-- SCENARIO OVERVIEW -->
+            <section class="section" id="scenario-overview">
+                <h2>2. Scenario Overview</h2>
+                <p>{{ scenario.__doc__ or "Analysis of firewall policy configurations to detect rule shadowing patterns." }}</p>
+                
+                {% if scenario.security_rules_by_dg %}
+                <div class="alert">
+                    <strong>Analysis Scope:</strong> {{ scenario.security_rules_by_dg.keys()|length }} device group(s) containing {{ scenario.security_rules_by_dg.values()|map('length')|sum }} security rules in total.
+                </div>
+                {% endif %}
+            </section>
+
+            <!-- ANALYSIS RESULTS -->
+            <section class="section" id="analysis-results">
+                <h2>3. Analysis Results</h2>
+
+                {% if scenario.analysis_results_by_dg %}
+                {% set dg_idx = 1 %}
+                {% for dg, analysis_results in scenario.analysis_results_by_dg.items() %}
+                <div class="section" id="device-group-{{ dg|lower|replace(' ', '-') }}">
+                    <h3>3.{{ dg_idx }} Device Group: {{ dg }}</h3>
+
+                    {% if analysis_results|length %}
+                    <div class="alert">
+                        <strong>{{ analysis_results|length }} shadowing issue(s) detected.</strong>
+                    </div>
+                    {% else %}
+                    <div class="alert">
+                        <strong>No shadowing issues detected</strong> in this device group.
+                    </div>
+                    {% endif %}
+
+                    {% set finding_idx = 1 %}
+                {% for idx, (rule, shadowing_rules) in enumerate(analysis_results) %}
+                <h4 class="finding-header" id="device-group-{{ dg|lower|replace(' ', '-') }}-finding-{{ finding_idx }}">
+                    {{ rule.name }}
+                </h4>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rule</th>
+                                <th>Name</th>
+                                <th>Index</th>
+                                {% for attr in rule.__pydantic_fields__.keys() if attr not in ['name', 'index'] %}
+                                <th>{{ attr.replace('_', ' ').title() }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Shadowed Rule</td>
+                                <td>{{ rule.name }}</td>
+                                <td>{{ rule.index }}</td>
+                                {% for attr in rule.__pydantic_fields__.keys() if attr not in ['name', 'index'] %}
+                                <td>{% if getattr(rule, attr) is iterable and not getattr(rule, attr) is string %}{% for v in getattr(rule, attr) %}{{ v }}<br>{% endfor %}{% else %}{{ getattr(rule, attr) }}{% endif %}</td>
+                                {% endfor %}
+                            </tr>
+                            {% for pr in shadowing_rules %}
+                            <tr>
+                                <td>Preceding Rule</td>
+                                <td>{{ pr.name }}</td>
+                                <td>{{ pr.index }}</td>
+                                {% for attr in rule.__pydantic_fields__.keys() if attr not in ['name', 'index'] %}
+                                <td>{% if getattr(pr, attr) is iterable and not getattr(pr, attr) is string %}{% for v in getattr(pr, attr) %}{{ v }}<br>{% endfor %}{% else %}{{ getattr(pr, attr) }}{% endif %}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% set finding_idx = finding_idx + 1 %}
+                {% endfor %}
+                <script>
+        // Mobile sidebar toggle
+        const btn = document.getElementById('tocBtn');
+        const toc = document.getElementById('toc');
+        if (btn && toc) {
+            btn.addEventListener('click', function() {
+                toc.classList.toggle('open');
+            });
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth <= 767 && 
+                    !toc.contains(event.target) && 
+                    !btn.contains(event.target)) {
+                    toc.classList.remove('open');
+                }
+            });
+        }
+        // Toggle findings list in sidebar
+        document.querySelectorAll('.device-link').forEach(function(el) {
+            el.addEventListener('click', function() {
+                const findings = el.parentElement.querySelector('.findings-list');
+                if (findings) {
+                    findings.style.display = findings.style.display === 'none' ? 'block' : 'none';
+                }
+            });
+        });
+        // Highlight active link on scroll
+        const links = document.querySelectorAll('nav a[href^="#"]');
+        const sections = document.querySelectorAll('section[id]');
+        function setActive() {
+            const pos = window.scrollY + 100;
+            let current = '';
+            sections.forEach(sec => {
+                if (pos >= sec.offsetTop) {
+                    current = sec.getAttribute('id');
+                }
+            });
+            links.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        setActive();
+        window.addEventListener('scroll', setActive);
+    </script>
+                </div>
+                {% set dg_idx = dg_idx + 1 %}
+                {% endfor %}
+                {% else %}
+                <div class="alert">
+                    <strong>No analysis results available.</strong> The analysis may not have been executed yet.
+                </div>
+                {% endif %}
+            </section>
+
+            <!-- METHODOLOGY -->
+            <section class="section" id="methodology">
+                <h2>4. Methodology</h2>
+                <p>This analysis employs automated checks to identify potential rule shadowing scenarios. Each check examines specific rule attributes to determine if preceding rules may prevent subsequent rules from being evaluated.</p>
+                
+                {% if scenario.checks %}
+                <h3>Validation Checks</h3>
+                {% for check in scenario.checks %}
+                <div class="alert">
+                    <strong>{{ check.__name__.replace('_', ' ').title() }}</strong>
+                    <p>{{ check.__doc__ or "No description available" }}</p>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </section>
+
+            <!-- RECOMMENDATIONS -->
+            <section class="section" id="recommendations">
+                <h2>5. Recommendations</h2>
+                
+                {% if scenario.analysis_results_by_dg and scenario.analysis_results_by_dg.values()|map('length')|sum > 0 %}
+                <div class="alert">
+                    <strong>Immediate Action Required:</strong> {{ scenario.analysis_results_by_dg.values()|map('length')|sum }} shadowing issue(s) need attention.
+                </div>
+                
+                <h3>Priority Actions</h3>
+                <ol>
+                    <li><strong>Review Rule Ordering:</strong> Examine the sequence of rules in affected device groups to ensure more specific rules are positioned before general ones.</li>
+                    <li><strong>Consolidate Redundant Rules:</strong> Consider merging or removing rules that may be redundant due to shadowing.</li>
+                    <li><strong>Implement Rule Testing:</strong> Test rule modifications in a controlled environment before applying to production.</li>
+                    <li><strong>Regular Policy Audits:</strong> Establish periodic reviews to prevent future shadowing issues.</li>
+                </ol>
+                {% else %}
+                <div class="alert">
+                    <strong>No immediate action required.</strong> No shadowing issues were detected in the analyzed policies.
+                </div>
+                {% endif %}
+            </section>
+
+            <!-- APPENDIX -->
+            <section class="section" id="appendix">
+                <h2>6. Appendix</h2>
+                <h3>Technical Details</h3>
+                <p>This report was generated using automated policy analysis tools designed to identify potential configuration issues in firewall rule sets.</p>
+                
+                <h3>Glossary</h3>
+                <dl>
+                    <dt><strong>Rule Shadowing</strong></dt>
+                    <dd>A condition where a firewall rule is never evaluated because a preceding rule with broader criteria has already matched and processed the traffic.</dd>
+                    
+                    <dt><strong>Device Group</strong></dt>
+                    <dd>A logical grouping of network devices that share common security policies and rules.</dd>
+                    
+                    <dt><strong>Preceding Rule</strong></dt>
+                    <dd>A rule that appears earlier in the rule evaluation sequence and may prevent subsequent rules from being processed.</dd>
+                </dl>
+            </section>
+        </main>
     </div>
 
     <script>
