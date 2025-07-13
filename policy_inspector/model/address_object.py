@@ -1,6 +1,6 @@
 import logging
 from ipaddress import IPv4Address, IPv4Network
-from typing import ClassVar, Union
+from typing import ClassVar
 
 from pydantic import Field, field_validator
 
@@ -42,7 +42,7 @@ class AddressObject(MainModel):
             key_name = next(k for k in type_map if k in data)
             subclass = type_map[key_name]
 
-            data_tag: Union[dict, None] = data.get("tag", None)
+            data_tag: dict | None = data.get("tag", None)
             if not data_tag:
                 tags = set()
             else:
@@ -137,7 +137,7 @@ class AddressObjectIPRange(AddressObject):
         if isinstance(v, str):
             parts = tuple(v.split("-"))
             return tuple(map(IPv4Address, parts))
-        if isinstance(v, (tuple, list)):
+        if isinstance(v, tuple | list):
             return tuple(map(IPv4Address, v))
         return v
 

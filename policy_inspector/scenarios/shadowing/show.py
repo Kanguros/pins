@@ -58,7 +58,7 @@ def show_as_table(scenario, *args, **kwargs) -> None:
                 attribute_values = []
                 for rule in rules:
                     rule_attribute = getattr(rule, attribute_name)
-                    if isinstance(rule_attribute, (set, list)):
+                    if isinstance(rule_attribute, set | list):
                         value = "\n".join(f"- {str(v)}" for v in rule_attribute)
                     else:
                         value = str(rule_attribute)

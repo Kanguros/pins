@@ -1,0 +1,117 @@
+/* Custom CSS for Policy Inspector Documentation */
+
+/* Improve code block styling */
+.highlight {
+    border-radius: 6px;
+    border: 1px solid #e1e4e8;
+}
+
+/* Better table styling */
+.wy-table-responsive table td,
+.wy-table-responsive table th {
+    white-space: normal;
+}
+
+/* Improve admonition styling */
+.admonition {
+    border-radius: 6px;
+    margin: 1em 0;
+}
+
+.admonition.note {
+    border-left: 5px solid #2196F3;
+}
+
+.admonition.warning {
+    border-left: 5px solid #FF9800;
+}
+
+.admonition.tip {
+    border-left: 5px solid #4CAF50;
+}
+
+/* Better navigation styling */
+.wy-nav-content-wrap {
+    margin-left: 300px;
+}
+
+@media screen and (max-width: 768px) {
+    .wy-nav-content-wrap {
+        margin-left: 0;
+    }
+}
+
+/* Improve search results */
+.search li div.context {
+    color: #888;
+    margin: 2px 0 0 30px;
+    text-align: left;
+}
+
+/* Better version selector */
+.rst-versions {
+    border-top: 5px solid #2980B9;
+}
+
+/* Improve logo area */
+.wy-side-nav-search {
+    background-color: #2980B9;
+}
+
+.wy-side-nav-search > a {
+    color: #fff;
+    font-size: 1.3em;
+    font-weight: bold;
+}
+
+/* Better footer */
+.rst-footer-buttons {
+    margin-top: 2em;
+}
+
+/* Improve code documentation */
+.sig-name {
+    font-weight: bold;
+}
+
+.property {
+    color: #008000;
+}
+
+/* Better API documentation styling */
+.py.class > dt,
+.py.function > dt,
+.py.method > dt {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 8px 12px;
+}
+
+/* Improve parameter lists */
+.field-list > dt {
+    background-color: #f1f3f4;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-weight: bold;
+}
+
+/* Better navigation breadcrumbs */
+.wy-breadcrumbs {
+    margin-bottom: 1em;
+}
+
+.wy-breadcrumbs a {
+    color: #2980B9;
+}
+
+/* Improve mobile responsiveness */
+@media screen and (max-width: 480px) {
+    .wy-table-responsive table {
+        font-size: 90%;
+    }
+    
+    .highlight {
+        font-size: 85%;
+    }
+}

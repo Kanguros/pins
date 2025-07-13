@@ -1,7 +1,8 @@
 import json
 import logging
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any, Optional
 
 import rich_click as click
 from click.types import Choice as clickChoice

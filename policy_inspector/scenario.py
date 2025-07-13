@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Optional, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 if TYPE_CHECKING:
     from policy_inspector.panorama import PanoramaConnector
@@ -20,7 +20,7 @@ class Scenario:
         _scenarios: A set of all registered subclasses of Scenario.
     """
 
-    name: Optional[str] = None
+    name: str | None = None
 
     _scenarios: dict[str, type["Scenario"]] = {}
 

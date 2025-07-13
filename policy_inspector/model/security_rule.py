@@ -1,4 +1,4 @@
-from typing import ClassVar, Optional, Union
+from typing import ClassVar
 
 from pydantic import Field, PositiveInt
 
@@ -35,36 +35,36 @@ class SecurityRule(MainModel):
         default="allow",
         description="Whether the traffic should be allowed or denied.",
     )
-    source_zones: Union[SetStr, AnyObjType] = Field(
+    source_zones: SetStr | AnyObjType = Field(
         default={"any"},
         description="Set of source zones or 'any'",
     )
-    destination_zones: Union[SetStr, AnyObjType] = Field(
+    destination_zones: SetStr | AnyObjType = Field(
         default={"any"},
         description="Set of destination zones or 'any'",
     )
 
-    source_addresses: Union[SetStr, AnyObjType] = Field(
+    source_addresses: SetStr | AnyObjType = Field(
         default={"any"},
         description="Source address objects/groups or 'any'",
     )
 
-    destination_addresses: Union[SetStr, AnyObjType] = Field(
+    destination_addresses: SetStr | AnyObjType = Field(
         default={"any"},
         description="Destination address objects/groups or 'any'",
     )
 
-    applications: Union[SetStr, AnyObjType] = Field(
+    applications: SetStr | AnyObjType = Field(
         default={"any"},
         description="Set of applications or 'any' that the rule applies to.",
     )
 
-    services: Union[SetStr, AnyObjType, AppDefaultType] = Field(
+    services: SetStr | AnyObjType | AppDefaultType = Field(
         default_factory=set,
         description="Services (e.g., TCP/UDP ports) or 'any'/'application-default'",
     )
 
-    category: Union[SetStr, AnyObjType] = Field(
+    category: SetStr | AnyObjType = Field(
         default={"any"},
         description="URL categories or 'any'",
     )
@@ -133,18 +133,18 @@ class SecurityRule(MainModel):
         return security_rules
 
 
-AddressObjectTypes = Union[
-    AddressObjectIPNetwork, AddressObjectIPRange, AddressObjectFQDN
-]
+AddressObjectTypes = (
+    AddressObjectIPNetwork | AddressObjectIPRange | AddressObjectFQDN
+)
 
 
 class AdvancedSecurityRule(SecurityRule):
-    resolved_source_addresses: Optional[list[AddressObjectTypes]] = Field(
+    resolved_source_addresses: list[AddressObjectTypes] | None = Field(
         default=None,
         description="Resolved source addresses to a list of specific Address Objects",
     )
 
-    resolved_destination_addresses: Optional[list[AddressObjectTypes]] = Field(
+    resolved_destination_addresses: list[AddressObjectTypes] | None = Field(
         default=None,
         description="Resolved destination to a list of specific Address Objects",
     )

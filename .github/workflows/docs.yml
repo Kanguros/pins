@@ -1,0 +1,390 @@
+name: 📚 Documentation
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'docs/**'
+      - 'policy_inspector/**'
+      - 'pyproject.toml'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'policy_inspector/**'
+      - 'pyproject.toml'
+  workflow_dispatch:  # Allow manual triggering
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Build documentation
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      build_status: ${{ steps.build-docs.outputs.build_status }}
+      html_files: ${{ steps.build-docs.outputs.html_files }}
+      asset_files: ${{ steps.build-docs.outputs.asset_files }}
+      image_files: ${{ steps.build-docs.outputs.image_files }}
+      warning_count: ${{ steps.build-docs.outputs.warning_count }}
+      coverage_percentage: ${{ steps.coverage.outputs.coverage_percentage }}
+      linkcheck_status: ${{ steps.linkcheck.outputs.linkcheck_status }}
+    steps:
+      - name: 📂 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for version info
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: 📦 Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: 🔍 Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: 📚 Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: |
+          poetry install --with docs
+          
+      - name: 🔧 Configure Sphinx
+        run: |
+          echo "Building documentation for commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "## 🚀 Documentation Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📝 **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "🌿 **Branch**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "🐍 **Python Version**: $(python --version)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🏗️ Build documentation
+        id: build-docs
+        run: |
+          cd docs
+          
+          # Start build section in summary
+          echo "## 📚 Documentation Build" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Build with detailed output and capture both stdout and stderr
+          if poetry run sphinx-build -W -b html source build/html 2>&1 | tee build.log; then
+            echo "✅ **Build Status**: Success" >> $GITHUB_STEP_SUMMARY
+            echo "build_status=success" >> $GITHUB_OUTPUT
+          else
+            echo "❌ **Build Status**: Failed" >> $GITHUB_STEP_SUMMARY
+            echo "build_status=failed" >> $GITHUB_OUTPUT
+            
+            # Add error details to summary
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### ❌ Build Errors" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -20 build.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          
+          # Add .nojekyll file to prevent GitHub Pages from processing with Jekyll
+          touch build/html/.nojekyll
+          
+          # Generate build statistics
+          file_count=$(find build/html -name "*.html" | wc -l)
+          asset_count=$(find build/html -name "*.css" -o -name "*.js" | wc -l)
+          image_count=$(find build/html -name "*.png" -o -name "*.jpg" -o -name "*.svg" | wc -l)
+          total_size=$(du -sh build/html | cut -f1)
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Build Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📄 HTML files | $file_count |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🎨 CSS/JS assets | $asset_count |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🖼️ Images | $image_count |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📦 Total size | $total_size |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Save statistics as outputs
+          echo "html_files=$file_count" >> $GITHUB_OUTPUT
+          echo "asset_files=$asset_count" >> $GITHUB_OUTPUT
+          echo "image_files=$image_count" >> $GITHUB_OUTPUT
+          
+          # Check for warnings
+          if grep -i "warning" build.log > /dev/null; then
+            warning_count=$(grep -c -i "warning" build.log)
+            echo "⚠️ **Warnings**: $warning_count found" >> $GITHUB_STEP_SUMMARY
+            echo "warning_count=$warning_count" >> $GITHUB_OUTPUT
+            
+            # Show warnings in collapsible section
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "<details>" >> $GITHUB_STEP_SUMMARY
+            echo "<summary>⚠️ View Warnings ($warning_count)</summary>" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            grep -i "warning" build.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "</details>" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **Warnings**: None" >> $GITHUB_STEP_SUMMARY
+            echo "warning_count=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📋 Generate coverage reports
+        id: coverage
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 Documentation Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Install interrogate for documentation coverage
+          poetry add --group dev interrogate
+          
+          # Run coverage integration script and capture output
+          if poetry run python scripts/coverage_integration.py run 2>&1 | tee coverage.log; then
+            echo "✅ **Coverage Analysis**: Completed" >> $GITHUB_STEP_SUMMARY
+            
+            # Extract coverage percentage if available
+            if grep -o "[0-9]*%" coverage.log > /dev/null; then
+              coverage_pct=$(grep -o "[0-9]*%" coverage.log | tail -1)
+              echo "📈 **Overall Coverage**: $coverage_pct" >> $GITHUB_STEP_SUMMARY
+              echo "coverage_percentage=$coverage_pct" >> $GITHUB_OUTPUT
+            else
+              echo "📈 **Overall Coverage**: Not available" >> $GITHUB_STEP_SUMMARY
+              echo "coverage_percentage=unknown" >> $GITHUB_OUTPUT
+            fi
+            
+            # Add coverage details in collapsible section
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "<details>" >> $GITHUB_STEP_SUMMARY
+            echo "<summary>📋 View Coverage Details</summary>" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat coverage.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "</details>" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **Coverage Analysis**: Failed" >> $GITHUB_STEP_SUMMARY
+            echo "coverage_percentage=failed" >> $GITHUB_OUTPUT
+          fi
+          
+          # Copy coverage reports to build directory
+          if [ -f "docs/build/coverage-report.md" ]; then
+            cp docs/build/coverage-report.md docs/build/html/coverage-report.html
+            echo "📄 [Coverage Report](./coverage-report.html) available in built docs" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 🔄 Setup versioning
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          # Get current version and add to documentation
+          poetry run python scripts/docs_versioning.py current --auto-add
+          
+          # Create version selector
+          poetry run python scripts/docs_versioning.py create-selector
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🔄 Versioning" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Version information added to documentation" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🔗 Check external links
+        id: linkcheck
+        run: |
+          cd docs
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🔗 Link Validation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if poetry run sphinx-build -b linkcheck source build/linkcheck 2>&1 | tee linkcheck.log; then
+            echo "✅ **Link Check**: Passed" >> $GITHUB_STEP_SUMMARY
+            echo "linkcheck_status=success" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ **Link Check**: Some issues found" >> $GITHUB_STEP_SUMMARY
+            echo "linkcheck_status=warning" >> $GITHUB_OUTPUT
+            
+            # Show broken links in collapsible section
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "<details>" >> $GITHUB_STEP_SUMMARY
+            echo "<summary>🔗 View Link Check Results</summary>" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat linkcheck.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "</details>" >> $GITHUB_STEP_SUMMARY
+          fi
+        continue-on-error: true  # Don't fail the build on broken external links
+
+      - name: 📊 Generate final summary
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🎯 Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Summary table
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🏗️ Build | ${{ steps.build-docs.outputs.build_status == 'success' && '✅ Success' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📊 Coverage | ${{ steps.coverage.outputs.coverage_percentage != 'failed' && '✅ Complete' || '⚠️ Issues' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔗 Links | ${{ steps.linkcheck.outputs.linkcheck_status == 'success' && '✅ Valid' || '⚠️ Issues' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ github.ref }}" == "refs/heads/main" ] && [ "${{ github.event_name }}" == "push" ]; then
+            echo "🚀 **Next Step**: Documentation will be deployed to GitHub Pages" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "📋 **Next Step**: Download preview artifact to review changes" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 📁 Setup Pages
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/configure-pages@v3
+
+      - name: 📤 Upload documentation artifact
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: docs/build/html
+
+      - name: 📎 Upload build artifacts for review
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v3
+        with:
+          name: documentation-preview
+          path: docs/build/html
+          retention-days: 7
+
+  # Quality checks
+  quality:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: 📂 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: 📦 Install Poetry
+        uses: snok/install-poetry@v1
+
+      - name: 📚 Install dependencies
+        run: poetry install --with docs
+
+      - name: 🔍 Check documentation coverage
+        run: |
+          echo "## 🔍 Quality Checks" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Install interrogate if not already installed
+          poetry add --group dev interrogate
+          
+          # Use the coverage integration script
+          if poetry run python scripts/coverage_integration.py run; then
+            echo "✅ **Coverage Check**: Passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **Coverage Check**: Issues found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 🎯 Validate MyST syntax
+        run: |
+          cd docs
+          echo "🎯 **MyST Syntax Validation**: Starting..." >> $GITHUB_STEP_SUMMARY
+          
+          # Simple MyST validation
+          validation_passed=true
+          for file in $(find source -name "*.md"); do
+            if ! poetry run python -c "
+            import sys
+            try:
+                with open('$file', 'r', encoding='utf-8') as f:
+                    content = f.read()
+                # Basic validation - check for balanced code blocks
+                if content.count('\`\`\`') % 2 != 0:
+                    print(f'Unbalanced code blocks in $file')
+                    sys.exit(1)
+                print(f'✅ $file - MyST syntax OK')
+            except Exception as e:
+                print(f'❌ $file - Error: {e}')
+                sys.exit(1)
+            "; then
+              echo "✅ $(basename $file)" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ $(basename $file)" >> $GITHUB_STEP_SUMMARY
+              validation_passed=false
+            fi
+          done
+          
+          if [ "$validation_passed" = true ]; then
+            echo "✅ **MyST Syntax**: All files valid" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **MyST Syntax**: Some files have issues" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Deploy to GitHub Pages
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: 🚀 Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
+
+  # Final notification with complete summary
+  notify:
+    runs-on: ubuntu-latest
+    needs: [build, deploy]
+    if: always() && github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: 📢 Final deployment summary
+        run: |
+          echo "## 🚀 Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.deploy.result }}" == "success" ]; then
+            echo "✅ **Deployment Status**: Success" >> $GITHUB_STEP_SUMMARY
+            echo "🌐 **Live URL**: ${{ needs.deploy.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📊 Build Results" >> $GITHUB_STEP_SUMMARY
+            echo "- 📄 HTML files generated: ${{ needs.build.outputs.html_files }}" >> $GITHUB_STEP_SUMMARY
+            echo "- � Assets: ${{ needs.build.outputs.asset_files }}" >> $GITHUB_STEP_SUMMARY
+            echo "- 🖼️ Images: ${{ needs.build.outputs.image_files }}" >> $GITHUB_STEP_SUMMARY
+            echo "- ⚠️ Warnings: ${{ needs.build.outputs.warning_count }}" >> $GITHUB_STEP_SUMMARY
+            echo "- 📊 Coverage: ${{ needs.build.outputs.coverage_percentage }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Deployment Status**: Failed" >> $GITHUB_STEP_SUMMARY
+            echo "📋 Check the deploy job logs for details" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi

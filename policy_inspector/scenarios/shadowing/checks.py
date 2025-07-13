@@ -1,5 +1,6 @@
 import logging
-from typing import TYPE_CHECKING, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from policy_inspector.model.base import AnyObj
 
