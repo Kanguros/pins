@@ -1,5 +1,5 @@
-from collections.abc import Iterable, Iterator
-from typing import TYPE_CHECKING, Callable
+from collections.abc import Callable, Iterable, Iterator
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from policy_inspector.model.security_rule import SecurityRule
@@ -22,11 +22,10 @@ def apply_filters(
         An iterator over `SecurityRule` objects that pass all filter conditions.
 
     Example:
-        filters = [exclude_disabled, exclude_deny]
-        filtered_policies = apply_filters(filters, policies)
-        for policy in filtered_policies:
-            print(policy)
-
+        >>> filters = [exclude_disabled, exclude_deny]
+        >>> filtered_policies = apply_filters(filters, policies)
+        >>> for policy in filtered_policies:
+        ...     print(policy)
     """
     return filter(
         lambda p: all(filter_func(p) for filter_func in filters),

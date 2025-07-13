@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
 
 from policy_inspector.model.address_group import AddressGroup
 from policy_inspector.model.address_object import AddressObject
@@ -36,7 +36,7 @@ class MockPanoramaConnector:
         )
 
     def get_address_objects(
-        self, device_group: Optional[str] = None
+        self, device_group: str | None = None
     ) -> list[AddressObject]:
         """Retrieve address objects from JSON file.
 
@@ -62,7 +62,7 @@ class MockPanoramaConnector:
         return AddressObject.parse_json(entries)
 
     def get_address_groups(
-        self, device_group: Optional[str] = None
+        self, device_group: str | None = None
     ) -> list[AddressGroup]:
         """Retrieve address groups from JSON file.
 
@@ -89,7 +89,7 @@ class MockPanoramaConnector:
 
     def get_security_rules(
         self,
-        device_group: Optional[str] = None,
+        device_group: str | None = None,
         rulebase: Literal["pre", "post"] = "post",
     ) -> list[SecurityRule]:
         """Retrieve security rules from JSON file.

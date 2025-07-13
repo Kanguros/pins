@@ -1,5 +1,5 @@
 import logging
-from typing import Literal, Optional
+from typing import Literal
 
 import urllib3
 from requests import RequestException, Session
@@ -82,8 +82,8 @@ class PanoramaConnector:
         self,
         endpoint: str,
         method: str,
-        params: Optional[dict] = None,
-        data: Optional[dict] = None,
+        params: dict | None = None,
+        data: dict | None = None,
     ) -> dict:
         try:
             url = f"{self.base_url}/{endpoint}"
@@ -114,7 +114,7 @@ class PanoramaConnector:
         return response_data.get("result", {}).get(items_key, [])
 
     def get_address_objects(
-        self, device_group: Optional[str] = None
+        self, device_group: str | None = None
     ) -> list[AddressObject]:
         """Retrieve address objects from Panorama using REST API.
 
@@ -138,7 +138,7 @@ class PanoramaConnector:
         return AddressObject.parse_json(entries)
 
     def get_address_groups(
-        self, device_group: Optional[str] = None
+        self, device_group: str | None = None
     ) -> list[AddressGroup]:
         """Retrieve address groups from Panorama using REST API.
 
@@ -163,7 +163,7 @@ class PanoramaConnector:
 
     def get_security_rules(
         self,
-        device_group: Optional[str] = None,
+        device_group: str | None = None,
         rulebase: Literal["pre", "post"] = "post",
     ) -> list[SecurityRule]:
         """Retrieve security rules from Panorama using REST API.

@@ -1,0 +1,248 @@
+name: 📚 Documentation
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'docs/**'
+      - 'policy_inspector/**'
+      - 'pyproject.toml'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'policy_inspector/**'
+      - 'pyproject.toml'
+  workflow_dispatch:  # Allow manual triggering
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Build documentation
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📂 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for version info
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: 📦 Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: 🔍 Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: 📚 Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: |
+          poetry install --with docs
+          
+      - name: 🔧 Configure Sphinx
+        run: |
+          echo "Building documentation for commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref_name }}"
+
+      - name: 🏗️ Build documentation
+        run: |
+          cd docs
+          poetry run sphinx-build -W -b html source build/html
+          
+          # Add .nojekyll file to prevent GitHub Pages from processing with Jekyll
+          touch build/html/.nojekyll
+          
+          # Add CNAME file if custom domain is configured
+          # echo "docs.yourcompany.com" > build/html/CNAME
+
+      - name: � Generate coverage reports
+        run: |
+          # Install interrogate for documentation coverage
+          poetry add --group dev interrogate
+          
+          # Run coverage integration script
+          poetry run python scripts/coverage_integration.py run
+          
+          # Copy coverage reports to build directory
+          if [ -f "docs/build/coverage-report.md" ]; then
+            cp docs/build/coverage-report.md docs/build/html/coverage-report.html
+          fi
+
+      - name: 🔄 Setup versioning
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          # Get current version and add to documentation
+          poetry run python scripts/docs_versioning.py current --auto-add
+          
+          # Create version selector
+          poetry run python scripts/docs_versioning.py create-selector
+
+      - name: �🔗 Check external links
+        run: |
+          cd docs
+          poetry run sphinx-build -b linkcheck source build/linkcheck
+        continue-on-error: true  # Don't fail the build on broken external links
+
+      - name: 📊 Generate build report
+        run: |
+          echo "# Documentation Build Report" > build-report.md
+          echo "" >> build-report.md
+          echo "- **Build Date**: $(date)" >> build-report.md
+          echo "- **Commit**: ${{ github.sha }}" >> build-report.md
+          echo "- **Branch**: ${{ github.ref_name }}" >> build-report.md
+          echo "- **Python Version**: $(python --version)" >> build-report.md
+          echo "- **Sphinx Version**: $(poetry run python -c 'import sphinx; print(sphinx.__version__)')" >> build-report.md
+          echo "" >> build-report.md
+          
+          # Check for warnings in build output
+          if [ -f "docs/build/html/.buildinfo" ]; then
+            echo "- **Build Status**: ✅ Success" >> build-report.md
+          else
+            echo "- **Build Status**: ❌ Failed" >> build-report.md
+          fi
+          
+          # Add file count
+          file_count=$(find docs/build/html -name "*.html" | wc -l)
+          echo "- **Generated Pages**: $file_count HTML files" >> build-report.md
+
+      - name: 📁 Setup Pages
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/configure-pages@v3
+
+      - name: 📤 Upload documentation artifact
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: docs/build/html
+
+      - name: 📎 Upload build artifacts for review
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v3
+        with:
+          name: documentation-preview
+          path: docs/build/html
+          retention-days: 7
+
+  # Quality checks
+  quality:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: 📂 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: 📦 Install Poetry
+        uses: snok/install-poetry@v1
+
+      - name: 📚 Install dependencies
+        run: poetry install --with docs
+
+      - name: 🔍 Check documentation coverage
+        run: |
+          # Install interrogate if not already installed
+          poetry add --group dev interrogate
+          
+          # Use the coverage integration script
+          poetry run python scripts/coverage_integration.py run
+
+      - name: 🎯 Validate MyST syntax
+        run: |
+          cd docs
+          find source -name "*.md" -exec poetry run python -c "
+          import sys
+          
+          def validate_myst_file(filepath):
+              with open(filepath, 'r', encoding='utf-8') as f:
+                  content = f.read()
+              
+              errors = []
+              
+              # Check for common MyST syntax issues
+              if '```{' in content:
+                  open_blocks = content.count('```{')
+                  close_blocks = content.count('```')
+                  if open_blocks * 2 > close_blocks:
+                      errors.append('Mismatched code blocks')
+              
+              # Check for broken internal references
+              import re
+              refs = re.findall(r'\{doc\}\`([^`]+)\`', content)
+              for ref in refs:
+                  # This is a simplified check - in practice you'd validate the actual file exists
+                  if not ref or ref.startswith('http'):
+                      errors.append(f'Invalid internal reference: {ref}')
+              
+              if errors:
+                  print(f'Errors in {filepath}:')
+                  for error in errors:
+                      print(f'  - {error}')
+                  return False
+              return True
+          
+          if validate_myst_file(sys.argv[1]):
+              print(f'✅ {sys.argv[1]} - MyST syntax OK')
+          else:
+              print(f'❌ {sys.argv[1]} - MyST syntax errors found')
+              sys.exit(1)
+          " {} \;
+
+  # Deploy to GitHub Pages
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: 🚀 Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
+
+  # Notify on completion
+  notify:
+    runs-on: ubuntu-latest
+    needs: [build, deploy]
+    if: always() && github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: 📢 Notify deployment status
+        run: |
+          if [ "${{ needs.deploy.result }}" == "success" ]; then
+            echo "✅ Documentation deployed successfully!"
+            echo "🌐 URL: ${{ needs.deploy.outputs.page_url }}"
+          else
+            echo "❌ Documentation deployment failed"
+            exit 1
+          fi

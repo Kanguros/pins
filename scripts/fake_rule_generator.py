@@ -2,7 +2,6 @@
 import random
 from collections.abc import Iterator
 from ipaddress import IPv4Network
-from typing import Union
 
 import rich
 
@@ -102,14 +101,14 @@ def random_ip_network() -> str:
 def random_selection(
     options: list[str],
     allow_AnyObj: bool = True,  # noqa: FBT001
-) -> Union[set[str], str]:
+) -> set[str] | str:
     """Randomly select a subset from options or return 'AnyObj'."""
     if allow_AnyObj and random.random() < 0.1:
         return {AnyObj}
     return set(random.sample(options, random.randint(1, min(3, len(options)))))
 
 
-def random_address_selection(exclude: set[str] = None) -> Union[set[str], str]:
+def random_address_selection(exclude: set[str] = None) -> set[str] | str:
     choices = (
         ADDRESS_OBJECTS
         + ADDRESS_GROUPS
@@ -122,7 +121,7 @@ def random_address_selection(exclude: set[str] = None) -> Union[set[str], str]:
     return selection
 
 
-def random_zone_selection(exclude: set[str] = None) -> Union[set[str], str]:
+def random_zone_selection(exclude: set[str] = None) -> set[str] | str:
     selection = random_selection(ZONES)
     if exclude and selection == exclude:
         return random_zone_selection(exclude)

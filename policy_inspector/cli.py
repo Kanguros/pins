@@ -1,7 +1,6 @@
 import logging
 from pathlib import Path
 from textwrap import dedent
-from typing import Union
 
 import rich_click as click
 
@@ -90,7 +89,7 @@ def run_scenario_with_panorama(
     panorama_api_version: str = "v11.1",
     panorama_verify_ssl: bool = False,
     export: tuple[str, ...] = (),
-    export_dir: Union[str, None] = ".",
+    export_dir: str | None = ".",
     show: tuple[str, ...] = ("text",),
     panorama_cls: type[PanoramaConnector] = PanoramaConnector,
     **kwargs,
@@ -118,7 +117,7 @@ def run_scenario_with_mock_data(
     device_groups: tuple[str] = (),
     show: tuple[str, ...] = (),
     export: tuple[str, ...] = (),
-    export_dir: Union[str, None] = ".",
+    export_dir: str | None = ".",
     **kwargs,
 ) -> None:
     """Run scenario using mock data from JSON files."""
