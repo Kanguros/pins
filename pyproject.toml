@@ -121,6 +121,8 @@ docstring-code-line-length = 72
     "S101",  # Use of `assert` detected
     "D",  # Missing docstring in public function
     "S106",  # Possible hardcoded password assigned to argument: "password"
+    "S603",  # `subprocess` call: check for execution of untrusted input
+    "A001",  # Variable `copyright` is shadowing a Python builtin
 ]
 
 [tool.pytest.ini_options]

@@ -202,7 +202,9 @@ This section provides detailed documentation for all modules, classes, and funct
         outdated_examples = self.check_outdated_examples()
 
         # Generate report
-        current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        current_date = datetime.now(tz=datetime.timetz()).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
         report = f"""# Documentation Metrics Report
 
 Generated on: {current_date}

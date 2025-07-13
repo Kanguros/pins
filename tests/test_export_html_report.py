@@ -1,6 +1,8 @@
 import tempfile
 from pathlib import Path
 
+import pytest
+
 from policy_inspector.model.security_rule import SecurityRule
 from policy_inspector.scenarios.shadowing.advanced import AdvancedShadowing
 from policy_inspector.scenarios.shadowing.export import export_as_html
@@ -49,6 +51,9 @@ def test_export_as_html_advanced():
     assert "Firewall Policy Analysis Report" in html
 
 
+@pytest.mark.skip(
+    reason="This test generates a large HTML report for manual inspection"
+)
 def test_export_as_html_big_report():
     """
     Generate a big HTML report with many device groups, rules, findings, address groups/objects.
