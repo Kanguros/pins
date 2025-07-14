@@ -103,7 +103,7 @@ html_favicon = None  # Add favicon path if available
 # HTML context for custom variables in templates
 html_context = {
     "display_github": True,
-    "github_user": "cdot65",  # Update with actual GitHub username
+    "github_user": "Kanguros",  # Update with actual GitHub username
     "github_repo": "policy-inspector",  # Update with actual repo name
     "github_version": "main",
     "conf_py_path": "/docs/source/",
@@ -137,7 +137,6 @@ html_css_files = [
 
 html_js_files = [
     "custom.js",
-    "version-selector.js",
 ]
 
 # Versioning support
