@@ -11,46 +11,6 @@ from pydantic import BaseModel, ConfigDict
 from rich.logging import RichHandler
 
 
-def load_json(path: Path) -> list[dict[str, Any]]:
-    """Load and parse a JSON file, returning its contents as a list of dictionaries."""
-    with path.open("r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-_EXPORT_REGISTRY: dict[tuple[type, str], Callable] = {}
-_SHOW_REGISTRY: dict[tuple[type, str], Callable] = {}
-
-
-def register_export(scenario_cls: type, fmt: str):
-    """Decorator to register an export function for a scenario and format."""
-
-    def decorator(func: Callable):
-        _EXPORT_REGISTRY[(scenario_cls, fmt)] = func
-        return func
-
-    return decorator
-
-
-def get_export_func(scenario, fmt: str):
-    """Get export function for scenario instance and format."""
-    return _EXPORT_REGISTRY.get((type(scenario), fmt))
-
-
-def register_show(scenario_cls: type, fmt: str):
-    """Decorator to register a show function for a scenario and format."""
-
-    def decorator(func: Callable):
-        _SHOW_REGISTRY[(scenario_cls, fmt)] = func
-        return func
-
-    return decorator
-
-
-def get_show_func(scenario, fmt: str):
-    """Get show function for scenario instance and format."""
-    return _SHOW_REGISTRY.get((type(scenario), fmt))
-
-
 def load_jinja_template(template_dir: Path, template_name: str):
     """
     Load a Jinja2 template from the current directory.
@@ -145,7 +105,7 @@ class Example(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     name: str
-    scenario: type
+    scenario: type | None  # Allow None for dynamic loading
     data_dir: str
     device_group: str
     show: tuple[str, ...] = ("text",)

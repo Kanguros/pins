@@ -1,7 +1,19 @@
+"""
+Unified Scenario base class with integrated exporter and displayer support.
+
+This module provides the unified Scenario class that uses composition with
+Exporter and Displayer classes for better separation of concerns.
+"""
+
 import logging
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
+
+from policy_inspector.displayer import DefaultDisplayer, Displayer
+from policy_inspector.exporter import DefaultExporter, Exporter
 
 if TYPE_CHECKING:
+    import rich_click as click
+
     from policy_inspector.panorama import PanoramaConnector
 
 logger = logging.getLogger(__name__)
@@ -12,15 +24,19 @@ AnalysisResult = TypeVar("AnalysisResult")
 
 class Scenario:
     """
-    Base class for defining security scenarios and checks.
+    Unified base class for defining security scenarios and checks with integrated export/display support.
 
     Attributes:
         name: Scenario display name.
         panorama: PanoramaConnector instance for data retrieval.
-        _scenarios: A set of all registered subclasses of Scenario.
+        exporter: Exporter instance for handling exports.
+        displayer: Displayer instance for handling display.
+        _scenarios: A dict of all registered subclasses of Scenario (for backwards compatibility).
     """
 
     name: str | None = None
+    exporter_class: type[Exporter] = DefaultExporter
+    displayer_class: type[Displayer] = DefaultDisplayer
 
     _scenarios: dict[str, type["Scenario"]] = {}
 
@@ -33,11 +49,22 @@ class Scenario:
             **kwargs: Additional keyword arguments for subclass customization.
         """
         self.panorama = panorama
+        
+        # Initialize exporter and displayer
+        export_dir = kwargs.pop('export_dir', '.')
+        self.exporter = self.exporter_class(output_dir=export_dir)
+        self.displayer = self.displayer_class()
+        
+        # Set remaining kwargs as attributes
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+        # Storage for execution results
+        self._results: ScenarioResults | None = None
+        self._analysis: AnalysisResult | None = None
+
     def __init_subclass__(cls, **kwargs) -> None:
-        """Registers subclasses automatically in the `scenarios` set."""
+        """Registers subclasses automatically in the `_scenarios` dict for backwards compatibility."""
         super().__init_subclass__(**kwargs)
         cls._scenarios[str(cls)] = cls
 
@@ -45,64 +72,55 @@ class Scenario:
         return self.name or self.__class__.__name__
 
     @classmethod
-    def get_available(cls) -> dict[str, type["Scenario"]]:
+    def get_scenario_name(cls) -> str:
         """
-        Retrieve all registered ``Scenario`` subclasses.
-
+        Get the scenario name for CLI registration.
+        
         Returns:
-            A set containing all subclasses of ``Scenario``.
+            Snake_case name derived from class name
         """
-        return cls._scenarios
+        if cls.name:
+            return cls.name.lower().replace(' ', '_').replace('-', '_')
+        
+        # Convert CamelCase to snake_case
+        name = cls.__name__
+        if name.endswith('Scenario'):
+            name = name[:-8]  # Remove 'Scenario' suffix
+        
+        # Convert CamelCase to snake_case
+        import re
+        name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
 
     @classmethod
-    def from_name(cls, name: str) -> type["Scenario"]:
-        return cls._scenarios[name]
-
-    def show(self, formats, *args, **kwargs):
+    def get_cli_options(cls) -> list["click.Option"]:
         """
-        Show scenario results in the given formats using registered show functions.
+        Get CLI options specific to this scenario.
+        
+        Override this method in subclasses to define scenario-specific CLI options.
+        
+        Returns:
+            List of Click option decorators
         """
-        for fmt in formats:
-            show_func = None
-            from policy_inspector.utils import get_show_func
+        return []
 
-            show_func = get_show_func(self, fmt)
-            if show_func:
-                show_func(self, *args, **kwargs)
-            else:
-                logger.warning(
-                    f"No show function registered for {type(self).__name__} and format '{fmt}'"
-                )
-
-    def export(self, formats, *args, output_dir: str = None, **kwargs):
+    def get_available_export_formats(self) -> list[str]:
         """
-        Export scenario results in the given formats using registered export functions.
-        If exporting to HTML, save the file to output_dir or current directory.
+        Get available export formats for this scenario.
+        
+        Returns:
+            List of available export format names
         """
-        from pathlib import Path
+        return self.exporter.get_available_formats()
 
-        for fmt in formats:
-            export_func = None
-            from policy_inspector.utils import get_export_func
-
-            export_func = get_export_func(self, fmt)
-            if export_func:
-                if fmt == "html":
-                    # Determine output path
-                    out_dir = Path(output_dir) if output_dir else Path.cwd()
-                    out_dir.mkdir(parents=True, exist_ok=True)
-                    filename = f"{type(self).__name__.lower()}_report.html"
-                    output_path = out_dir / filename
-                    export_func(
-                        self, *args, output_path=str(output_path), **kwargs
-                    )
-                    logger.info(f"HTML report saved to: {output_path}")
-                else:
-                    export_func(self, *args, **kwargs)
-            else:
-                logger.warning(
-                    f"No export function registered for {type(self).__name__} and format '{fmt}'"
-                )
+    def get_available_display_formats(self) -> list[str]:
+        """
+        Get available display formats for this scenario.
+        
+        Returns:
+            List of available display format names
+        """
+        return self.displayer.get_available_formats()
 
     def execute(self) -> ScenarioResults:
         """
@@ -114,7 +132,7 @@ class Scenario:
         Returns:
             The results of executing.
         """
-        raise NotImplementedError
+        raise NotImplementedError("Subclasses must implement execute() method")
 
     def analyze(self, results: ScenarioResults) -> AnalysisResult:
         """
@@ -129,9 +147,106 @@ class Scenario:
         Returns:
             The analysis outcome.
         """
-        raise NotImplementedError
+        raise NotImplementedError("Subclasses must implement analyze() method")
 
     def execute_and_analyze(self) -> AnalysisResult:
         """Execute the scenario and analyze the results."""
-        results = self.execute()
-        return self.analyze(results)
+        logger.info(f"Executing scenario: {self}")
+        self._results = self.execute()
+        
+        logger.info(f"Analyzing results for scenario: {self}")
+        self._analysis = self.analyze(self._results)
+        
+        return self._analysis
+
+    def get_data_for_export(self) -> Any:
+        """
+        Get data ready for export.
+        
+        Override this method to customize what data gets exported.
+        By default, returns the analysis results.
+        
+        Returns:
+            Data to be exported
+        """
+        return self._analysis if self._analysis is not None else self._results
+
+    def get_data_for_display(self) -> Any:
+        """
+        Get data ready for display.
+        
+        Override this method to customize what data gets displayed.
+        By default, returns the analysis results.
+        
+        Returns:
+            Data to be displayed
+        """
+        return self._analysis if self._analysis is not None else self._results
+
+    def show(self, formats: list[str] | tuple[str, ...]) -> None:
+        """
+        Display scenario results in the given formats.
+        
+        Args:
+            formats: List of display format names
+        """
+        if not formats:
+            return
+            
+        data = self.get_data_for_display()
+        if data is None:
+            logger.warning("No data available for display. Run execute_and_analyze() first.")
+            return
+            
+        logger.info(f"Displaying results in formats: {', '.join(formats)}")
+        self.displayer.display(data, list(formats))
+
+    def export(self, formats: list[str] | tuple[str, ...], output_dir: str | None = None) -> dict[str, str]:
+        """
+        Export scenario results in the given formats.
+        
+        Args:
+            formats: List of export format names
+            output_dir: Directory to save exports (overrides instance setting)
+            
+        Returns:
+            Dictionary mapping format names to output file paths
+        """
+        if not formats:
+            return {}
+            
+        data = self.get_data_for_export()
+        if data is None:
+            logger.warning("No data available for export. Run execute_and_analyze() first.")
+            return {}
+        
+        # Use provided output_dir or create new exporter if needed
+        exporter = self.exporter
+        if output_dir and output_dir != str(self.exporter.output_dir):
+            exporter = self.exporter_class(output_dir=output_dir)
+        
+        filename_base = f"{self.get_scenario_name()}_results"
+        logger.info(f"Exporting results in formats: {', '.join(formats)}")
+        
+        return exporter.export(data, list(formats), filename_base)
+
+    def get_help_text(self) -> str:
+        """
+        Get help text for this scenario.
+        
+        Returns:
+            Help text describing the scenario
+        """
+        return self.__doc__ or f"Analysis scenario: {self}"
+
+    def get_description(self) -> str:
+        """
+        Get a brief description of this scenario.
+        
+        Returns:
+            Brief description
+        """
+        if self.__doc__:
+            # Return first line of docstring
+            return self.__doc__.strip().split('\n')[0]
+        return f"Analysis scenario: {self}"

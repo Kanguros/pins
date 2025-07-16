@@ -1,6 +1,9 @@
 # Example configuration file for Policy Inspector
 # This shows how to configure the application using YAML
 
+# List of paths to directories with modules which contain Scenario subclasses
+scenarios: []
+
 # Export formats - can be a list of formats
 export:
     - json
