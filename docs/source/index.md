@@ -6,7 +6,7 @@ A command-line tool that connects to Panorama to identify security rules that wi
 
 ## Key Features
 
-- **🔍 Shadowing Detection**: Find rules that never trigger  
+- **🔍 Shadowing Detection**: Find rules that never trigger
 - **🌐 Direct API Integration**: Connect to Panorama - no exports needed
 - ** Advanced Analysis**: Resolve IP addresses for precise detection
 - **📈 Multiple Output Formats**: Text, table, HTML, JSON, and CSV

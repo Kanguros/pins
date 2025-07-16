@@ -13,7 +13,6 @@ panorama:
     hostname: panorama.company.com
     username: admin
     verify_ssl: false
-
 # Run with: pins run shadowing --config config.yaml
 ```
 
@@ -23,7 +22,7 @@ Set credentials without files:
 
 ```bash
 export PINS_PANORAMA_HOSTNAME=panorama.company.com
-export PINS_PANORAMA_USERNAME=admin  
+export PINS_PANORAMA_USERNAME=admin
 export PINS_PANORAMA_PASSWORD=your-password
 ```
 
@@ -42,7 +41,7 @@ Here's the full configuration format from {download}`config.example.yaml <../../
 Policy Inspector searches for config files in this order:
 
 1. `--config filename.yaml` (command line)
-2. `./config.yaml` (current directory)  
+2. `./config.yaml` (current directory)
 3. `~/.policy-inspector/config.yaml` (user home)
 4. `/etc/policy-inspector/config.yaml` (system)
 
@@ -70,21 +69,23 @@ pins run shadowing --panorama-hostname panorama.company.com \
 Settings are applied in this order (later overrides earlier):
 
 1. Configuration file
-2. Environment variables  
+2. Environment variables
 3. Command line options
 
 ## Security Tips
 
 **Keep credentials secure:**
+
 - Use environment variables for passwords
 - Set `verify_ssl: true` for production
 - Limit config file permissions: `chmod 600 config.yaml`
 
 **Example secure setup:**
+
 ```yaml
 panorama:
     hostname: panorama.company.com
-    username: admin  
+    username: admin
     verify_ssl: true
     # password via PINS_PANORAMA_PASSWORD env var
 ```
@@ -97,6 +98,6 @@ Validate your setup works:
 # Test connection only
 pins run example shadowing-basic
 
-# Test with your Panorama  
+# Test with your Panorama
 pins run shadowing --device-groups "test-group"
 ```

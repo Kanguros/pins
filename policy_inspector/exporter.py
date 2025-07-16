@@ -40,12 +40,16 @@ class Exporter(ABC):
         """
         exporters = {}
         for attr_name in dir(self):
-            if attr_name.startswith(self.method_prefix) and callable(getattr(self, attr_name)):
-                format_name = attr_name[len(self.method_prefix):]
+            if attr_name.startswith(self.method_prefix) and callable(
+                getattr(self, attr_name)
+            ):
+                format_name = attr_name[len(self.method_prefix) :]
                 exporters[format_name] = getattr(self, attr_name)
         return exporters
 
-    def export(self, data: Any, formats: list[str], filename_base: str = "export") -> dict[str, str]:
+    def export(
+        self, data: Any, formats: list[str], filename_base: str = "export"
+    ) -> dict[str, str]:
         """
         Export data to multiple formats.
 
@@ -67,20 +71,30 @@ class Exporter(ABC):
                 if export_method:
                     output_path = export_method(data, filename_base)
                     results[export_format] = output_path
-                    logger.info(f"✓ Exported {export_format.upper()} to: {output_path}")
+                    logger.info(
+                        f"✓ Exported {export_format.upper()} to: {output_path}"
+                    )
                 else:
                     # Fallback to JSON if method doesn't exist
-                    logger.warning(f"Export method for '{export_format}' not found, falling back to JSON")
-                    output_path = self.export_json(data, f"{filename_base}_{export_format}_fallback")
+                    logger.warning(
+                        f"Export method for '{export_format}' not found, falling back to JSON"
+                    )
+                    output_path = self.export_json(
+                        data, f"{filename_base}_{export_format}_fallback"
+                    )
                     results[export_format] = output_path
 
             except Exception as e:
                 logger.error(f"Failed to export {export_format}: {e}")
                 # Try JSON fallback
                 try:
-                    output_path = self.export_json(data, f"{filename_base}_{export_format}_error")
+                    output_path = self.export_json(
+                        data, f"{filename_base}_{export_format}_error"
+                    )
                     results[export_format] = output_path
-                    logger.info(f"✓ Exported fallback JSON for {export_format} to: {output_path}")
+                    logger.info(
+                        f"✓ Exported fallback JSON for {export_format} to: {output_path}"
+                    )
                 except Exception as fallback_error:
                     logger.error(f"Even JSON fallback failed: {fallback_error}")
 
@@ -98,7 +112,7 @@ class Exporter(ABC):
             Full path to the saved file
         """
         output_path = self.output_dir / filename
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(content)
         return str(output_path)
 
@@ -116,16 +130,18 @@ class Exporter(ABC):
         filename = f"{filename_base}.json"
 
         # Convert data to JSON-serializable format
-        if hasattr(data, 'dict'):
+        if hasattr(data, "dict"):
             # Pydantic model
             json_data = data.dict()
-        elif hasattr(data, '__dict__'):
+        elif hasattr(data, "__dict__"):
             # Regular object with attributes
             json_data = self._serialize_object(data)
         else:
             json_data = data
 
-        content = json.dumps(json_data, indent=2, default=str, ensure_ascii=False)
+        content = json.dumps(
+            json_data, indent=2, default=str, ensure_ascii=False
+        )
         return self.save(content, filename)
 
     def export_yaml(self, data: Any, filename_base: str = "export") -> str:
@@ -142,14 +158,16 @@ class Exporter(ABC):
         filename = f"{filename_base}.yaml"
 
         # Convert data to YAML-serializable format
-        if hasattr(data, 'dict'):
+        if hasattr(data, "dict"):
             yaml_data = data.dict()
-        elif hasattr(data, '__dict__'):
+        elif hasattr(data, "__dict__"):
             yaml_data = self._serialize_object(data)
         else:
             yaml_data = data
 
-        content = yaml.dump(yaml_data, default_flow_style=False, allow_unicode=True)
+        content = yaml.dump(
+            yaml_data, default_flow_style=False, allow_unicode=True
+        )
         return self.save(content, filename)
 
     def export_csv(self, data: Any, filename_base: str = "export") -> str:
@@ -178,7 +196,7 @@ class Exporter(ABC):
                 writer = csv.DictWriter(output, fieldnames=fieldnames)
                 writer.writeheader()
                 writer.writerows(data)
-            elif hasattr(data[0], '__dict__'):
+            elif hasattr(data[0], "__dict__"):
                 # List of objects
                 first_obj = data[0]
                 fieldnames = list(vars(first_obj).keys())
@@ -198,7 +216,7 @@ class Exporter(ABC):
             # Convert dict to CSV
             output = io.StringIO()
             writer = csv.writer(output)
-            writer.writerow(['Key', 'Value'])
+            writer.writerow(["Key", "Value"])
             for key, value in data.items():
                 writer.writerow([key, str(value)])
             content = output.getvalue()
@@ -207,7 +225,7 @@ class Exporter(ABC):
             # Fallback: convert to string and save as single-column CSV
             output = io.StringIO()
             writer = csv.writer(output)
-            writer.writerow(['Data'])
+            writer.writerow(["Data"])
             writer.writerow([str(data)])
             content = output.getvalue()
 
@@ -223,20 +241,24 @@ class Exporter(ABC):
         Returns:
             Dictionary representation of the object
         """
-        if hasattr(obj, '__dict__'):
+        if hasattr(obj, "__dict__"):
             result = {}
             for key, value in obj.__dict__.items():
-                if not key.startswith('_'):  # Skip private attributes
-                    if hasattr(value, '__dict__'):
+                if not key.startswith("_"):  # Skip private attributes
+                    if hasattr(value, "__dict__"):
                         result[key] = self._serialize_object(value)
                     elif isinstance(value, list | tuple):
                         result[key] = [
-                            self._serialize_object(item) if hasattr(item, '__dict__') else item
+                            self._serialize_object(item)
+                            if hasattr(item, "__dict__")
+                            else item
                             for item in value
                         ]
                     elif isinstance(value, dict):
                         result[key] = {
-                            k: self._serialize_object(v) if hasattr(v, '__dict__') else v
+                            k: self._serialize_object(v)
+                            if hasattr(v, "__dict__")
+                            else v
                             for k, v in value.items()
                         }
                     else:
@@ -254,13 +276,17 @@ class Exporter(ABC):
         """
         formats = []
         for attr_name in dir(self):
-            if attr_name.startswith(self.method_prefix) and callable(getattr(self, attr_name)):
-                format_name = attr_name[len(self.method_prefix):]
-                if format_name != 'json':  # Don't include base methods unless overridden
+            if attr_name.startswith(self.method_prefix) and callable(
+                getattr(self, attr_name)
+            ):
+                format_name = attr_name[len(self.method_prefix) :]
+                if (
+                    format_name != "json"
+                ):  # Don't include base methods unless overridden
                     formats.append(format_name)
 
         # Always include built-in formats
-        formats.extend(['json', 'yaml', 'csv'])
+        formats.extend(["json", "yaml", "csv"])
         return sorted(set(formats))
 
 
@@ -269,4 +295,4 @@ class DefaultExporter(Exporter):
 
     def get_available_formats(self) -> list[str]:
         """Get available export formats."""
-        return ['json', 'yaml', 'csv']
+        return ["json", "yaml", "csv"]

@@ -31,6 +31,7 @@ pins run shadowing \
 ### Using Environment Variables
 
 Set credentials once:
+
 ```bash
 export PINS_PANORAMA_HOSTNAME=panorama.company.com
 export PINS_PANORAMA_USERNAME=admin
@@ -50,6 +51,7 @@ Create `config.yaml` using the example from the project:
 ```
 
 Then run:
+
 ```bash
 pins run shadowing --config config.yaml
 ```
@@ -65,7 +67,7 @@ pins run example shadowing-basic
 # Table format
 pins run example shadowing-basic --show table
 
-# Rich colored output  
+# Rich colored output
 pins run example shadowing-basic --show rich
 ```
 

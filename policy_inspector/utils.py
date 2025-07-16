@@ -1,6 +1,5 @@
 import json
 import logging
-from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Optional
 
@@ -9,6 +8,20 @@ from click.types import Choice as clickChoice
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pydantic import BaseModel, ConfigDict
 from rich.logging import RichHandler
+
+
+def load_json(file_path: Path) -> Any:
+    """
+    Load JSON data from a file.
+
+    Args:
+        file_path: Path to the JSON file
+
+    Returns:
+        Parsed JSON data
+    """
+    with open(file_path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 
 def load_jinja_template(template_dir: Path, template_name: str):

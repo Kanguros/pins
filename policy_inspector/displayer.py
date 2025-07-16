@@ -28,12 +28,16 @@ class Displayer(ABC):
         """
         for display_format in formats:
             try:
-                display_method = getattr(self, f"{self.method_prefix}{display_format}", None)
+                display_method = getattr(
+                    self, f"{self.method_prefix}{display_format}", None
+                )
                 if display_method:
                     display_method(data)
                 else:
                     # Fallback to JSON if method doesn't exist
-                    logger.warning(f"Display method for '{display_format}' not found, falling back to JSON")
+                    logger.warning(
+                        f"Display method for '{display_format}' not found, falling back to JSON"
+                    )
                     self.display_json(data)
 
             except Exception as e:
@@ -53,16 +57,18 @@ class Displayer(ABC):
             data: Data to display
         """
         # Convert data to JSON-serializable format
-        if hasattr(data, 'dict'):
+        if hasattr(data, "dict"):
             # Pydantic model
             json_data = data.dict()
-        elif hasattr(data, '__dict__'):
+        elif hasattr(data, "__dict__"):
             # Regular object with attributes
             json_data = self._serialize_object(data)
         else:
             json_data = data
 
-        json_str = json.dumps(json_data, indent=2, default=str, ensure_ascii=False)
+        json_str = json.dumps(
+            json_data, indent=2, default=str, ensure_ascii=False
+        )
         print(json_str)
 
     def display_text(self, data: Any) -> None:
@@ -102,20 +108,24 @@ class Displayer(ABC):
         Returns:
             Dictionary representation of the object
         """
-        if hasattr(obj, '__dict__'):
+        if hasattr(obj, "__dict__"):
             result = {}
             for key, value in obj.__dict__.items():
-                if not key.startswith('_'):  # Skip private attributes
-                    if hasattr(value, '__dict__'):
+                if not key.startswith("_"):  # Skip private attributes
+                    if hasattr(value, "__dict__"):
                         result[key] = self._serialize_object(value)
                     elif isinstance(value, list | tuple):
                         result[key] = [
-                            self._serialize_object(item) if hasattr(item, '__dict__') else item
+                            self._serialize_object(item)
+                            if hasattr(item, "__dict__")
+                            else item
                             for item in value
                         ]
                     elif isinstance(value, dict):
                         result[key] = {
-                            k: self._serialize_object(v) if hasattr(v, '__dict__') else v
+                            k: self._serialize_object(v)
+                            if hasattr(v, "__dict__")
+                            else v
                             for k, v in value.items()
                         }
                     else:
@@ -133,13 +143,17 @@ class Displayer(ABC):
         """
         formats = []
         for attr_name in dir(self):
-            if attr_name.startswith(self.method_prefix) and callable(getattr(self, attr_name)):
-                format_name = attr_name[len(self.method_prefix):]
-                if format_name != 'json':  # Don't include base methods unless overridden
+            if attr_name.startswith(self.method_prefix) and callable(
+                getattr(self, attr_name)
+            ):
+                format_name = attr_name[len(self.method_prefix) :]
+                if (
+                    format_name != "json"
+                ):  # Don't include base methods unless overridden
                     formats.append(format_name)
 
         # Always include built-in formats
-        formats.extend(['json', 'text', 'raw'])
+        formats.extend(["json", "text", "raw"])
         return sorted(set(formats))
 
 
@@ -148,7 +162,7 @@ class DefaultDisplayer(Displayer):
 
     def get_available_formats(self) -> list[str]:
         """Get available display formats."""
-        return ['json', 'text', 'raw']
+        return ["json", "text", "raw"]
 
     def display_table(self, data: Any) -> None:
         """
@@ -172,21 +186,23 @@ class DefaultDisplayer(Displayer):
                     headers = list(data[0].keys())
                     for header in headers:
                         table.add_column(header)
-                    
+
                     for item in data:
-                        row = [str(item.get(header, '')) for header in headers]
+                        row = [str(item.get(header, "")) for header in headers]
                         table.add_row(*row)
 
-                elif hasattr(data[0], '__dict__'):
+                elif hasattr(data[0], "__dict__"):
                     # List of objects
                     headers = list(vars(data[0]).keys())
-                    headers = [h for h in headers if not h.startswith('_')]
-                    
+                    headers = [h for h in headers if not h.startswith("_")]
+
                     for header in headers:
                         table.add_column(header)
-                    
+
                     for item in data:
-                        row = [str(getattr(item, header, '')) for header in headers]
+                        row = [
+                            str(getattr(item, header, "")) for header in headers
+                        ]
                         table.add_row(*row)
 
                 else:
@@ -202,10 +218,10 @@ class DefaultDisplayer(Displayer):
                 table = Table(show_header=True, header_style="bold magenta")
                 table.add_column("Key")
                 table.add_column("Value")
-                
+
                 for key, value in data.items():
                     table.add_row(str(key), str(value))
-                
+
                 console.print(table)
 
             else:
@@ -213,7 +229,9 @@ class DefaultDisplayer(Displayer):
                 self.display_text(data)
 
         except ImportError:
-            logger.warning("Rich library not available, falling back to text display")
+            logger.warning(
+                "Rich library not available, falling back to text display"
+            )
             self.display_text(data)
 
 
@@ -223,7 +241,7 @@ class RichDisplayer(DefaultDisplayer):
     def get_available_formats(self) -> list[str]:
         """Get available display formats including rich formats."""
         base_formats = super().get_available_formats()
-        rich_formats = ['table', 'rich']
+        rich_formats = ["table", "rich"]
         return sorted(set(base_formats + rich_formats))
 
     def display_rich(self, data: Any) -> None:
@@ -242,5 +260,7 @@ class RichDisplayer(DefaultDisplayer):
             pprint(data)
 
         except ImportError:
-            logger.warning("Rich library not available, falling back to JSON display")
+            logger.warning(
+                "Rich library not available, falling back to JSON display"
+            )
             self.display_json(data)

@@ -15,8 +15,8 @@ from policy_inspector.config import (
     get_scenario_directories_from_config,
 )
 from policy_inspector.lazy_group import ScenarioCLI, add_panorama_options
-from policy_inspector.mock_panorama import MockPanoramaConnector
 from policy_inspector.loader import ScenarioLoader
+from policy_inspector.mock_panorama import MockPanoramaConnector
 from policy_inspector.utils import (
     Example,
     ExampleChoice,

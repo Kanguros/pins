@@ -59,6 +59,7 @@ class ScenarioLoader:
         try:
             # Test if scenarios package is available
             import importlib.util
+
             if importlib.util.find_spec("policy_inspector.scenarios"):
                 # Import to trigger registration
                 import policy_inspector.scenarios  # noqa: F401
@@ -97,6 +98,7 @@ class ScenarioLoader:
         try:
             # Add directory to Python path temporarily
             import sys
+
             if str(dir_path.absolute()) not in sys.path:
                 sys.path.insert(0, str(dir_path.absolute()))
 
@@ -104,9 +106,13 @@ class ScenarioLoader:
             for module_info in pkgutil.iter_modules([str(dir_path)]):
                 try:
                     module = importlib.import_module(module_info.name)
-                    scenarios.update(self._extract_scenarios_from_module(module))
+                    scenarios.update(
+                        self._extract_scenarios_from_module(module)
+                    )
                 except Exception as e:
-                    logger.debug(f"Error loading module {module_info.name}: {e}")
+                    logger.debug(
+                        f"Error loading module {module_info.name}: {e}"
+                    )
 
         except Exception as e:
             logger.debug(f"Error loading scenarios from {directory}: {e}")
@@ -130,9 +136,11 @@ class ScenarioLoader:
 
             for attr_name in dir(module):
                 attr = getattr(module, attr_name)
-                if (isinstance(attr, type) and
-                    issubclass(attr, Scenario) and
-                    attr is not Scenario):
+                if (
+                    isinstance(attr, type)
+                    and issubclass(attr, Scenario)
+                    and attr is not Scenario
+                ):
                     scenario_name = attr.get_scenario_name()
                     scenarios[scenario_name] = attr
                     logger.debug(f"Found scenario: {scenario_name}")
@@ -181,18 +189,19 @@ class ScenarioLoader:
         Returns:
             Scenario name
         """
-        if hasattr(cls, 'get_scenario_name'):
+        if hasattr(cls, "get_scenario_name"):
             return cls.get_scenario_name()
 
         # Fallback to class name conversion
         name = cls.__name__
-        if name.endswith('Scenario'):
+        if name.endswith("Scenario"):
             name = name[:-8]  # Remove 'Scenario' suffix
 
         # Convert CamelCase to snake_case
         import re
-        name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
+
+        name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
 
     def get_scenario_info(self, scenario_name: str) -> dict[str, Any] | None:
         """
@@ -209,22 +218,24 @@ class ScenarioLoader:
             return None
 
         info = {
-            'name': scenario_name,
-            'class_name': scenario_cls.__name__,
-            'module': scenario_cls.__module__,
-            'description': self._get_scenario_description(scenario_cls),
-            'help_text': self._get_scenario_help(scenario_cls),
+            "name": scenario_name,
+            "class_name": scenario_cls.__name__,
+            "module": scenario_cls.__module__,
+            "description": self._get_scenario_description(scenario_cls),
+            "help_text": self._get_scenario_help(scenario_cls),
         }
 
         # Add available formats if possible
         try:
-            if hasattr(scenario_cls, 'exporter_class'):
+            if hasattr(scenario_cls, "exporter_class"):
                 dummy_exporter = scenario_cls.exporter_class()
-                info['export_formats'] = dummy_exporter.get_available_formats()
+                info["export_formats"] = dummy_exporter.get_available_formats()
 
-            if hasattr(scenario_cls, 'displayer_class'):
+            if hasattr(scenario_cls, "displayer_class"):
                 dummy_displayer = scenario_cls.displayer_class()
-                info['display_formats'] = dummy_displayer.get_available_formats()
+                info["display_formats"] = (
+                    dummy_displayer.get_available_formats()
+                )
         except Exception as e:
             logger.debug(f"Could not get format info for {scenario_name}: {e}")
 
@@ -233,7 +244,7 @@ class ScenarioLoader:
     def _get_scenario_description(self, cls: type) -> str:
         """Get scenario description from class."""
         # Try class method first
-        if hasattr(cls, 'get_description') and callable(cls.get_description):
+        if hasattr(cls, "get_description") and callable(cls.get_description):
             try:
                 # Try calling as class method first
                 return cls.get_description()
@@ -243,14 +254,14 @@ class ScenarioLoader:
 
         # Fall back to docstring
         if cls.__doc__:
-            return cls.__doc__.strip().split('\n')[0]
+            return cls.__doc__.strip().split("\n")[0]
 
         return f"Analysis scenario: {cls.__name__}"
 
     def _get_scenario_help(self, cls: type) -> str:
         """Get scenario help text from class."""
         # Try class method first
-        if hasattr(cls, 'get_help_text') and callable(cls.get_help_text):
+        if hasattr(cls, "get_help_text") and callable(cls.get_help_text):
             try:
                 # Try calling as class method first
                 return cls.get_help_text()
@@ -263,50 +274,58 @@ class ScenarioLoader:
     def _load_scenarios_dynamic(self) -> dict[str, type]:
         """
         Dynamically load scenarios through module discovery.
-        
+
         Returns:
             Dictionary mapping scenario names to scenario classes
         """
         scenarios = {}
-        
+
         # Import the scenario base class
         try:
             from policy_inspector.scenario import Scenario
         except ImportError:
             logger.debug("Scenario class not available")
             return scenarios
-        
+
         # Discover scenario modules in built-in scenarios directory
         import importlib.util
         import os
-        
+
         # Get the scenarios directory
-        scenarios_dir = os.path.join(os.path.dirname(__file__), 'scenarios')
-        
+        scenarios_dir = os.path.join(os.path.dirname(__file__), "scenarios")
+
         if os.path.exists(scenarios_dir):
             for root, _dirs, files in os.walk(scenarios_dir):
                 for file in files:
-                    if file.endswith('.py') and file != '__init__.py':
+                    if file.endswith(".py") and file != "__init__.py":
                         file_path = os.path.join(root, file)
                         module_name = f"policy_inspector.scenarios.{os.path.relpath(file_path, scenarios_dir).replace(os.sep, '.')[:-3]}"
-                        
+
                         try:
-                            spec = importlib.util.spec_from_file_location(module_name, file_path)
+                            spec = importlib.util.spec_from_file_location(
+                                module_name, file_path
+                            )
                             if spec and spec.loader:
                                 module = importlib.util.module_from_spec(spec)
                                 spec.loader.exec_module(module)
-                                
+
                                 # Find all Scenario subclasses in the module
                                 for attr_name in dir(module):
                                     attr = getattr(module, attr_name)
-                                    if (isinstance(attr, type) and 
-                                        issubclass(attr, Scenario) and 
-                                        attr is not Scenario):
+                                    if (
+                                        isinstance(attr, type)
+                                        and issubclass(attr, Scenario)
+                                        and attr is not Scenario
+                                    ):
                                         scenario_name = attr.get_scenario_name()
                                         scenarios[scenario_name] = attr
-                                        logger.debug(f"Discovered scenario: {scenario_name}")
-                                        
+                                        logger.debug(
+                                            f"Discovered scenario: {scenario_name}"
+                                        )
+
                         except Exception as e:
-                            logger.debug(f"Error loading module {module_name}: {e}")
-        
+                            logger.debug(
+                                f"Error loading module {module_name}: {e}"
+                            )
+
         return scenarios

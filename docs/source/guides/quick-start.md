@@ -32,7 +32,7 @@ Enter your password when prompted.
 ## What's Next?
 
 - **View results differently**: Add `--show table` for table format
-- **Save reports**: Add `--export html --export-dir ./reports` 
+- **Save reports**: Add `--export html --export-dir ./reports`
 - **Use config files**: See {doc}`configuration` for easier credential management
 - **Advanced analysis**: Try `pins run shadowingvalue` for deeper inspection
 
@@ -40,6 +40,6 @@ Enter your password when prompted.
 
 ```bash
 pins --help                    # Main commands
-pins run --help               # Available scenarios  
+pins run --help               # Available scenarios
 pins run shadowing --help     # Command options
 ```
