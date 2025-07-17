@@ -13,7 +13,7 @@ def runner():
 @pytest.fixture
 def cli_setup():
     """Initialize ScenarioCLI for tests with scenario directories."""
-    from policy_inspector.lazy_group import ScenarioCLI
+    from policy_inspector.cli.lazy_group import ScenarioCLI
 
     scenario_directories = ["d:\\Projects\\policy_inspector\\policy_inspector\\scenarios"]
     __main__.main.cls = ScenarioCLI(scenario_directories=scenario_directories)

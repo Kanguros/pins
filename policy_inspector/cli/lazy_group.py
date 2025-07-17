@@ -10,7 +10,7 @@ from typing import Any
 
 import rich_click as click
 
-from policy_inspector.loader import ScenarioLoader
+from policy_inspector.cli.loader import ScenarioLoader
 
 logger = logging.getLogger(__name__)
 

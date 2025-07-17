@@ -63,11 +63,6 @@ class Scenario:
         self._results: ScenarioResults | None = None
         self._analysis: AnalysisResult | None = None
 
-    def __init_subclass__(cls, **kwargs) -> None:
-        """Registers subclasses automatically in the `_scenarios` dict for backwards compatibility."""
-        super().__init_subclass__(**kwargs)
-        cls._scenarios[str(cls)] = cls
-
     def __str__(self):
         return self.name or self.__class__.__name__
 
@@ -122,16 +117,6 @@ class Scenario:
             List of available display format names
         """
         return self.displayer.get_available_formats()
-
-    @classmethod
-    def get_available(cls) -> dict[str, type["Scenario"]]:
-        """
-        Retrieve all registered Scenario subclasses.
-
-        Returns:
-            A dictionary mapping scenario names to their classes.
-        """
-        return cls._scenarios
 
     def execute(self) -> ScenarioResults:
         """

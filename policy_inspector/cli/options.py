@@ -1,4 +1,9 @@
+import logging
 
+import rich_click as click
+import yaml
+
+logger = logging.getLogger(__name__)
 
 
 def configure_from_yaml(ctx, param, filename):
@@ -18,7 +23,6 @@ def configure_from_yaml(ctx, param, filename):
         with open(filename) as f:
             data = yaml.safe_load(f) or {}
     except FileNotFoundError:
-        # If config file doesn't exist, just continue with no defaults
         return
     except yaml.YAMLError as e:
         raise click.BadParameter(f"Invalid YAML in config file: {e}") from e

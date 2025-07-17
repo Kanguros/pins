@@ -7,21 +7,15 @@ logger = logging.getLogger(__name__)
 
 
 
-
-
-def show_options(f):
-    """Decorator that adds --show click options to a command."""
-    options = [
-        click.option(
+def display_options(f):
+    """Decorator that adds --display click options to a command."""
+    option = click.option(
             "-d",
             "--display",
             multiple=True,
             help="Output format (can be specified multiple times)",
         )
-    ]
-    for option in reversed(options):
-        f = option(f)
-    return f
+    return option(f)
 
 
 def export_options(f):

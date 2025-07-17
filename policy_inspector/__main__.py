@@ -1,21 +1,21 @@
-"""
-Enhanced CLI with dynamic scenario loading.
-
-This module provides the new main CLI interface that supports dynamic
-scenario loading and better separation of concerns.
-"""
-
 import logging
 from textwrap import dedent
 
-import rich_click as click
+try:
+    import rich_click as click
+    click.rich_click.SHOW_ARGUMENTS = True
+    click.rich_click.TEXT_MARKUP = "markdown"
+    click.rich_click.USE_MARKDOWN = True
+    click.rich_click.SHOW_METAVARS_COLUMN = True
+except ImportError:
+    import click
 
+from policy_inspector.cli.lazy_group import ScenarioCLI, add_panorama_options
+from policy_inspector.cli.loader import ScenarioLoader
 from policy_inspector.config import (
     config_option,
     get_scenario_directories_from_config,
 )
-from policy_inspector.lazy_group import ScenarioCLI, add_panorama_options
-from policy_inspector.loader import ScenarioLoader
 from policy_inspector.mock_panorama import MockPanoramaConnector
 from policy_inspector.utils import (
     Example,
@@ -26,10 +26,7 @@ from policy_inspector.utils import (
 
 config_logger()
 
-click.rich_click.SHOW_ARGUMENTS = True
-click.rich_click.TEXT_MARKUP = "markdown"
-click.rich_click.USE_MARKDOWN = True
-click.rich_click.SHOW_METAVARS_COLUMN = True
+
 
 logger = logging.getLogger(__name__)
 

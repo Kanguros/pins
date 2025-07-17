@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from policy_inspector.loader import ScenarioLoader
+from policy_inspector.cli.loader import ScenarioLoader
 
 
 def gather_data_files(match: str):
