@@ -7,16 +7,17 @@ for common formats like JSON, YAML, and CSV.
 
 import json
 import logging
-from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
 
 import yaml
 
+from policy_inspector.output.utils import get_matching_methods
+
 logger = logging.getLogger(__name__)
 
 
-class Exporter(ABC):
+class Exporter:
     """Base class for exporting scenario data to various formats."""
 
     method_prefix: str = "export_"
@@ -31,21 +32,15 @@ class Exporter(ABC):
         self.output_dir = Path(output_dir)
         self.exporters = self._build_exporters_map()
 
-    def _build_exporters_map(self) -> dict[str, Any]:
+    @classmethod
+    def get_available_formats(cls) -> list[str]:
         """
-        Build a map of available export methods.
+        Get list of available export formats for this exporter.
 
         Returns:
-            Dictionary mapping format names to export methods
+            List of format names
         """
-        exporters = {}
-        for attr_name in dir(self):
-            if attr_name.startswith(self.method_prefix) and callable(
-                getattr(self, attr_name)
-            ):
-                format_name = attr_name[len(self.method_prefix) :]
-                exporters[format_name] = getattr(self, attr_name)
-        return exporters
+        return get_matching_methods(cls, cls.method_prefix)
 
     def export(
         self, data: Any, formats: list[str], filename_base: str = "export"
@@ -67,7 +62,10 @@ class Exporter(ABC):
 
         for export_format in formats:
             try:
-                export_method = self.exporters.get(export_format)
+                export_method = getattr(
+                    self, f"{self.method_prefix}{export_format}", None
+                )
+
                 if export_method:
                     output_path = export_method(data, filename_base)
                     results[export_format] = output_path
@@ -115,6 +113,45 @@ class Exporter(ABC):
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(content)
         return str(output_path)
+
+    def _serialize_object(self, obj: Any) -> dict[str, Any]:
+        """
+        Serialize an object to a dictionary for JSON/YAML export.
+
+        Args:
+            obj: Object to serialize
+
+        Returns:
+            Dictionary representation of the object
+        """
+        if hasattr(obj, "__dict__"):
+            result = {}
+            for key, value in obj.__dict__.items():
+                if not key.startswith("_"):  # Skip private attributes
+                    if hasattr(value, "__dict__"):
+                        result[key] = self._serialize_object(value)
+                    elif isinstance(value, list | tuple):
+                        result[key] = [
+                            self._serialize_object(item)
+                            if hasattr(item, "__dict__")
+                            else item
+                            for item in value
+                        ]
+                    elif isinstance(value, dict):
+                        result[key] = {
+                            k: self._serialize_object(v)
+                            if hasattr(v, "__dict__")
+                            else v
+                            for k, v in value.items()
+                        }
+                    else:
+                        result[key] = value
+            return result
+        return str(obj)
+
+
+class DefaultExporter(Exporter):
+    """Default exporter with common formats."""
 
     def export_json(self, data: Any, filename_base: str = "export") -> str:
         """
@@ -230,69 +267,3 @@ class Exporter(ABC):
             content = output.getvalue()
 
         return self.save(content, filename)
-
-    def _serialize_object(self, obj: Any) -> dict[str, Any]:
-        """
-        Serialize an object to a dictionary for JSON/YAML export.
-
-        Args:
-            obj: Object to serialize
-
-        Returns:
-            Dictionary representation of the object
-        """
-        if hasattr(obj, "__dict__"):
-            result = {}
-            for key, value in obj.__dict__.items():
-                if not key.startswith("_"):  # Skip private attributes
-                    if hasattr(value, "__dict__"):
-                        result[key] = self._serialize_object(value)
-                    elif isinstance(value, list | tuple):
-                        result[key] = [
-                            self._serialize_object(item)
-                            if hasattr(item, "__dict__")
-                            else item
-                            for item in value
-                        ]
-                    elif isinstance(value, dict):
-                        result[key] = {
-                            k: self._serialize_object(v)
-                            if hasattr(v, "__dict__")
-                            else v
-                            for k, v in value.items()
-                        }
-                    else:
-                        result[key] = value
-            return result
-        return str(obj)
-
-    @abstractmethod
-    def get_available_formats(self) -> list[str]:
-        """
-        Get list of available export formats for this exporter.
-
-        Returns:
-            List of format names
-        """
-        formats = []
-        for attr_name in dir(self):
-            if attr_name.startswith(self.method_prefix) and callable(
-                getattr(self, attr_name)
-            ):
-                format_name = attr_name[len(self.method_prefix) :]
-                if (
-                    format_name != "json"
-                ):  # Don't include base methods unless overridden
-                    formats.append(format_name)
-
-        # Always include built-in formats
-        formats.extend(["json", "yaml", "csv"])
-        return sorted(set(formats))
-
-
-class DefaultExporter(Exporter):
-    """Default exporter with common formats."""
-
-    def get_available_formats(self) -> list[str]:
-        """Get available export formats."""
-        return ["json", "yaml", "csv"]

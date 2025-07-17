@@ -7,29 +7,11 @@ for common formats like JSON, table, and text output.
 
 import json
 import logging
-from abc import ABC, abstractmethod
 from typing import Any
 
+from policy_inspector.output.utils import get_matching_methods
+
 logger = logging.getLogger(__name__)
-
-
-def get_matching_methods(instance: object, method_prefix: str) -> list[str]:
-    """
-    Discover matching methods for a given instance.
-
-    Args:
-        instance: The object to inspect methods.
-        method_prefix: The prefix used to identify methods.
-
-    Returns:
-        List of format names.
-    """
-    formats = []
-    for attr_name in dir(instance):
-        if attr_name.startswith(method_prefix) and callable(getattr(instance, attr_name)):
-            format_name = attr_name[len(method_prefix):]
-            formats.append(format_name)
-    return sorted(set(formats))
 
 
 class Displayer:

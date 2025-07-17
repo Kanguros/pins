@@ -7,39 +7,6 @@ logger = logging.getLogger(__name__)
 
 
 
-def display_options(f):
-    """Decorator that adds --display click options to a command."""
-    option = click.option(
-            "-d",
-            "--display",
-            multiple=True,
-            help="Output format (can be specified multiple times)",
-        )
-    return option(f)
-
-
-def export_options(f):
-    """Decorator that adds --export and --export-dir options to a command."""
-    options = [
-        click.option(
-            "-ed",
-            "--export-dir",
-            default=".",
-            type=click.Path(file_okay=False, dir_okay=True),
-            show_default=True,
-            help="Directory to save exported files (default: current directory)",
-        ),
-        click.option(
-            "-e",
-            "--export",
-            multiple=True,
-            help="Export format (can be specified multiple times)",
-        ),
-    ]
-    for option in reversed(options):
-        f = option(f)
-    return f
-
 
 
 

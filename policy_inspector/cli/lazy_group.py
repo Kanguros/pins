@@ -10,12 +10,13 @@ from typing import Any
 
 import rich_click as click
 
+from policy_inspector.cli.base_group import VerboseGroup
 from policy_inspector.cli.loader import ScenarioLoader
 
 logger = logging.getLogger(__name__)
 
 
-class ScenarioCLI(click.MultiCommand):
+class ScenarioCLI(VerboseGroup):
     """Dynamic CLI handler that creates commands for discovered scenarios."""
 
     def __init__(self, scenario_directories: list[str] | None = None, **kwargs):
@@ -161,12 +162,12 @@ class ScenarioCLI(click.MultiCommand):
 
         # Display formats
         display_formats = (
-            scenario_info.get("display_formats", ["json", "text"])
+            scenario_info.get("display_formats", [])
             if scenario_info
-            else ["json", "text"]
+            else []
         )
         command = click.option(
-            "--show",
+            "-d","--display",
             multiple=True,
             type=click.Choice(display_formats),
             default=["text"],
