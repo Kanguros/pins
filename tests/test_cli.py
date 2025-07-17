@@ -15,7 +15,9 @@ def cli_setup():
     """Initialize ScenarioCLI for tests with scenario directories."""
     from policy_inspector.cli.lazy_group import ScenarioCLI
 
-    scenario_directories = ["d:\\Projects\\policy_inspector\\policy_inspector\\scenarios"]
+    scenario_directories = [
+        "d:\\Projects\\policy_inspector\\policy_inspector\\scenarios"
+    ]
     __main__.main.cls = ScenarioCLI(scenario_directories=scenario_directories)
     return __main__
 
@@ -125,7 +127,9 @@ def test_run_example_with_export(runner, name, export_format):
 def test_run_example_with_show(runner, name, show_format):
     """Test examples with different show formats."""
     result = runner.invoke(
-        __main__.run_example, [name, "--show", show_format], catch_exceptions=True
+        __main__.run_example,
+        [name, "--show", show_format],
+        catch_exceptions=True,
     )
     phrases = [
         f"Selected example: '{name}'",

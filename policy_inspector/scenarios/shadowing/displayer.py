@@ -34,7 +34,9 @@ class ShadowingDisplayer(Displayer):
             return
         console = Console()
         for dg, results in analysis_results.items():
-            console.print(f"[bold yellow]=== Device Group: {dg} ===[/bold yellow]")
+            console.print(
+                f"[bold yellow]=== Device Group: {dg} ===[/bold yellow]"
+            )
             for i, result in enumerate(results):
                 rule, shadowing_rules = result
                 if not shadowing_rules:
@@ -53,7 +55,9 @@ class ShadowingDisplayer(Displayer):
                     for rule in rules:
                         rule_attribute = getattr(rule, attribute_name)
                         if isinstance(rule_attribute, set | list):
-                            value = "\n".join(f"- {str(v)}" for v in rule_attribute)
+                            value = "\n".join(
+                                f"- {str(v)}" for v in rule_attribute
+                            )
                         else:
                             value = str(rule_attribute)
                         attribute_values.append(value)

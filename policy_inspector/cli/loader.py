@@ -227,8 +227,12 @@ class ScenarioLoader:
 
         # Add available formats if possible
         try:
-            info["export_formats"] = scenario_cls.exporter_class.get_available_formats()
-            info["display_formats"] = scenario_cls.displayer_class.get_available_formats()
+            info["export_formats"] = (
+                scenario_cls.exporter_class.get_available_formats()
+            )
+            info["display_formats"] = (
+                scenario_cls.displayer_class.get_available_formats()
+            )
         except Exception as e:
             logger.debug(f"Could not get format info for {scenario_name}: {e}")
 

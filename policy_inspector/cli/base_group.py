@@ -2,10 +2,13 @@ import logging
 
 try:
     import rich_click as click
+
     clickGroup = click.RichGroup
 except ImportError:
     import click
+
     clickGroup = click.Group
+
 
 def verbose_callback(ctx: click.Context, param, value) -> None:
     """Callback function for verbose option."""
@@ -22,6 +25,7 @@ def verbose_callback(ctx: click.Context, param, value) -> None:
         handler = _logger.handlers[0]
         handler._log_render.show_path = True
         handler._log_render.show_time = True
+
 
 def verbose_option() -> click.Option:
     return click.Option(
@@ -46,4 +50,3 @@ class VerboseGroup(clickGroup):
         """Override to add verbose option to all commands."""
         cmd.params.append(verbose_option())
         super().add_command(cmd, name)
-

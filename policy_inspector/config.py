@@ -1,14 +1,8 @@
 import logging
 
-import rich_click as click
 import yaml
 
 logger = logging.getLogger(__name__)
-
-
-
-
-
 
 
 def get_scenario_directories_from_config(

@@ -3,6 +3,7 @@ from textwrap import dedent
 
 try:
     import rich_click as click
+
     click.rich_click.SHOW_ARGUMENTS = True
     click.rich_click.TEXT_MARKUP = "markdown"
     click.rich_click.USE_MARKDOWN = True
@@ -25,7 +26,6 @@ from policy_inspector.utils import (
 )
 
 config_logger()
-
 
 
 logger = logging.getLogger(__name__)
@@ -279,4 +279,3 @@ def scenario_info(ctx: click.Context, scenario_name: str) -> None:
         click.echo(
             f"Available display formats: {', '.join(info['display_formats'])}"
         )
-

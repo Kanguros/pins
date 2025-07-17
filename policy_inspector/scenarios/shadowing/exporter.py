@@ -6,15 +6,18 @@ from policy_inspector.utils import load_jinja_template
 
 
 class ShadowingExporter(Exporter):
-
-    def export_html(self, scenario, *args, output_path: str = None, **kwargs) -> str:
+    def export_html(
+        self, scenario, *args, output_path: str = None, **kwargs
+    ) -> str:
         """
         Render the HTML report using a Jinja2 template (report_template.html).
         If output_path is provided, save the HTML to that file.
         """
         template_dir = Path(__file__).parent
         template = load_jinja_template(template_dir, "report_template.html")
-        current_date = datetime.now(tz=timezone.utc).strftime("%B %d, %Y %H:%M:%S")
+        current_date = datetime.now(tz=timezone.utc).strftime(
+            "%B %d, %Y %H:%M:%S"
+        )
 
         # Calculate total policies correctly
         total_policies = sum(

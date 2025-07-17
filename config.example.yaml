@@ -3,7 +3,7 @@
 
 # List of paths to directories with modules which contain Scenario subclasses
 scenarios:
-  - "policy_inspector/scenarios"
+    - "policy_inspector/scenarios"
 
 # Export formats - can be a list of formats
 export:

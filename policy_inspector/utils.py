@@ -39,12 +39,6 @@ def load_jinja_template(template_dir: Path, template_name: str):
     return env.get_template(template_name)
 
 
-
-
-
-
-
-
 def config_logger(
     logger_name: str = "policy_inspector",
     default_level: str = "INFO",
@@ -146,4 +140,3 @@ class ExampleChoice(clickChoice):
 def get_example_file_path(name: str) -> Path:
     """Get the path to an example file."""
     return Path(__file__).parent / "example" / name
-

@@ -162,12 +162,11 @@ class ScenarioCLI(VerboseGroup):
 
         # Display formats
         display_formats = (
-            scenario_info.get("display_formats", [])
-            if scenario_info
-            else []
+            scenario_info.get("display_formats", []) if scenario_info else []
         )
         command = click.option(
-            "-d","--display",
+            "-d",
+            "--display",
             multiple=True,
             type=click.Choice(display_formats),
             default=["text"],
