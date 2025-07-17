@@ -11,12 +11,10 @@ try:
 except ImportError:
     import click
 
+from policy_inspector.cli.base_group import VerboseGroup
 from policy_inspector.cli.lazy_group import ScenarioCLI, add_panorama_options
 from policy_inspector.cli.loader import ScenarioLoader
-from policy_inspector.cli.base_group import VerboseGroup
-from policy_inspector.cli.base_group import VerboseGroup
 from policy_inspector.config import (
-    config_option,
     get_scenario_directories_from_config,
 )
 from policy_inspector.mock_panorama import MockPanoramaConnector
@@ -33,16 +31,14 @@ logger = logging.getLogger(__name__)
 
 
 @click.group(no_args_is_help=True, add_help_option=True, cls=VerboseGroup)
-@click.option("--config", default="config.yaml", help="Configuration file path")
 @click.pass_context
-def main(ctx: click.Context, config: str):
+def main(ctx: click.Context):
     """Policy Inspector - Analyze Palo Alto firewall policies.
 
     Enhanced version with dynamic scenario loading and better export/display capabilities.
     Scenarios can be loaded from built-in modules or custom directories specified in config.
     """
     ctx.ensure_object(dict)
-    ctx.obj["config_file"] = config
 
 
 @main.command("list")
@@ -83,7 +79,6 @@ def main_list(ctx: click.Context) -> None:
 
 
 @main.group("run", no_args_is_help=True, cls=ScenarioCLI)
-@config_option()
 @add_panorama_options
 @click.pass_context
 def main_run(
@@ -99,13 +94,6 @@ def main_run(
 
     Run security policy analysis scenarios against your Panorama.
     """
-    # Get scenario directories from config
-    config_file = ctx.obj.get("config_file", "config.yaml")
-    scenario_directories = get_scenario_directories_from_config(config_file)
-
-    if not hasattr(main_run, "_scenario_cli_initialized"):
-        main_run.cls = ScenarioCLI(scenario_directories=scenario_directories)
-        main_run._scenario_cli_initialized = True
 
     ctx.ensure_object(dict)
     ctx.obj.update(
@@ -115,8 +103,6 @@ def main_run(
             "panorama_password": panorama_password,
             "panorama_api_version": panorama_api_version,
             "panorama_verify_ssl": panorama_verify_ssl,
-            "config_file": config_file,
-            "scenario_directories": scenario_directories,
         }
     )
 
@@ -248,35 +234,3 @@ def run_example(
         logger.info("Example execution completed")
 
 
-@main.command("info")
-@click.argument("scenario_name")
-@click.pass_context
-def scenario_info(ctx: click.Context, scenario_name: str) -> None:
-    """Get detailed information about a specific scenario."""
-    config_file = ctx.obj.get("config_file", "config.yaml")
-    scenario_directories = get_scenario_directories_from_config(config_file)
-
-    loader = ScenarioLoader(scenario_directories)
-    info = loader.get_scenario_info(scenario_name)
-
-    if not info:
-        click.echo(f"Scenario '{scenario_name}' not found.", err=True)
-        return
-
-    click.echo(f"Scenario: {info['name']}")
-    click.echo(f"Class: {info['class_name']}")
-    click.echo(f"Module: {info['module']}")
-    click.echo(f"Description: {info['description']}")
-    click.echo("")
-    click.echo("Help:")
-    click.echo(dedent(info["help_text"]))
-
-    if "export_formats" in info:
-        click.echo(
-            f"Available export formats: {', '.join(info['export_formats'])}"
-        )
-
-    if "display_formats" in info:
-        click.echo(
-            f"Available display formats: {', '.join(info['display_formats'])}"
-        )
