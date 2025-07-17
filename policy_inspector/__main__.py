@@ -13,6 +13,8 @@ except ImportError:
 
 from policy_inspector.cli.lazy_group import ScenarioCLI, add_panorama_options
 from policy_inspector.cli.loader import ScenarioLoader
+from policy_inspector.cli.base_group import VerboseGroup
+from policy_inspector.cli.base_group import VerboseGroup
 from policy_inspector.config import (
     config_option,
     get_scenario_directories_from_config,
@@ -21,7 +23,6 @@ from policy_inspector.mock_panorama import MockPanoramaConnector
 from policy_inspector.utils import (
     Example,
     ExampleChoice,
-    VerboseGroup,
     config_logger,
 )
 

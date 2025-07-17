@@ -27,6 +27,41 @@ class Displayer:
             List of format names
         """
         return get_matching_methods(self, self.method_prefix)
+    
+    def _serialize_object(self, obj: Any) -> dict[str, Any]:
+        """
+        Serialize an object to a dictionary for JSON display.
+
+        Args:
+            obj: Object to serialize
+
+        Returns:
+            Dictionary representation of the object
+        """
+        if hasattr(obj, "__dict__"):
+            result = {}
+            for key, value in obj.__dict__.items():
+                if not key.startswith("_"):  # Skip private attributes
+                    if hasattr(value, "__dict__"):
+                        result[key] = self._serialize_object(value)
+                    elif isinstance(value, list | tuple):
+                        result[key] = [
+                            self._serialize_object(item)
+                            if hasattr(item, "__dict__")
+                            else item
+                            for item in value
+                        ]
+                    elif isinstance(value, dict):
+                        result[key] = {
+                            k: self._serialize_object(v)
+                            if hasattr(v, "__dict__")
+                            else v
+                            for k, v in value.items()
+                        }
+                    else:
+                        result[key] = value
+            return result
+        return str(obj)
 
     def display(self, data: Any, formats: list[str]) -> None:
         """
@@ -58,6 +93,10 @@ class Displayer:
                 except Exception as fallback_error:
                     logger.error(f"Even JSON fallback failed: {fallback_error}")
                     print(f"Error displaying data: {str(data)}")
+
+
+class DefaultDisplayer(Displayer):
+    """Default displayer that provides JSON, text, and table display methods."""
 
     def display_json(self, data: Any) -> None:
         """
@@ -94,41 +133,6 @@ class Displayer:
                 print(f"{key}: {value}")
         else:
             print(str(data))
-
-    def _serialize_object(self, obj: Any) -> dict[str, Any]:
-        """
-        Serialize an object to a dictionary for JSON display.
-
-        Args:
-            obj: Object to serialize
-
-        Returns:
-            Dictionary representation of the object
-        """
-        if hasattr(obj, "__dict__"):
-            result = {}
-            for key, value in obj.__dict__.items():
-                if not key.startswith("_"):  # Skip private attributes
-                    if hasattr(value, "__dict__"):
-                        result[key] = self._serialize_object(value)
-                    elif isinstance(value, list | tuple):
-                        result[key] = [
-                            self._serialize_object(item)
-                            if hasattr(item, "__dict__")
-                            else item
-                            for item in value
-                        ]
-                    elif isinstance(value, dict):
-                        result[key] = {
-                            k: self._serialize_object(v)
-                            if hasattr(v, "__dict__")
-                            else v
-                            for k, v in value.items()
-                        }
-                    else:
-                        result[key] = value
-            return result
-        return str(obj)
 
     def display_table(self, data: Any) -> None:
         """

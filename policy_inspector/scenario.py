@@ -100,23 +100,6 @@ class Scenario:
         """
         return []
 
-    def get_available_export_formats(self) -> list[str]:
-        """
-        Get available export formats for this scenario.
-
-        Returns:
-            List of available export format names
-        """
-        return self.exporter.get_available_formats()
-
-    def get_available_display_formats(self) -> list[str]:
-        """
-        Get available display formats for this scenario.
-
-        Returns:
-            List of available display format names
-        """
-        return self.displayer.get_available_formats()
 
     def execute(self) -> ScenarioResults:
         """
