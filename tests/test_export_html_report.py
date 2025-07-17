@@ -5,7 +5,7 @@ import pytest
 
 from policy_inspector.model.security_rule import SecurityRule
 from policy_inspector.scenarios.shadowing.advanced import AdvancedShadowing
-from policy_inspector.scenarios.shadowing.export import export_as_html
+from policy_inspector.scenarios.shadowing.exporter import export_as_html
 from policy_inspector.scenarios.shadowing.simple import Shadowing
 
 

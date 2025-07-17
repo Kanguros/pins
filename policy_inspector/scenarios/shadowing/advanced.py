@@ -128,13 +128,11 @@ class AdvancedShadowing(Shadowing):
         self,
         panorama=None,
         device_groups=None,
-        security_rules_by_dg=None,
         **kwargs,
     ):
         super().__init__(
             panorama=panorama,
             device_groups=device_groups,
-            security_rules_by_dg=security_rules_by_dg,
             **kwargs,
         )
         self.address_objects_by_dg = {}

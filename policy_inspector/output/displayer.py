@@ -13,10 +13,38 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
-class Displayer(ABC):
+def get_matching_methods(instance: object, method_prefix: str) -> list[str]:
+    """
+    Discover matching methods for a given instance.
+
+    Args:
+        instance: The object to inspect methods.
+        method_prefix: The prefix used to identify methods.
+
+    Returns:
+        List of format names.
+    """
+    formats = []
+    for attr_name in dir(instance):
+        if attr_name.startswith(method_prefix) and callable(getattr(instance, attr_name)):
+            format_name = attr_name[len(method_prefix):]
+            formats.append(format_name)
+    return sorted(set(formats))
+
+
+class Displayer:
     """Base class for displaying scenario data in various terminal formats."""
 
     method_prefix: str = "display_"
+
+    def get_available_formats(self) -> list[str]:
+        """
+        Get list of available display formats for this displayer.
+
+        Returns:
+            List of format names
+        """
+        return get_matching_methods(self, self.method_prefix)
 
     def display(self, data: Any, formats: list[str]) -> None:
         """
@@ -56,16 +84,12 @@ class Displayer(ABC):
         Args:
             data: Data to display
         """
-        # Convert data to JSON-serializable format
         if hasattr(data, "dict"):
-            # Pydantic model
             json_data = data.dict()
         elif hasattr(data, "__dict__"):
-            # Regular object with attributes
             json_data = self._serialize_object(data)
         else:
             json_data = data
-
         json_str = json.dumps(
             json_data, indent=2, default=str, ensure_ascii=False
         )
@@ -88,15 +112,6 @@ class Displayer(ABC):
                 print(f"{key}: {value}")
         else:
             print(str(data))
-
-    def display_raw(self, data: Any) -> None:
-        """
-        Display data in raw format.
-
-        Args:
-            data: Data to display
-        """
-        print(data)
 
     def _serialize_object(self, obj: Any) -> dict[str, Any]:
         """
@@ -132,37 +147,6 @@ class Displayer(ABC):
                         result[key] = value
             return result
         return str(obj)
-
-    @abstractmethod
-    def get_available_formats(self) -> list[str]:
-        """
-        Get list of available display formats for this displayer.
-
-        Returns:
-            List of format names
-        """
-        formats = []
-        for attr_name in dir(self):
-            if attr_name.startswith(self.method_prefix) and callable(
-                getattr(self, attr_name)
-            ):
-                format_name = attr_name[len(self.method_prefix) :]
-                if (
-                    format_name != "json"
-                ):  # Don't include base methods unless overridden
-                    formats.append(format_name)
-
-        # Always include built-in formats
-        formats.extend(["json", "text", "raw"])
-        return sorted(set(formats))
-
-
-class DefaultDisplayer(Displayer):
-    """Default displayer with common formats."""
-
-    def get_available_formats(self) -> list[str]:
-        """Get available display formats."""
-        return ["json", "text", "raw"]
 
     def display_table(self, data: Any) -> None:
         """
@@ -233,34 +217,3 @@ class DefaultDisplayer(Displayer):
                 "Rich library not available, falling back to text display"
             )
             self.display_text(data)
-
-
-class RichDisplayer(DefaultDisplayer):
-    """Enhanced displayer with rich formatting support."""
-
-    def get_available_formats(self) -> list[str]:
-        """Get available display formats including rich formats."""
-        base_formats = super().get_available_formats()
-        rich_formats = ["table", "rich"]
-        return sorted(set(base_formats + rich_formats))
-
-    def display_rich(self, data: Any) -> None:
-        """
-        Display data with rich formatting.
-
-        Args:
-            data: Data to display
-        """
-        try:
-            from rich.console import Console
-            from rich.pretty import pprint
-
-            console = Console()
-            console.print("[bold]Data:[/bold]")
-            pprint(data)
-
-        except ImportError:
-            logger.warning(
-                "Rich library not available, falling back to JSON display"
-            )
-            self.display_json(data)

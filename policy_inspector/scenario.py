@@ -8,8 +8,8 @@ Exporter and Displayer classes for better separation of concerns.
 import logging
 from typing import TYPE_CHECKING, Any, TypeVar
 
-from policy_inspector.displayer import DefaultDisplayer, Displayer
-from policy_inspector.exporter import DefaultExporter, Exporter
+from policy_inspector.output.displayer import DefaultDisplayer, Displayer
+from policy_inspector.output.exporter import DefaultExporter, Exporter
 
 if TYPE_CHECKING:
     import rich_click as click
@@ -122,6 +122,16 @@ class Scenario:
             List of available display format names
         """
         return self.displayer.get_available_formats()
+
+    @classmethod
+    def get_available(cls) -> dict[str, type["Scenario"]]:
+        """
+        Retrieve all registered Scenario subclasses.
+
+        Returns:
+            A dictionary mapping scenario names to their classes.
+        """
+        return cls._scenarios
 
     def execute(self) -> ScenarioResults:
         """

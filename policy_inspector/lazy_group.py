@@ -10,7 +10,7 @@ from typing import Any
 
 import rich_click as click
 
-from policy_inspector.scenario_loader import ScenarioLoader
+from policy_inspector.loader import ScenarioLoader
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,9 @@ class ScenarioCLI(click.MultiCommand):
             Dictionary mapping scenario names to scenario classes
         """
         if self._scenarios_cache is None:
+            logger.debug("Discovering scenarios...")
             self._scenarios_cache = self.loader.discover_scenarios()
+            logger.debug(f"Discovered scenarios: {self._scenarios_cache}")
         return self._scenarios_cache
 
     def list_commands(self, ctx: click.Context) -> list[str]:

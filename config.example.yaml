@@ -2,7 +2,8 @@
 # This shows how to configure the application using YAML
 
 # List of paths to directories with modules which contain Scenario subclasses
-scenarios: []
+scenarios:
+  - "policy_inspector/scenarios"
 
 # Export formats - can be a list of formats
 export:
