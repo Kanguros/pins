@@ -33,7 +33,7 @@ linkify-it-py = ">=2.0.3"
 sphinx-click = ">=5.0,<6.0"
 
 [project.scripts]
-pins = 'policy_inspector.cli:main'
+pins = 'policy_inspector.__main__:main'
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

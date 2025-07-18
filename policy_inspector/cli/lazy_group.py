@@ -116,6 +116,8 @@ class ScenarioCLI(VerboseGroup):
         @click.pass_context
         def scenario_command(ctx: click.Context, **kwargs):
             """Dynamic scenario command."""
+            print(ctx.default_map.items())
+
             self._execute_scenario(ctx, scenario_cls, **kwargs)
 
         # Add common options
@@ -298,17 +300,13 @@ def create_panorama_options() -> list[click.Option]:
     return [
         click.option(
             "--panorama-hostname",
-            required=True,
             help="Panorama hostname or IP address",
         ),
         click.option(
-            "--panorama-username", required=True, help="Panorama username"
+            "--panorama-username", help="Panorama username"
         ),
         click.option(
             "--panorama-password",
-            required=True,
-            hide_input=True,
-            prompt=True,
             help="Panorama password",
         ),
         click.option(
@@ -318,14 +316,13 @@ def create_panorama_options() -> list[click.Option]:
         ),
         click.option(
             "--panorama-verify-ssl",
-            is_flag=True,
             default=False,
             help="Verify SSL certificates",
         ),
     ]
 
 
-def add_panorama_options(command: click.Command) -> click.Command:
+def panorama_options(command: click.Command) -> click.Command:
     """
     Add Panorama connection options to a command.
 

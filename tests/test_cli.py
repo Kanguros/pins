@@ -44,7 +44,6 @@ def test_run_command(runner, arg):
 
 
 def test_list_command(runner):
-    Scenario.get_available()
     result = runner.invoke(__main__.main, "list", catch_exceptions=False)
     assert result.exit_code == 0, (
         f"Non-zero exit code. Output:\n{result.output}"
@@ -55,7 +54,6 @@ def test_list_command(runner):
 
 
 def test_list_command_verbose(runner):
-    Scenario.get_available()
     result = runner.invoke(__main__.main, ["list", "-vvv"])
     assert result.exit_code == 0
     for phrase in [

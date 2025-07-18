@@ -12,7 +12,7 @@ except ImportError:
     import click
 
 from policy_inspector.cli.base_group import VerboseGroup
-from policy_inspector.cli.lazy_group import ScenarioCLI, add_panorama_options
+from policy_inspector.cli.lazy_group import ScenarioCLI, panorama_options
 from policy_inspector.cli.loader import ScenarioLoader
 from policy_inspector.config import (
     get_scenario_directories_from_config,
@@ -79,7 +79,7 @@ def main_list(ctx: click.Context) -> None:
 
 
 @main.group("run", no_args_is_help=True, cls=ScenarioCLI)
-@add_panorama_options
+@panorama_options
 @click.pass_context
 def main_run(
     ctx: click.Context,
@@ -105,6 +105,7 @@ def main_run(
             "panorama_verify_ssl": panorama_verify_ssl,
         }
     )
+    print(ctx.default_map.items())
 
 
 examples = [
