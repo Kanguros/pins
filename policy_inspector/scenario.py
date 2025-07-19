@@ -6,7 +6,7 @@ Exporter and Displayer classes for better separation of concerns.
 """
 
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Iterable, TypeVar
 
 from policy_inspector.output.displayer import DefaultDisplayer, Displayer
 from policy_inspector.output.exporter import DefaultExporter, Exporter
@@ -37,8 +37,7 @@ class Scenario:
     name: str | None = None
     exporter_class: type[Exporter] = DefaultExporter
     displayer_class: type[Displayer] = DefaultDisplayer
-
-    _scenarios: dict[str, type["Scenario"]] = {}
+    panorama_class: type[PanoramaConnector] = PanoramaConnector
 
     def __init__(self, panorama: "PanoramaConnector", **kwargs) -> None:
         """
@@ -65,41 +64,6 @@ class Scenario:
 
     def __str__(self):
         return self.name or self.__class__.__name__
-
-    @classmethod
-    def get_scenario_name(cls) -> str:
-        """
-        Get the scenario name for CLI registration.
-
-        Returns:
-            Snake_case name derived from class name
-        """
-        if cls.name:
-            return cls.name.lower().replace(" ", "_").replace("-", "_")
-
-        # Convert CamelCase to snake_case
-        name = cls.__name__
-        if name.endswith("Scenario"):
-            name = name[:-8]  # Remove 'Scenario' suffix
-
-        # Convert CamelCase to snake_case
-        import re
-
-        name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
-
-    @classmethod
-    def get_cli_options(cls) -> list["click.Option"]:
-        """
-        Get CLI options specific to this scenario.
-
-        Override this method in subclasses to define scenario-specific CLI options.
-
-        Returns:
-            List of Click option decorators
-        """
-        return []
-
 
     def execute(self) -> ScenarioResults:
         """
@@ -138,31 +102,7 @@ class Scenario:
 
         return self._analysis
 
-    def get_data_for_export(self) -> Any:
-        """
-        Get data ready for export.
-
-        Override this method to customize what data gets exported.
-        By default, returns the analysis results.
-
-        Returns:
-            Data to be exported
-        """
-        return self._analysis if self._analysis is not None else self._results
-
-    def get_data_for_display(self) -> Any:
-        """
-        Get data ready for display.
-
-        Override this method to customize what data gets displayed.
-        By default, returns the analysis results.
-
-        Returns:
-            Data to be displayed
-        """
-        return self._analysis if self._analysis is not None else self._results
-
-    def show(self, formats: list[str] | tuple[str, ...]) -> None:
+    def show(self, formats: Iterable[str]) -> None:
         """
         Display scenario results in the given formats.
 
@@ -172,19 +112,12 @@ class Scenario:
         if not formats:
             return
 
-        data = self.get_data_for_display()
-        if data is None:
-            logger.warning(
-                "No data available for display. Run execute_and_analyze() first."
-            )
-            return
-
         logger.info(f"Displaying results in formats: {', '.join(formats)}")
-        self.displayer.display(data, list(formats))
+        self.displayer.display(self, formats)
 
     def export(
         self,
-        formats: list[str] | tuple[str, ...],
+        formats: Iterable[str],
         output_dir: str | None = None,
     ) -> dict[str, str]:
         """
@@ -200,40 +133,76 @@ class Scenario:
         if not formats:
             return {}
 
-        data = self.get_data_for_export()
-        if data is None:
-            logger.warning(
-                "No data available for export. Run execute_and_analyze() first."
-            )
-            return {}
-
-        # Use provided output_dir or create new exporter if needed
-        exporter = self.exporter
-        if output_dir and output_dir != str(self.exporter.output_dir):
-            exporter = self.exporter_class(output_dir=output_dir)
+        exporter = self.exporter_class(output_dir=output_dir)
 
         filename_base = f"{self.get_scenario_name()}_results"
         logger.info(f"Exporting results in formats: {', '.join(formats)}")
 
-        return exporter.export(data, list(formats), filename_base)
+        return exporter.export(self, formats, filename_base)
 
-    def get_help_text(self) -> str:
-        """
-        Get help text for this scenario.
 
-        Returns:
-            Help text describing the scenario
-        """
-        return self.__doc__ or f"Analysis scenario: {self}"
+TPanorama = TypeVar("TPanorama", bound="PanoramaConnector")
 
-    def get_description(self) -> str:
-        """
-        Get a brief description of this scenario.
+def initialize_panorama(panorama_cls: type[TPanorama], **kwargs) -> TPanorama:
+    """
+    Create a panorama connector from context parameters.
 
-        Returns:
-            Brief description
-        """
-        if self.__doc__:
-            # Return first line of docstring
-            return self.__doc__.strip().split("\n")[0]
-        return f"Analysis scenario: {self}"
+    Args:
+        ctx: Click context containing connection parameters
+
+    Returns:
+        Panorama connector instance or None if creation fails
+    """
+    try:
+        return panorama_cls(
+            hostname=kwargs["panorama_hostname"],
+            username=kwargs["panorama_username"],
+            password=kwargs["panorama_password"],
+            api_version=kwargs.get("panorama_api_version"),
+            verify_ssl=kwargs.get("panorama_verify_ssl"),
+        )
+    except KeyError as e:
+        logger.error(f"Missing required connection parameter: {e}")
+        return None
+    except Exception as e:
+        logger.error(f"Failed to create Panorama connector: {e}")
+        return None
+
+def run_scenario(
+    scenario_cls: type, **kwargs
+):
+    """
+    Execute a scenario with the provided options.
+
+    Args:
+        ctx: Click context
+        scenario_cls: Scenario class to execute
+        **kwargs: Command line options
+    """
+    try:
+        export_formats = kwargs.pop("export", ())
+        show_formats = kwargs.pop("show", ())
+        export_dir = kwargs.pop("export_dir", ".")
+
+        panorama = initialize_panorama(
+            scenario_cls.panorama_class, **kwargs
+            )
+        if not panorama:
+            click.echo(
+                "Error: Failed to create Panorama connector.", err=True
+            )
+            return
+
+        scenario = scenario_cls(
+            panorama=panorama, export_dir=export_dir, **kwargs
+        )
+
+        click.echo(f"Executing scenario: {scenario}")
+        scenario.execute_and_analyze()
+        scenario.show(show_formats)
+        scenario.export(export_formats, export_dir)
+        click.echo("Scenario execution completed successfully!")
+
+    except Exception as e:
+        logger.error(f"Scenario execution failed: {e}")
+        click.echo(f"Error: {e}", err=True)

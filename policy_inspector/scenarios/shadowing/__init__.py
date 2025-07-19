@@ -1,5 +1,5 @@
-from .simple import Scenario
-from .simple import Shadowing
-from .advanced import AdvancedShadowing
+from .scenario import Scenario
+from .scenario import Shadowing
+from .scenario import AdvancedShadowing
 
 __all__ = ["Scenario", "Shadowing", "AdvancedShadowing"]

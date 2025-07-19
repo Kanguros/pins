@@ -79,7 +79,6 @@ def run_checks(checks, *rules: "SecurityRule") -> dict[str, CheckResult]:
 
 
 class Shadowing(Scenario):
-    """Scenario for detecting shadowing rules in Palo Alto Panorama."""
 
     name: str = "Shadowing"
     checks: list[CheckFunction] = [

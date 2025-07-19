@@ -4,7 +4,7 @@ from policy_inspector.model.address_object import AddressObjectFQDN
 from policy_inspector.model.base import AnyObj
 from policy_inspector.model.security_rule import AdvancedSecurityRule
 from policy_inspector.resolver import Resolver
-from policy_inspector.scenarios.shadowing.simple import (
+from policy_inspector.scenarios.shadowing.scenario import (
     CheckFunction,
     CheckResult,
     Shadowing,
