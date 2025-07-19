@@ -12,13 +12,7 @@ except ImportError:
 
 from policy_inspector.cli.groups import LazyGroup, VerboseGroup
 from policy_inspector.cli.loader import ScenarioLoader
-from policy_inspector.config import (
-    get_scenario_directories_from_config,
-)
-from policy_inspector.mock_panorama import MockPanoramaConnector
 from policy_inspector.utils import (
-    Example,
-    ExampleChoice,
     config_logger,
 )
 
@@ -36,10 +30,9 @@ def main(ctx: click.Context):
     Enhanced version with dynamic scenario loading and better export/display capabilities.
     Scenarios can be loaded from built-in modules or custom directories specified in config.
     """
-    ctx.ensure_object(dict)
 
 
-@main.command("list")
+@main.command("list", cls=LazyGroup)
 @click.pass_context
 def main_list(ctx: click.Context) -> None:
     """List available analysis scenarios with descriptions."""
@@ -83,8 +76,6 @@ def main_run(ctx: click.Context):
 
     Run security policy analysis scenarios against your Panorama.
     """
-    v = "\n".join([f"{k}={v}" for k, v in ctx.__dict__.items()])
-    print(f"MAIN RUN:\n{v}")
 
 
 

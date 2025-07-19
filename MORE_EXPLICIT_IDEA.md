@@ -53,6 +53,10 @@ It also should implement running an `example` command.
 pins run example
 ```
 
+### Command `list` is not working
+
+Class `LazyGroup` is missing a method for listing scenarios/commands and getting some data to show. 
+
 ## Q&A
 
 ### Why Exporter and Displayer classes gets Scenario instance when executed?
