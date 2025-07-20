@@ -1,9 +1,5 @@
 import logging
 
-from policy_inspector.model.address_object import AddressObjectFQDN
-from policy_inspector.model.base import AnyObj
-from policy_inspector.model.security_rule import AdvancedSecurityRule
-from policy_inspector.resolver import Resolver
 from policy_inspector.builtin.shadowing_simple.scenario import (
     CheckFunction,
     CheckResult,
@@ -15,6 +11,10 @@ from policy_inspector.builtin.shadowing_simple.scenario import (
     check_source_zone,
     run_checks,
 )
+from policy_inspector.model.address_object import AddressObjectFQDN
+from policy_inspector.model.base import AnyObj
+from policy_inspector.model.security_rule import AdvancedSecurityRule
+from policy_inspector.resolver import Resolver
 
 logger = logging.getLogger(__name__)
 

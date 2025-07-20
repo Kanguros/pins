@@ -24,6 +24,7 @@ examples = [
 
 logger = logging.getLogger(__name__)
 
+
 @click.command("example", no_args_is_help=True)
 @click.option(
     "--show",
@@ -82,7 +83,11 @@ def example(
 
         # Find the scenario class
         scenario_cls = next(
-            (cls for name, cls in scenarios.items() if "shadow" in name.lower()),
+            (
+                cls
+                for name, cls in scenarios.items()
+                if "shadow" in name.lower()
+            ),
             None,
         )
 
@@ -108,7 +113,9 @@ def example(
                 logger.info(f"Exported {format_name.upper()}: {file_path}")
 
     except Exception as ex:
-        logger.error("Example run failed. This is expected if required files or connectivity are missing.")
+        logger.error(
+            "Example run failed. This is expected if required files or connectivity are missing."
+        )
         logger.error(f"Error: {ex}")
     finally:
         logger.info("Example execution completed")

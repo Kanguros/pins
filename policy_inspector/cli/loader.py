@@ -8,9 +8,8 @@ from various directories and load them for CLI integration.
 import importlib
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
-from click import Command
 
+from click import Command
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +17,11 @@ logger = logging.getLogger(__name__)
 def get_builtin_commands_dir() -> list[Path]:
     """Get the directory containing built-in scenario commands."""
     root_path = Path(__file__).parent.parent / "builtin"
-    return [p for p in root_path.iterdir() if p.is_dir() and not p.name.startswith("_")]
+    return [
+        p
+        for p in root_path.iterdir()
+        if p.is_dir() and not p.name.startswith("_")
+    ]
 
 
 class ScenarioLoader:

@@ -2,12 +2,12 @@ from ipaddress import IPv4Network
 
 import pytest
 
+from policy_inspector.builtin.shadowing.scenario import AdvancedShadowing
 from policy_inspector.model.address_object import (
     AddressObjectFQDN,
     AddressObjectIPNetwork,
 )
 from policy_inspector.model.security_rule import SecurityRule
-from policy_inspector.builtin.shadowing.scenario import AdvancedShadowing
 
 
 @pytest.fixture

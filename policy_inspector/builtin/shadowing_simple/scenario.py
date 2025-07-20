@@ -2,8 +2,6 @@ import logging
 from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
-from policy_inspector.panorama import PanoramaConnector
-from policy_inspector.scenario import Scenario
 from policy_inspector.builtin.shadowing_simple.checks import (
     CheckFunction,
     CheckResult,
@@ -15,6 +13,8 @@ from policy_inspector.builtin.shadowing_simple.checks import (
     check_source_address,
     check_source_zone,
 )
+from policy_inspector.panorama import PanoramaConnector
+from policy_inspector.scenario import Scenario
 
 if TYPE_CHECKING:
     from policy_inspector.model.security_rule import SecurityRule

@@ -6,6 +6,7 @@ import click
 
 logger = logging.getLogger(__name__)
 
+
 def verbose_callback(ctx: click.Context, param, value) -> None:
     """Callback function for verbose option."""
     if not value:
@@ -63,8 +64,10 @@ def configure_from_yaml(ctx, param, filename):
     print(f"CONFIG OPTION CALLBACK:\n{v}")
 
 
-def config_option(f, 
-    config_file_name: Iterable[str] = ("-c","--config"), default: str = "config.yaml"
+def config_option(
+    f,
+    config_file_name: Iterable[str] = ("-c", "--config"),
+    default: str = "config.yaml",
 ):
     """
     Decorator that adds a --config option to read defaults from a YAML file.
