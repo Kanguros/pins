@@ -16,5 +16,5 @@ def load_scenarios():
     scenarios_dir = (
         Path(__file__).parent.parent / "policy_inspector" / "scenarios"
     )
-    loader = ScenarioLoader(scenario_directories=[str(scenarios_dir)])
-    loader.discover_scenarios()
+    loader = ScenarioLoader(custom_paths=[str(scenarios_dir)])
+    loader.load_commands()

@@ -49,7 +49,7 @@ logger = logging.getLogger(__name__)
     type=ExampleChoice(examples),
 )
 @click.pass_context
-def run_example(
+def example(
     ctx: click.Context,
     show: tuple[str, ...],
     export: tuple[str, ...],
@@ -81,7 +81,7 @@ def run_example(
         config_file = ctx.obj.get("config_file", "config.yaml")
         scenario_directories = get_scenario_directories_from_config(config_file)
         loader = ScenarioLoader(scenario_directories)
-        scenarios = loader.discover_scenarios()
+        scenarios = loader.load_commands()
 
         # Find the scenario class
         scenario_cls = next(

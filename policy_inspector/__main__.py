@@ -43,7 +43,7 @@ def main_list(ctx: click.Context) -> None:
     scenario_directories = get_scenario_directories_from_config(config_file)
 
     loader = ScenarioLoader(scenario_directories)
-    scenarios = loader.discover_scenarios()
+    scenarios = loader.load_commands()
 
     click.echo("")
     click.echo("-" * 60)

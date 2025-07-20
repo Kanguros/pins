@@ -9,18 +9,6 @@ def runner():
     return CliRunner()
 
 
-@pytest.fixture
-def cli_setup():
-    """Initialize ScenarioCLI for tests with scenario directories."""
-    from policy_inspector.cli.lazy_group import ScenarioCLI
-
-    scenario_directories = [
-        "d:\\Projects\\policy_inspector\\policy_inspector\\scenarios"
-    ]
-    __main__.main.cls = ScenarioCLI(scenario_directories=scenario_directories)
-    return __main__
-
-
 @pytest.mark.parametrize("args", [None, ["--help"]])
 def test_main_command_help(runner, args):
     result = runner.invoke(__main__.main, args, catch_exceptions=False)

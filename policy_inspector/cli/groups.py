@@ -1,7 +1,7 @@
 import logging
 
 from policy_inspector.cli.loader import ScenarioLoader
-from policy_inspector.cli.options import config_option, verbose_option
+from policy_inspector.cli.options import verbose_option
 
 try:
     import rich_click as click
@@ -11,6 +11,8 @@ except ImportError:
     import click
 
     click_group = click.Group
+
+from click import Command
 
 logger = logging.getLogger(__name__)
 
@@ -42,20 +44,20 @@ class LazyGroup(VerboseGroup):
         """
         super().__init__(**kwargs)
         self.loader = ScenarioLoader(scenario_directories)
-        self._scenarios_cache: dict[str, type] | None = None
+        self._commands_cache: dict[str, Command] | None = None
 
-    def _get_scenarios(self) -> dict[str, type]:
+    def _load_commands(self) -> dict[str, "Command"]:
         """
         Get all available scenarios, caching the result.
 
         Returns:
             Dictionary mapping scenario names to scenario classes
         """
-        if self._scenarios_cache is None:
+        if self._commands_cache is None:
             logger.debug("Discovering scenarios...")
-            self._scenarios_cache = self.loader.discover_scenarios()
-            logger.debug(f"Discovered scenarios: {self._scenarios_cache}")
-        return self._scenarios_cache
+            self._commands_cache = self.loader.load_commands()
+            logger.debug(f"Discovered scenarios: {self._commands_cache}")
+        return self._commands_cache
 
     def list_commands(self, ctx: click.Context) -> list[str]:
         """
@@ -69,7 +71,7 @@ class LazyGroup(VerboseGroup):
         """
         commands = super().list_commands(ctx)
         try:
-            scenarios = self._get_scenarios()
+            scenarios = self._load_commands()
             return commands + sorted(scenarios.keys())
         except Exception as e:
             logger.error(f"Failed to list scenarios: {e}")
@@ -89,15 +91,11 @@ class LazyGroup(VerboseGroup):
             Click command or None if scenario not found
         """
         try:
-            scenarios = self._get_scenarios()
-            scenario_cls = scenarios.get(name)
-
-            if not scenario_cls:
-                return None
-
-            return self._create_scenario_command(scenario_cls, name)
+            commands_map = self._load_commands()
+            command = commands_map.get(name)
+            if command:
+                return command
 
         except Exception as e:
             logger.error(f"Failed to create command for scenario '{name}': {e}")
             return None
-

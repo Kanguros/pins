@@ -14,7 +14,7 @@ from policy_inspector.cli.loader import ScenarioLoader
 @pytest.fixture
 def mock_scenario_loader():
     """Fixture for creating a mock ScenarioLoader instance."""
-    return ScenarioLoader(scenario_directories=[str(mock_scenarios_path)])
+    return ScenarioLoader(custom_paths=[str(mock_scenarios_path)])
 
 
 def test_discover_scenarios(mock_scenario_loader):
@@ -66,7 +66,7 @@ def test_load_builtin_scenarios(mock_builtin_scenarios):
 
 def test_load_custom_scenarios(mock_builtin_scenarios):
     """Test loading custom scenarios."""
-    loader = ScenarioLoader(scenario_directories=[mock_builtin_scenarios])
+    loader = ScenarioLoader(custom_paths=[mock_builtin_scenarios])
     scenarios = loader._load_scenarios_from_directory(mock_builtin_scenarios)
     assert "scenario_a" in scenarios
     assert "scenario_b" in scenarios
