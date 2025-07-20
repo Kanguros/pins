@@ -6,29 +6,28 @@ from policy_inspector.cli.options import config_option, verbose_option
 try:
     import rich_click as click
 
-    clickGroup = click.RichGroup
+    click_group = click.RichGroup
 except ImportError:
     import click
 
-    clickGroup = click.Group
+    click_group = click.Group
 
 logger = logging.getLogger(__name__)
 
 
-
-class VerboseGroup(clickGroup):
+class VerboseGroup(click_group):
     """Click Group that automatically adds verbose option to all commands."""
 
     def __init__(self, name=None, commands=None, **attrs):
         super().__init__(name, commands, **attrs)
-        
+        self.help_option_names = ["-h", "--help"]
         self.params.append(verbose_option())
-        self.params.append(config_option())
 
     def add_command(self, cmd, name=None):
         """Override to add verbose option to all commands."""
         cmd.params.append(verbose_option())
         super().add_command(cmd, name)
+
 
 class LazyGroup(VerboseGroup):
     """Dynamic CLI handler that creates commands for discovered scenarios."""
@@ -68,9 +67,10 @@ class LazyGroup(VerboseGroup):
         Returns:
             List of scenario command names
         """
+        commands = super().list_commands(ctx)
         try:
             scenarios = self._get_scenarios()
-            return sorted(scenarios.keys())
+            return commands + sorted(scenarios.keys())
         except Exception as e:
             logger.error(f"Failed to list scenarios: {e}")
             return []
@@ -100,3 +100,4 @@ class LazyGroup(VerboseGroup):
         except Exception as e:
             logger.error(f"Failed to create command for scenario '{name}': {e}")
             return None
+

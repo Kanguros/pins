@@ -1,12 +1,7 @@
 import pytest
 
-# All tests in this module will be skipped
-pytest.skip(
-    "Skipping tests that require Panorama connection", allow_module_level=True
-)
-
 from policy_inspector.model.security_rule import SecurityRule
-from policy_inspector.scenarios.shadowing.scenario import Shadowing
+from policy_inspector.builtin.shadowing_simple.scenario import Shadowing
 
 
 @pytest.fixture

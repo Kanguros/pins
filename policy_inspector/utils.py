@@ -65,4 +65,3 @@ def config_logger(
     main_logger = logging.getLogger(logger_name)
     main_logger.handlers = [rich_handler]
     main_logger.setLevel(logging.INFO)
-

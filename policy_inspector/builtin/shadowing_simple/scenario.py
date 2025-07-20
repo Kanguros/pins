@@ -2,8 +2,9 @@ import logging
 from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
+from policy_inspector.panorama import PanoramaConnector
 from policy_inspector.scenario import Scenario
-from policy_inspector.scenarios.shadowing.checks import (
+from policy_inspector.builtin.shadowing_simple.checks import (
     CheckFunction,
     CheckResult,
     check_action,
@@ -17,7 +18,6 @@ from policy_inspector.scenarios.shadowing.checks import (
 
 if TYPE_CHECKING:
     from policy_inspector.model.security_rule import SecurityRule
-    from policy_inspector.panorama import PanoramaConnector
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +79,6 @@ def run_checks(checks, *rules: "SecurityRule") -> dict[str, CheckResult]:
 
 
 class Shadowing(Scenario):
-
     name: str = "Shadowing"
     checks: list[CheckFunction] = [
         check_action,

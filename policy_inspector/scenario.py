@@ -6,15 +6,16 @@ Exporter and Displayer classes for better separation of concerns.
 """
 
 import logging
-from typing import TYPE_CHECKING, Any, Iterable, TypeVar
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, TypeVar
 
 from policy_inspector.output.displayer import DefaultDisplayer, Displayer
 from policy_inspector.output.exporter import DefaultExporter, Exporter
+from policy_inspector.panorama import PanoramaConnector
 
 if TYPE_CHECKING:
     import rich_click as click
 
-    from policy_inspector.panorama import PanoramaConnector
 
 logger = logging.getLogger(__name__)
 
@@ -143,6 +144,7 @@ class Scenario:
 
 TPanorama = TypeVar("TPanorama", bound="PanoramaConnector")
 
+
 def initialize_panorama(panorama_cls: type[TPanorama], **kwargs) -> TPanorama:
     """
     Create a panorama connector from context parameters.
@@ -168,9 +170,8 @@ def initialize_panorama(panorama_cls: type[TPanorama], **kwargs) -> TPanorama:
         logger.error(f"Failed to create Panorama connector: {e}")
         return None
 
-def run_scenario(
-    scenario_cls: type, **kwargs
-):
+
+def run_scenario(scenario_cls: type, **kwargs):
     """
     Execute a scenario with the provided options.
 
@@ -184,13 +185,9 @@ def run_scenario(
         show_formats = kwargs.pop("show", ())
         export_dir = kwargs.pop("export_dir", ".")
 
-        panorama = initialize_panorama(
-            scenario_cls.panorama_class, **kwargs
-            )
+        panorama = initialize_panorama(scenario_cls.panorama_class, **kwargs)
         if not panorama:
-            click.echo(
-                "Error: Failed to create Panorama connector.", err=True
-            )
+            click.echo("Error: Failed to create Panorama connector.", err=True)
             return
 
         scenario = scenario_cls(
@@ -206,3 +203,18 @@ def run_scenario(
     except Exception as e:
         logger.error(f"Scenario execution failed: {e}")
         click.echo(f"Error: {e}", err=True)
+
+
+def get_exporter_displayer_formats(
+    scenario: Scenario,
+) -> tuple[type[Exporter], type[Displayer]]:
+    """
+    Helper function to retrieve exporter and displayer formats for a given scenario.
+
+    Args:
+        scenario: The Scenario instance.
+
+    Returns:
+        A tuple containing the exporter and displayer classes.
+    """
+    return scenario.exporter_class, scenario.displayer_class

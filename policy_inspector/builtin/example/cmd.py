@@ -1,13 +1,13 @@
+import logging
+
 import click
 
 from policy_inspector.cli.loader import ScenarioLoader
-from policy_inspector.config import (
-    get_scenario_directories_from_config,
-)
 from policy_inspector.mock_panorama import MockPanoramaConnector
 from policy_inspector.utils import (
     Example,
     ExampleChoice,
+    get_scenario_directories_from_config,
 )
 
 examples = [
@@ -25,6 +25,7 @@ examples = [
     ),
 ]
 
+logger = logging.getLogger(__name__)
 
 @click.command("example", no_args_is_help=True)
 @click.option(
@@ -53,7 +54,6 @@ def run_example(
     show: tuple[str, ...],
     export: tuple[str, ...],
     export_dir: str,
-    device_groups: tuple[str],
     example: Example,
 ) -> None:
     """Run built-in examples with sample data.
@@ -70,46 +70,33 @@ def run_example(
         "This is a demonstration run using example config/data. Results may not reflect your environment."
     )
 
-    # Get the data directory from the example
-    data_dir = example.get_data_dir()
-    logger.info(f"Data directory: {data_dir.absolute()}")
-    logger.info("Executing scenario with provided example data...")
-
     try:
         # Create mock panorama connector
         panorama = MockPanoramaConnector(
-            data_dir=data_dir,
+            data_dir=example.get_data_dir(),
             device_group=example.device_group,
         )
 
-        # Get scenario directories from config
+        # Load scenario dynamically
         config_file = ctx.obj.get("config_file", "config.yaml")
         scenario_directories = get_scenario_directories_from_config(config_file)
-
-        # Load scenario dynamically
         loader = ScenarioLoader(scenario_directories)
         scenarios = loader.discover_scenarios()
 
-        # Try to find a shadowing scenario
-        scenario_cls = None
-        for name, cls in scenarios.items():
-            if "shadow" in name.lower():
-                scenario_cls = cls
-                break
+        # Find the scenario class
+        scenario_cls = next(
+            (cls for name, cls in scenarios.items() if "shadow" in name.lower()),
+            None,
+        )
 
         if not scenario_cls:
             logger.error("No shadowing scenario found for example")
             return
 
-        # Use provided device_groups or default to the main device_group
-        device_groups_list = (
-            list(device_groups) if device_groups else [example.device_group]
-        )
-
         # Create and run scenario
         scenario = scenario_cls(
             panorama=panorama,
-            device_groups=device_groups_list,
+            device_groups=[example.device_group],
             export_dir=export_dir,
             **example.args,
         )
@@ -124,9 +111,7 @@ def run_example(
                 logger.info(f"Exported {format_name.upper()}: {file_path}")
 
     except Exception as ex:
-        logger.error(
-            "Example run failed. This is expected if required files or connectivity are missing."
-        )
+        logger.error("Example run failed. This is expected if required files or connectivity are missing.")
         logger.error(f"Error: {ex}")
     finally:
         logger.info("Example execution completed")

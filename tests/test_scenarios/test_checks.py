@@ -3,9 +3,7 @@ from collections.abc import Callable
 import pytest
 from _pytest.mark import ParameterSet
 
-from policy_inspector.model.base import AnyObj
-from policy_inspector.model.security_rule import SecurityRule
-from policy_inspector.scenarios.shadowing.checks import (
+from policy_inspector.builtin.shadowing_simple.checks import (
     check_action,
     check_application,
     check_destination_address,
@@ -13,6 +11,8 @@ from policy_inspector.scenarios.shadowing.checks import (
     check_source_address,
     check_source_zone,
 )
+from policy_inspector.model.base import AnyObj
+from policy_inspector.model.security_rule import SecurityRule
 
 TEST_CASES: dict[Callable, dict[str, list]] = {
     check_action: {

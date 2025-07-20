@@ -1,5 +1,10 @@
+import logging
+from collections.abc import Callable, Iterable
+from venv import logger
+
 import click
-from typing import Callable, Iterable, Optional
+
+logger = logging.getLogger(__name__)
 
 def verbose_callback(ctx: click.Context, param, value) -> None:
     """Callback function for verbose option."""
@@ -29,6 +34,7 @@ def verbose_option() -> click.Option:
         help="More verbose and detailed output with each `-v` up to `-vvvv`",
     )
 
+
 def configure_from_yaml(ctx, param, filename):
     """
     Callback for --config option that reads YAML configuration file
@@ -42,6 +48,7 @@ def configure_from_yaml(ctx, param, filename):
     if filename is None:
         return
     import yaml
+
     try:
         with open(filename) as f:
             data = yaml.safe_load(f) or {}
@@ -55,8 +62,9 @@ def configure_from_yaml(ctx, param, filename):
     v = "\n".join([f"{k}={v}" for k, v in ctx.__dict__.items()])
     print(f"CONFIG OPTION CALLBACK:\n{v}")
 
-def config_option(
-    config_file_name: str = "--config", default: str = "config.yaml"
+
+def config_option(f, 
+    config_file_name: Iterable[str] = ("-c","--config"), default: str = "config.yaml"
 ):
     """
     Decorator that adds a --config option to read defaults from a YAML file.
@@ -73,16 +81,17 @@ def config_option(
     Returns:
     """
 
-    return click.Option(
-            [config_file_name],
-            type=click.Path(dir_okay=False),
-            default=default,
-            callback=configure_from_yaml,
-            is_eager=True,
-            expose_value=False,
-            help="Read configuration from YAML file",
-            show_default=True,
-        )
+    return click.option(
+        *config_file_name,
+        type=click.Path(dir_okay=False),
+        default=default,
+        callback=configure_from_yaml,
+        is_eager=True,
+        expose_value=False,
+        help="Read configuration from YAML file",
+        show_default=True,
+    )(f)
+
 
 def export_options(
     command: Callable, export_formats: Iterable[str] = ()
@@ -103,7 +112,7 @@ def export_options(
         type=click.Choice(export_formats),
         help="Export formats (can be specified multiple times)",
     )(command)
-    
+
     return click.option(
         "--export-dir", default=".", help="Directory to save exported files"
     )(command)

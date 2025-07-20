@@ -27,7 +27,7 @@ class Displayer:
             List of format names
         """
         return get_matching_methods(self, self.method_prefix)
-    
+
     def _serialize_object(self, obj: Any) -> dict[str, Any]:
         """
         Serialize an object to a dictionary for JSON display.

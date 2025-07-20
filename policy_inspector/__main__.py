@@ -1,5 +1,7 @@
 import logging
 
+from policy_inspector.cli.options import config_option
+
 try:
     import rich_click as click
 
@@ -22,7 +24,8 @@ config_logger()
 logger = logging.getLogger(__name__)
 
 
-@click.group(no_args_is_help=True, add_help_option=True, cls=VerboseGroup)
+@click.group(no_args_is_help=True, cls=VerboseGroup)
+@config_option
 @click.pass_context
 def main(ctx: click.Context):
     """Policy Inspector - Analyze Palo Alto firewall policies.
@@ -76,7 +79,3 @@ def main_run(ctx: click.Context):
 
     Run security policy analysis scenarios against your Panorama.
     """
-
-
-
-

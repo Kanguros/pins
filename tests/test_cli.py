@@ -2,7 +2,6 @@ import pytest
 from click.testing import CliRunner
 
 from policy_inspector import __main__
-from policy_inspector.scenario import Scenario
 
 
 @pytest.fixture
@@ -72,7 +71,9 @@ def test_list_command_verbose(runner):
     ],
 )
 def test_run_example(runner, name):
-    result = runner.invoke(__main__.run_example, [name], catch_exceptions=True)
+    result = runner.invoke(
+        __main__.main, ["run", "example", name], catch_exceptions=True
+    )
     phrases = [
         f"Selected example: '{name}'",
         "Executing scenario with",
@@ -97,8 +98,8 @@ def test_run_example(runner, name):
 def test_run_example_with_export(runner, name, export_format):
     """Test examples with different export formats."""
     result = runner.invoke(
-        __main__.run_example,
-        [name, "--export", export_format],
+        __main__.main,
+        ["run", "example", name, "--export", export_format],
         catch_exceptions=True,
     )
     phrases = [
@@ -125,34 +126,8 @@ def test_run_example_with_export(runner, name, export_format):
 def test_run_example_with_show(runner, name, show_format):
     """Test examples with different show formats."""
     result = runner.invoke(
-        __main__.run_example,
-        [name, "--show", show_format],
-        catch_exceptions=True,
-    )
-    phrases = [
-        f"Selected example: '{name}'",
-        "Executing scenario with",
-        "Example execution completed",
-    ]
-    assert result.exit_code == 0, (
-        f"Exit code {result.exit_code}, output: {result.output}"
-    )
-    for phrase in phrases:
-        assert phrase in result.output
-
-
-@pytest.mark.parametrize(
-    "name",
-    [
-        "shadowing-basic",
-        "shadowing-multiple-dg",
-    ],
-)
-def test_run_example_with_device_groups(runner, name):
-    """Test examples with custom device groups."""
-    result = runner.invoke(
-        __main__.run_example,
-        [name, "--device-groups", "CustomDG1", "--device-groups", "CustomDG2"],
+        __main__.main,
+        ["run", "example", name, "--show", show_format],
         catch_exceptions=True,
     )
     phrases = [
@@ -170,8 +145,10 @@ def test_run_example_with_device_groups(runner, name):
 def test_run_example_with_combined_options(runner):
     """Test example with multiple options combined."""
     result = runner.invoke(
-        __main__.run_example,
+        __main__.main,
         [
+            "run",
+            "example",
             "shadowing-basic",
             "--export",
             "json",
