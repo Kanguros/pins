@@ -4,11 +4,8 @@ import click
 
 from policy_inspector.cli.loader import ScenarioLoader
 from policy_inspector.mock_panorama import MockPanoramaConnector
-from policy_inspector.utils import (
-    Example,
-    ExampleChoice,
-    get_scenario_directories_from_config,
-)
+
+from .utils import Example, ExampleChoice
 
 examples = [
     Example(
@@ -79,7 +76,7 @@ def example(
 
         # Load scenario dynamically
         config_file = ctx.obj.get("config_file", "config.yaml")
-        scenario_directories = get_scenario_directories_from_config(config_file)
+        scenario_directories = []
         loader = ScenarioLoader(scenario_directories)
         scenarios = loader.load_commands()
 

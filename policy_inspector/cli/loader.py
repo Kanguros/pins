@@ -9,23 +9,27 @@ import importlib
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
+from click import Command
 
-if TYPE_CHECKING:
-    from click import Command
 
 logger = logging.getLogger(__name__)
+
 
 def get_builtin_commands_dir() -> list[Path]:
     """Get the directory containing built-in scenario commands."""
     root_path = Path(__file__).parent.parent / "builtin"
-    return [p for p in root_path.iterdir() if p.is_dir()]
+    return [p for p in root_path.iterdir() if p.is_dir() and not p.name.startswith("_")]
+
 
 class ScenarioLoader:
     """Loads scenario modules dynamically from configured directories."""
 
-    def __init__(self, custom_paths: list[str] | None = None,
-                 builtin_commands: str = "policy_inspector.builtin",
-                 command_module: str = "cmd"):
+    def __init__(
+        self,
+        custom_paths: list[str] | None = None,
+        builtin_commands: str = "policy_inspector.builtin",
+        command_module: str = "cmd",
+    ):
         """
         Initialize the scenario loader.
 
@@ -46,11 +50,18 @@ class ScenarioLoader:
 
         Returns:
             Dictionary mapping scenario names to scenario classes
+
+        Raises:
+            RuntimeError: If any error occurs during command loading.
         """
+        if self._loaded_scenarios:
+            logger.debug("Using cached scenarios.")
+            return self._loaded_scenarios
+
         commands = {}
         commands.update(self._load_builtin_scenarios())
-        for directory in self.scenario_directories:
-            commands.update(self._load_scenarios_from_directory(directory))
+        for custom_path in self.custom_paths:
+            commands.update(self._load_scenarios_from_directory(custom_path))
         self._loaded_scenarios = commands
         return commands
 
@@ -65,23 +76,31 @@ class ScenarioLoader:
 
         builtin_commands_path = get_builtin_commands_dir()
         for folder in builtin_commands_path:
-            print(f"Found scenario directory: {folder.name}")
-            module_path = f"{self.builtin_commands}.{folder.name}.{self.command_module}"
+            logger.info(f"Found scenario directory: {folder.name}")
+            module_path = (
+                f"{self.builtin_commands}.{folder.name}.{self.command_module}"
+            )
             command = self._load_command(module_path, folder.name)
             if command:
                 scenarios[folder.name] = command
 
         return scenarios
 
-    def _load_scenarios_from_directory(self, directory: str) -> dict[str, "Command"]:
+    def _load_scenarios_from_directory(
+        self, directory: str
+    ) -> dict[str, "Command"]:
         """
-        Load scenario commands from a specific directory.
+        Load scenario commands from a specific directory or import path.
 
         Args:
-            directory: Path to the directory
+            directory: Path to the directory or import path
 
         Returns:
             Dictionary mapping scenario names to click commands
+
+        Raises:
+            FileNotFoundError: If the directory does not exist.
+            RuntimeError: If any error occurs during command loading.
         """
         scenarios = {}
         dir_path = Path(directory)
@@ -94,7 +113,7 @@ class ScenarioLoader:
             if not folder.is_dir():
                 continue
             logger.debug(f"Loading scenario from folder: {folder.name}")
-            module_path = f"{folder.name}.{self.command_module}"
+            module_path = f"{directory}.{folder.name}.{self.command_module}"
             scenario_command = self._load_command(module_path, folder.name)
             if scenario_command:
                 scenarios[folder.name] = scenario_command
@@ -115,19 +134,32 @@ class ScenarioLoader:
             module = importlib.import_module(module_path)
             command_func = getattr(module, command_name, None)
             if command_func is None:
-                logger.warning(f"Command '{command_name}' not found in module '{module_path}'")
+                logger.warning(
+                    f"Command '{command_name}' not found in module '{module_path}'"
+                )
                 return None
             if not callable(command_func):
-                logger.warning(f"'{command_name}' in module '{module_path}' is not callable")
+                logger.warning(
+                    f"'{command_name}' in module '{module_path}' is not callable"
+                )
                 return None
             if not isinstance(command_func, Command):
-                logger.warning(f"'{command_name}' in module '{module_path}' is not a Click command")
+                logger.warning(
+                    f"'{command_name}' in module '{module_path}' is not a Click command"
+                )
                 return None
             logger.debug(f"Loaded command {command_name} from {module_path}")
             return command_func
         except ImportError as e:
             logger.error(f"Failed to import module '{module_path}': {e}")
-            return None
+            raise ImportError(f"Error importing module '{module_path}': {e}")
+        except Exception as e:
+            logger.error(
+                f"Unexpected error while loading command '{command_name}' from module '{module_path}': {e}"
+            )
+            raise RuntimeError(
+                f"Error loading command '{command_name}' from module '{module_path}': {e}"
+            )
 
     def get_available_scenario_names(self) -> list[str]:
         """
